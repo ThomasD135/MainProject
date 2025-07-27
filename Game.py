@@ -565,7 +565,6 @@ class MiniMap(Setup.pg.sprite.Sprite):
                 canFastTravel = text[3]
 
                 if canFastTravel == "YES":
-                    print("git test")
                     locationX = float(text[1])
                     locationY = float(text[2])
                     player.world_x = locationX
