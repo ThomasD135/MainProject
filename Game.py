@@ -196,6 +196,8 @@ class Player(Setup.pg.sprite.Sprite):
         self.world_x = Setup.setup.WIDTH // 2
         self.world_y = Setup.setup.HEIGHT // 2
 
+        self.maxHealth = 100 # temp
+        self.maxMana = 100 # temp
         self.health = 100 # temp
         self.mana = 100 # temp
 
@@ -203,6 +205,7 @@ class Player(Setup.pg.sprite.Sprite):
         self.miniMap = MiniMap()
         self.weapon = Weapon("Wooden sword", "weapon", "ability", 100, 200, 300, 20, 5, None, self) # temp
         self.spell = Spell("Fireball", "fire", 100, 20, self) # temp
+        self.mapFragments = {1 : True, 2 : True, 3 : True, 4 : False}
 
         self.idleFilePath = Setup.os.path.join("ASSETS", "PLAYER", "PLAYER_IDLE_SHEET")
         self.idleImageSheet = Setup.pg.image.load(self.idleFilePath + ".png").convert_alpha()
@@ -220,7 +223,7 @@ class Player(Setup.pg.sprite.Sprite):
 
         # movement
         self.movementSpeeds = [0, 0]
-        self.keyPressVelocity = 8
+        self.keyPressVelocity = 6
         self.mostRecentDirection = None
         self.playerYFallingSpeed = 0
         self.playerXCarriedMovingSpeed = 0 # dashing etc
@@ -288,11 +291,14 @@ class Player(Setup.pg.sprite.Sprite):
 
     def Inputs(self):
         keys = Setup.pg.key.get_pressed()
-        
-        self.MovementKeyHandler(keys)
-        self.JumpHandler(keys)
-        self.DashHandler(keys)
-        self.CrouchHandler(keys)
+
+        if self.miniMap.enlarged and self.miniMap.seeWaypoints: # cannot move when currently at a waypoint - can move when viewing mini map normally
+            self.movementSpeeds, self.playerXCarriedMovingSpeed = [0, 0], 0
+        else:
+            self.MovementKeyHandler(keys)
+            self.JumpHandler(keys)
+            self.DashHandler(keys)
+            self.CrouchHandler(keys)
 
     def MovementKeyHandler(self, keys):
         if keys[Setup.pg.K_d] or keys[Setup.pg.K_RIGHT]: # d key or right arrow key
@@ -332,10 +338,10 @@ class Player(Setup.pg.sprite.Sprite):
 
     def DashHandler(self, keys):
         if keys[Setup.pg.K_LSHIFT] and self.playerXCarriedMovingSpeed == 0: # pressing shift (dash) and not already in a dash
-            if self.mostRecentDirection == "RIGHT":
-                self.playerXCarriedMovingSpeed = 35
-            elif self.mostRecentDirection == "LEFT":
-                self.playerXCarriedMovingSpeed = -35
+            if self.mostRecentDirection == "LEFT":
+                self.playerXCarriedMovingSpeed = -32
+            else:
+                self.playerXCarriedMovingSpeed = 32
 
     def CrouchHandler(self, keys):
         if keys[Setup.pg.K_LCTRL] and self.state != "AIR":
@@ -345,12 +351,13 @@ class Player(Setup.pg.sprite.Sprite):
             self.isCrouched = False
 
         if self.isCrouched:
-            self.keyPressVelocity = 4
+            self.keyPressVelocity = 3
         else:
-            self.keyPressVelocity = 8     
+            self.keyPressVelocity = 6     
 
     def Update(self):
         self.Inputs()
+
         if self.playerXCarriedMovingSpeed != 0:
             self.movementSpeeds[0] = self.playerXCarriedMovingSpeed
 
@@ -504,12 +511,25 @@ class MiniMap(Setup.pg.sprite.Sprite):
             self.seeWaypoints = False
             Setup.pg.mouse.set_visible(False)
 
+    def MapFragments(self, player, start_x, start_y, shrinkModifier):
+        mapWidth = (48 * 160) / shrinkModifier
+        fragmentWidthHeight = mapWidth / 2 # square fragements so widtgh and height are the same
+
+        fragmentLocations = {1 : (start_x, start_y),
+                              2 : (start_x + mapWidth / 2, start_y),
+                              3 : (start_x, start_y + mapWidth / 2),
+                              4 : (start_x + mapWidth / 2, start_y + mapWidth / 2)}
+
+        for fragment, fragmentValue in player.mapFragments.items(): 
+            if not fragmentValue:
+                Setup.pg.draw.rect(Setup.setup.screen, (Setup.setup.BLACK), (fragmentLocations[fragment][0], fragmentLocations[fragment][1], fragmentWidthHeight, fragmentWidthHeight))
+
     def DrawMap(self, blocks, player):
         if not self.enlarged:
             shrinkModifier = 20
             start_x = 20
             start_y = Setup.setup.HEIGHT - 400
-            Setup.pg.draw.rect(Setup.setup.screen, (Setup.setup.GREY), (start_x, start_y, self.width - (start_x / 2), self.height - (start_x / 2))) # background to draw on, easier to see map
+            Setup.pg.draw.rect(Setup.setup.screen, (Setup.setup.GREY), (start_x, start_y, self.width, self.height)) # background to draw on, easier to see map
         else:
             shrinkModifier = 8
             start_x = 480
@@ -519,12 +539,12 @@ class MiniMap(Setup.pg.sprite.Sprite):
         for block in blocks:
             newImage = Setup.pg.transform.scale(block.image, (block.width / shrinkModifier, block.height / shrinkModifier))
             new_x, new_y = block.world_x / shrinkModifier, block.world_y / shrinkModifier
-
             Setup.setup.screen.blit(newImage, (start_x + new_x, start_y + new_y))
-
+        
         new_player_x, new_player_y = player.world_x / shrinkModifier, player.world_y / shrinkModifier
         
-        if not self.enlarged:
+        self.MapFragments(player, start_x, start_y, shrinkModifier)
+        if not self.enlarged:  
             self.playerIconImage = Setup.setup.loadImage(self.playerIconFile, self.playerIconWidth, self.playerIconHeight)
             Setup.setup.screen.blit(self.playerIconImage, (start_x + new_player_x - (0.25 * 32), start_y + new_player_y - (0.5 * 32))) # adjusting icon location to be roughly centered on in-game player
         else:

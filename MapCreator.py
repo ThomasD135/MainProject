@@ -76,7 +76,7 @@ class MapDataHandling():
                 blockNumber = int(lineData[XPosition][0] + lineData[XPosition][1]) 
                 rotation = int(lineData[XPosition][2]) * -90
 
-                row.append(Menus.Button("BLOCK", blockWidth, blockWidth, XPosition * blockWidth - (0.5 * blockWidth), YPosition * blockWidth - (0.5 * blockWidth), "", True, mapGrid.blockSheetHandler.GetCorrectBlockImage(blockNumber, blockWidth, blockWidth, blockWidth, blockWidth, False, rotation), blockNumber, rotation))
+                row.append(Menus.Button("BLOCK", blockWidth, blockWidth, XPosition * blockWidth, YPosition * blockWidth, "", True, mapGrid.blockSheetHandler.GetCorrectBlockImage(blockNumber, blockWidth, blockWidth, blockWidth, blockWidth, False, rotation), blockNumber, rotation))
 
             grid.append(row)
             row = []
@@ -134,7 +134,7 @@ class MapGrid():
 
         for gridYPosition in range(0, 48): 
             for gridXPosition in range(0, 48): 
-                blockRow.append(Menus.Button("BLOCK", self.blockWidth, self.blockWidth, gridXPosition * self.blockWidth - (0.5 * self.blockWidth), gridYPosition * self.blockWidth - (0.5 * self.blockWidth), "", True, self.blockSheetHandler.GetCorrectBlockImage(self.selectedBlock, self.blockWidth, self.blockWidth, self.blockWidth, self.blockWidth, False, self.rotation), self.selectedBlock, self.rotation))
+                blockRow.append(Menus.Button("BLOCK", self.blockWidth, self.blockWidth, gridXPosition * self.blockWidth, gridYPosition * self.blockWidth, "", True, self.blockSheetHandler.GetCorrectBlockImage(self.selectedBlock, self.blockWidth, self.blockWidth, self.blockWidth, self.blockWidth, False, self.rotation), self.selectedBlock, self.rotation))
 
             self.blockGrid.append(blockRow)
             blockRow = [] 
