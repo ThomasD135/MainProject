@@ -103,7 +103,7 @@ class SlidingButton(Button):
             self.rect.center = (mousePositionX, self.locationY) # move slider to mouse X coordinate if within boundaries
 
     def GetRelativeLocation(self): # how far along the slider the button is
-        return int(((self.rect.center[0] - self.locationX) / self.length) * 100) # between 0 and 100
+        return int(((self.rect.center[0] - self.locationX) / self.length) * 100) # between 0 and 100 (text display)
 
 class Background():
     def __init__(self, filePathImage):

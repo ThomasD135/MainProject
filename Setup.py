@@ -144,7 +144,7 @@ class SoundHandler():
 
     @staticmethod
     def ChangeVolume(volume):
-        setup.volume = volume
+        setup.volume = volume / 100 
 
         for x in range(0, 1):
             pg.mixer.Channel(x).set_volume(setup.volume) # between 0 and 1. Only changes sounds that are currently playing

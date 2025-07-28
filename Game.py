@@ -62,15 +62,15 @@ class MapBlock(Setup.pg.sprite.Sprite):
         super().__init__() # init the sprite class
         self.blockNumber = blockNumber
         self.rotation = rotation
-        self.world_x = originalLocationX
-        self.world_y = originalLocationY
+        self.worldX = originalLocationX
+        self.worldY = originalLocationY
 
         self.width = Setup.setup.BLOCK_WIDTH
         self.height = Setup.setup.BLOCK_WIDTH
 
         self.image = Setup.pg.transform.scale(image, (self.width, self.height)) 
         self.rect = self.image.get_rect()
-        self.rect.topleft = (self.world_x, self.world_y)  
+        self.rect.topleft = (self.worldX, self.worldY)  
 
         self.collision = hasCollision 
         self.damage = damage
@@ -193,8 +193,8 @@ class Player(Setup.pg.sprite.Sprite):
         self.name = name
         self.width = Setup.setup.BLOCK_WIDTH
         self.height = Setup.setup.BLOCK_WIDTH
-        self.world_x = Setup.setup.WIDTH / 2
-        self.world_y = Setup.setup.HEIGHT / 2
+        self.worldX = Setup.setup.WIDTH / 2
+        self.worldY = Setup.setup.HEIGHT / 2
 
         self.maxHealth = 100 # temp
         self.maxMana = 100 # temp
@@ -239,15 +239,15 @@ class Player(Setup.pg.sprite.Sprite):
 
         self.mask = Setup.pg.mask.from_surface(self.currentImage) 
         self.rect = self.mask.get_rect()
-        self.rect.topleft = (self.world_x, self.world_y)
+        self.rect.topleft = (self.worldX, self.worldY)
 
     def CollideWithObject(self, mapBlocks):
         collided = []
-        self.rect.topleft = (self.world_x, self.world_y)
+        self.rect.topleft = (self.worldX, self.worldY)
 
         for block in mapBlocks:
             if block.collision: # if the block can be collided with
-                block.rect.topleft = (block.world_x, block.world_y) # using original locations for both the player and block to make collision less confusing
+                block.rect.topleft = (block.worldX, block.worldY) # using original locations for both the player and block to make collision less confusing
 
                 if self.rect.colliderect(block.rect):
                     collided.append(block)
@@ -258,34 +258,34 @@ class Player(Setup.pg.sprite.Sprite):
         collisions = {'top': False, 'bottom': False, 'left': False, 'right': False}
 
         # horizontal movement
-        self.world_x += self.movementSpeeds[0]
-        self.rect.topleft = (self.world_x, self.world_y)
+        self.worldX += self.movementSpeeds[0]
+        self.rect.topleft = (self.worldX, self.worldY)
 
         for block in self.CollideWithObject(mapBlocks):
             if self.movementSpeeds[0] > 0: # moving right so colliding with the left side of the block (right side of the player)
-                self.world_x = block.world_x - self.rect.width
+                self.worldX = block.worldX - self.rect.width
                 collisions['right'] = True
 
             elif self.movementSpeeds[0] < 0: # moving left so colliding with the right side of the block (left side of the player)
-                self.world_x = block.world_x + block.rect.width
+                self.worldX = block.worldX + block.rect.width
                 collisions['left'] = True
 
-            self.rect.topleft = (self.world_x, self.world_y)
+            self.rect.topleft = (self.worldX, self.worldY)
 
         # vertical movement
-        self.world_y += self.movementSpeeds[1]
-        self.rect.topleft = (self.world_x, self.world_y)
+        self.worldY += self.movementSpeeds[1]
+        self.rect.topleft = (self.worldX, self.worldY)
 
         for block in self.CollideWithObject(mapBlocks):
             if self.movementSpeeds[1] > 0: # moving down so colliding with the top of the block (bottom of the player)
-                self.world_y = block.world_y - self.rect.height
+                self.worldY = block.worldY - self.rect.height
                 collisions['bottom'] = True
 
             elif self.movementSpeeds[1] < 0: # moving up so colliding with the bottom of the block (top of the player)
-                self.world_y = block.world_y + block.rect.height
+                self.worldY = block.worldY + block.rect.height
                 collisions['top'] = True
 
-            self.rect.topleft = (self.world_x, self.world_y)
+            self.rect.topleft = (self.worldX, self.worldY)
 
         return collisions
 
@@ -409,9 +409,9 @@ class Player(Setup.pg.sprite.Sprite):
 
     def DrawFrame(self):
         if not self.miniMap.enlarged:
-            draw_x = self.world_x - self.camera.camera.left # always in centre of the screen
-            draw_y = self.world_y - self.camera.camera.top
-            Setup.setup.screen.blit(self.currentImage, (draw_x, draw_y))
+            drawX = self.worldX - self.camera.camera.left # always in centre of the screen
+            drawY = self.worldY - self.camera.camera.top
+            Setup.setup.screen.blit(self.currentImage, (drawX, drawY))
 
     def Attack(self):
         if Setup.pg.mouse.get_pressed()[0] and not self.weapon.isChargingAttack:
@@ -444,9 +444,9 @@ class Prompt:
         self.active = False
 
     def Draw(self, parentBlock, camera):
-        draw_x = parentBlock.world_x - camera.left
-        draw_y = parentBlock.world_y - camera.top
-        Setup.setup.screen.blit(self.image, (draw_x, draw_y))    
+        drawX = parentBlock.worldX - camera.left
+        drawY = parentBlock.worldY - camera.top
+        Setup.setup.screen.blit(self.image, (drawX, drawY))    
 
 class GameBackground:
     def __init__(self):
@@ -510,14 +510,14 @@ class MiniMap(Setup.pg.sprite.Sprite):
             self.seeWaypoints = False
             Setup.pg.mouse.set_visible(False)
 
-    def MapFragments(self, player, start_x, start_y, shrinkModifier):
+    def MapFragments(self, player, startX, startY, shrinkModifier):
         mapWidth = (48 * Setup.setup.BLOCK_WIDTH) / shrinkModifier
         fragmentWidthHeight = mapWidth / 2 # square fragements so widtgh and height are the same
 
-        fragmentLocations = {1 : (start_x, start_y),
-                              2 : (start_x + mapWidth / 2, start_y),
-                              3 : (start_x, start_y + mapWidth / 2),
-                              4 : (start_x + mapWidth / 2, start_y + mapWidth / 2)}
+        fragmentLocations = {1 : (startX, startY),
+                              2 : (startX + mapWidth / 2, startY),
+                              3 : (startX, startY + mapWidth / 2),
+                              4 : (startX + mapWidth / 2, startY + mapWidth / 2)}
 
         for fragment, fragmentValue in player.mapFragments.items(): 
             if not fragmentValue:
@@ -526,49 +526,49 @@ class MiniMap(Setup.pg.sprite.Sprite):
     def DrawMap(self, blocks, player):
         if not self.enlarged:
             shrinkModifier = 20
-            start_x = 20
-            start_y = Setup.setup.HEIGHT - 400
-            Setup.pg.draw.rect(Setup.setup.screen, (Setup.setup.GREY), (start_x, start_y, self.width, self.height)) # background to draw on, easier to see map
+            startX = 20
+            startY = Setup.setup.HEIGHT - 400
+            Setup.pg.draw.rect(Setup.setup.screen, (Setup.setup.GREY), (startX, startY, self.width, self.height)) # background to draw on, easier to see map
         else:
             shrinkModifier = 8
-            start_x = 480
-            start_y = 60
+            startX = 480
+            startY = 60
             Setup.pg.draw.rect(Setup.setup.screen, (Setup.setup.GREY), (0, 0, Setup.setup.WIDTH, Setup.setup.HEIGHT))
         
         for block in blocks:
             newImage = Setup.pg.transform.scale(block.image, (block.width / shrinkModifier, block.height / shrinkModifier))
-            new_x, new_y = block.world_x / shrinkModifier, block.world_y / shrinkModifier
-            Setup.setup.screen.blit(newImage, (start_x + new_x, start_y + new_y))
+            newX, newY = block.worldX / shrinkModifier, block.worldY / shrinkModifier
+            Setup.setup.screen.blit(newImage, (startX + newX, startY + newY))
         
-        new_player_x, new_player_y = player.world_x / shrinkModifier, player.world_y / shrinkModifier
+        newPlayerX, newPlayerY = player.worldX / shrinkModifier, player.worldY / shrinkModifier
         
-        self.MapFragments(player, start_x, start_y, shrinkModifier)
+        self.MapFragments(player, startX, startY, shrinkModifier)
         if not self.enlarged:  
             self.playerIconImage = Setup.setup.loadImage(self.playerIconFile, self.playerIconWidth, self.playerIconHeight)
-            Setup.setup.screen.blit(self.playerIconImage, (start_x + new_player_x - (0.25 * 32), start_y + new_player_y - (0.5 * 32))) # adjusting icon location to be roughly centered on in-game player
+            Setup.setup.screen.blit(self.playerIconImage, (startX + newPlayerX - (0.25 * 32), startY + newPlayerY - (0.5 * 32))) # adjusting icon location to be roughly centered on in-game player
         else:
             self.playerIconImage = Setup.setup.loadImage(self.playerIconFile, self.playerIconWidth * 2, self.playerIconHeight * 2)
-            Setup.setup.screen.blit(self.playerIconImage, (start_x + new_player_x - (0.5 * 32), start_y + new_player_y - 32)) 
+            Setup.setup.screen.blit(self.playerIconImage, (startX + newPlayerX - (0.5 * 32), startY + newPlayerY - 32)) 
 
     def CreateWaypointButtons(self, waypoints):
         width, height = 64, 64
         shrinkModifier = 8
-        start_x = 480
-        start_y = 60
+        startX = 480
+        startY = 60
 
         self.waypointButtons.empty()
 
         for waypoint in waypoints:
             parentBlock = waypoint.parent
-            location_x = start_x + (parentBlock.world_x / shrinkModifier) + (0.25 * 64) - 6
-            location_y = start_y + (parentBlock.world_y / shrinkModifier) - (0.2 * 64)
+            locationX = startX + (parentBlock.worldX / shrinkModifier) + (0.25 * 64) - 6
+            locationY = startY + (parentBlock.worldY / shrinkModifier) - (0.2 * 64)
 
             if not waypoint.active:
                 canFastTravel = "NO"
-                self.waypointButtons.add(Menus.Button(f"WAYPOINT {parentBlock.world_x} {parentBlock.world_y} {canFastTravel}", width, height, location_x, location_y, "INACTIVE_WAYPOINT_IMAGE"))
+                self.waypointButtons.add(Menus.Button(f"WAYPOINT {parentBlock.worldX} {parentBlock.worldY} {canFastTravel}", width, height, locationX, locationY, "INACTIVE_WAYPOINT_IMAGE"))
             else:
                 canFastTravel = "YES"
-                self.waypointButtons.add(Menus.Button(f"WAYPOINT {parentBlock.world_x} {parentBlock.world_y} {canFastTravel}", width, height, location_x, location_y, "ACTIVE_WAYPOINT_IMAGE"))
+                self.waypointButtons.add(Menus.Button(f"WAYPOINT {parentBlock.worldX} {parentBlock.worldY} {canFastTravel}", width, height, locationX, locationY, "ACTIVE_WAYPOINT_IMAGE"))
 
     def DrawWaypoints(self, player):
         if self.enlarged and self.seeWaypoints:
@@ -586,8 +586,8 @@ class MiniMap(Setup.pg.sprite.Sprite):
                 if canFastTravel == "YES":
                     locationX = float(text[1])
                     locationY = float(text[2])
-                    player.world_x = locationX
-                    player.world_y = locationY
+                    player.worldX = locationX
+                    player.worldY = locationY
                     player.miniMap.enlarged = False
                     Setup.pg.mouse.set_visible(False)
 
@@ -606,9 +606,9 @@ class Camera:
         waypoints = gameHandler.waypoints
 
         for block in blocks:
-            draw_x = block.world_x - self.camera.left
-            draw_y = block.world_y - self.camera.top
-            Setup.setup.screen.blit(block.image, (draw_x, draw_y))
+            drawX = block.worldX - self.camera.left
+            drawY = block.worldY - self.camera.top
+            Setup.setup.screen.blit(block.image, (drawX, drawY))
 
         for waypoint in waypoints:
             waypoint.IsPlayerInRange(self.player, self.camera)
