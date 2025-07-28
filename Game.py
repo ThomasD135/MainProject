@@ -65,8 +65,8 @@ class MapBlock(Setup.pg.sprite.Sprite):
         self.world_x = originalLocationX
         self.world_y = originalLocationY
 
-        self.width = 160
-        self.height = 160
+        self.width = Setup.setup.BLOCK_WIDTH
+        self.height = Setup.setup.BLOCK_WIDTH
 
         self.image = Setup.pg.transform.scale(image, (self.width, self.height)) 
         self.rect = self.image.get_rect()
@@ -191,10 +191,10 @@ class Player(Setup.pg.sprite.Sprite):
     def __init__(self, name):
         super().__init__()
         self.name = name
-        self.width = 160
-        self.height = 160
-        self.world_x = Setup.setup.WIDTH // 2
-        self.world_y = Setup.setup.HEIGHT // 2
+        self.width = Setup.setup.BLOCK_WIDTH
+        self.height = Setup.setup.BLOCK_WIDTH
+        self.world_x = Setup.setup.WIDTH / 2
+        self.world_y = Setup.setup.HEIGHT / 2
 
         self.maxHealth = 100 # temp
         self.maxMana = 100 # temp
@@ -396,7 +396,7 @@ class Player(Setup.pg.sprite.Sprite):
         else:
             self.UpdateCurrentImage(False)
 
-        gameBackground.MoveImage(-self.movementSpeeds[0] * 0.75)
+        gameBackground.MoveImage(-self.movementSpeeds[0], self.movementSpeeds[1])
         self.camera.Update()
         self.camera.DisplayMap(gameHandler)
         self.miniMap.ChangeScale()
@@ -450,18 +450,17 @@ class Prompt:
 
 class GameBackground:
     def __init__(self):
-        self.width = 40 * 160 # 32 blocks, 160 pixels each plus extra to always be on screen
-        self.height = Setup.setup.HEIGHT
-        self.locationX, self.locationY = 0, 0
-        self.filePath = Setup.os.path.join("ASSETS", "BACKGROUND", "GAME_BACKGROUND_1_IMAGE")
-        self.image = Setup.setup.loadImage(self.filePath, self.width, self.height)
+        self.startX, self.startY = 0, 240
+        
+        filePath = Setup.os.path.join("ASSETS", "BACKGROUND", "GAME_BACKGROUND_2_IMAGE")
+        self.blockImage = Setup.setup.loadImage(filePath, Setup.setup.BLOCK_WIDTH * Setup.setup.BLOCKS_WIDE - 160, Setup.setup.BLOCK_WIDTH * Setup.setup.BLOCKS_WIDE - 240)
 
     def DrawImage(self):
-        Setup.setup.screen.blit(self.image, (self.locationX, self.locationY))
+        Setup.setup.screen.blit(self.blockImage, (self.startX, self.startY))
 
-    def MoveImage(self, moveX):
-        self.locationX += moveX
-        self.locationY = 0
+    def MoveImage(self, moveX, moveY):
+        self.startX += moveX
+        self.startY -= moveY
 
 class Waypoint:
     def __init__(self, parentBlock):
@@ -512,7 +511,7 @@ class MiniMap(Setup.pg.sprite.Sprite):
             Setup.pg.mouse.set_visible(False)
 
     def MapFragments(self, player, start_x, start_y, shrinkModifier):
-        mapWidth = (48 * 160) / shrinkModifier
+        mapWidth = (48 * Setup.setup.BLOCK_WIDTH) / shrinkModifier
         fragmentWidthHeight = mapWidth / 2 # square fragements so widtgh and height are the same
 
         fragmentLocations = {1 : (start_x, start_y),

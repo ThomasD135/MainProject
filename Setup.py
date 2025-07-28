@@ -21,6 +21,8 @@ class Setup():
 
         self.WIDTH = self.screen.get_size()[0]
         self.HEIGHT = self.screen.get_size()[1]
+        self.BLOCK_WIDTH = 160
+        self.BLOCKS_WIDE = 48
 
         self.GRAVITY = 1
 
@@ -52,10 +54,10 @@ class Setup():
         self.pressedKey = None
 
     def update(self):
-        self.screen.fill(self.GREY) # make the screen completely black to hide previous frame
+        self.screen.fill(self.BLACK) # make the screen completely black to hide previous frame
         self.clock.tick(self.FPS)
 
-    def loadImage(self, imagePath, width, height):
+    def loadImage(self, imagePath, width=160, height=160):
         image = pg.image.load(imagePath + ".png").convert_alpha()
         image = pg.transform.scale(image, (width, height))
         return image
