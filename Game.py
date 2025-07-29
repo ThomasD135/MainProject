@@ -38,6 +38,7 @@ class GameHandler(Setup.pg.sprite.Sprite):
     def CreatePlayableMap(self):
         self.playableMap = []
         self.waypoints = []
+        self.treasureChests = []
         newRow = []
 
         for row in MapCreator.mapGrid.blockGrid:
@@ -53,6 +54,9 @@ class GameHandler(Setup.pg.sprite.Sprite):
 
                     if block.blockNumber == 17 or block.blockNumber == 18: # waypoints
                         self.waypoints.append(Waypoint(mapBlock))
+
+                    if block.blockNumber == 19: # treasure chests
+                        self.treasureChests.append(TreaureChest(mapBlock, "wooden sword")) # temp reward
 
             self.playableMap.append(newRow)
             newRow = []
@@ -357,6 +361,7 @@ class Player(Setup.pg.sprite.Sprite):
 
     def Update(self):
         self.Inputs()
+        gameBackground.MoveImage(-self.movementSpeeds[0], self.movementSpeeds[1])
 
         if self.playerXCarriedMovingSpeed != 0:
             self.movementSpeeds[0] = self.playerXCarriedMovingSpeed
@@ -396,7 +401,7 @@ class Player(Setup.pg.sprite.Sprite):
         else:
             self.UpdateCurrentImage(False)
 
-        gameBackground.MoveImage(-self.movementSpeeds[0], self.movementSpeeds[1])
+        
         self.camera.Update()
         self.camera.DisplayMap(gameHandler)
         self.miniMap.ChangeScale()
@@ -433,26 +438,11 @@ class Player(Setup.pg.sprite.Sprite):
         if keys[Setup.pg.K_f]:
             self.spell.Attack(self.mana)
 
-class Prompt:
-    def __init__(self, promptName, key, typeOfPrompt):
-        self.width = 64
-        self.height = 64
-        self.key = key
-        self.typeOfPrompt = typeOfPrompt
-        self.imagePath = Setup.os.path.join("ASSETS", "PROMPTS", promptName)
-        self.image = Setup.setup.loadImage(self.imagePath, self.width, self.height)
-        self.active = False
-
-    def Draw(self, parentBlock, camera):
-        drawX = parentBlock.worldX - camera.left
-        drawY = parentBlock.worldY - camera.top
-        Setup.setup.screen.blit(self.image, (drawX, drawY))    
-
 class GameBackground:
     def __init__(self):
         self.startX, self.startY = 0, 240
         
-        filePath = Setup.os.path.join("ASSETS", "BACKGROUND", "GAME_BACKGROUND_2_IMAGE")
+        filePath = Setup.os.path.join("ASSETS", "BACKGROUND", "GAME_BACKGROUND_1_IMAGE")
         self.blockImage = Setup.setup.loadImage(filePath, Setup.setup.BLOCK_WIDTH * Setup.setup.BLOCKS_WIDE - 160, Setup.setup.BLOCK_WIDTH * Setup.setup.BLOCKS_WIDE - 240)
 
     def DrawImage(self):
@@ -462,33 +452,69 @@ class GameBackground:
         self.startX += moveX
         self.startY -= moveY
 
+class Prompt:
+    def __init__(self, promptName, key):
+        self.width = 64
+        self.height = 64
+        self.key = key
+        self.imagePath = Setup.os.path.join("ASSETS", "PROMPTS", promptName)
+        self.image = Setup.setup.loadImage(self.imagePath, self.width, self.height)
+        self.active = False
+
+    def Draw(self, parentBlock, camera):
+        drawX = parentBlock.worldX - camera.left
+        drawY = parentBlock.worldY - camera.top
+        Setup.setup.screen.blit(self.image, (drawX, drawY))  
+        
+    def PromptInteractedWith(self):
+        if self.active and Setup.setup.pressedKey == Setup.pg.key.key_code(self.key):
+            return True
+
+    def IsPlayerInRange(self, parentBlock, player, camera):
+        if parentBlock.rect.colliderect(player.rect):
+            self.active = True
+            self.Draw(parentBlock, camera)
+            return True
+            
+        self.active = False
+
+class TreaureChest:
+    def __init__(self, parentBlock, item):
+        self.parent = parentBlock
+        self.prompt = Prompt("E_PROMPT_IMAGE", "e")
+        self.openedImage = MapCreator.mapGrid.blockSheetHandler.GetCorrectBlockImage(self.parent.blockNumber + 1, Setup.setup.BLOCK_WIDTH, Setup.setup.BLOCK_WIDTH, Setup.setup.BLOCK_WIDTH, Setup.setup.BLOCK_WIDTH, False, 0)
+        self.chestOpened = False # saved data, has the waypoint been interacted with before
+        self.reward = item
+
+    def IsPlayerInRange(self, player, camera):
+        if not self.chestOpened:
+            if self.prompt.IsPlayerInRange(self.parent, player, camera):
+                self.TreasureChestFunction()
+
+    def TreasureChestFunction(self):
+        if self.prompt.PromptInteractedWith():
+            self.parent.image = self.openedImage
+            self.chestOpened = True
+            print(f"rewarded {self.reward}")
+            # reward item, save opened state and change image
+
 class Waypoint:
     def __init__(self, parentBlock):
         self.parent = parentBlock
-        self.prompt = Prompt("E_PROMPT_IMAGE", "e", "MINI_MAP")
-        self.active = False # saved data, has the waypoint been interacted with before
+        self.prompt = Prompt("E_PROMPT_IMAGE", "e")
+        self.waypointActive = False # saved data, has the waypoint been interacted with before
 
     def IsPlayerInRange(self, player, camera):
-        if self.parent.rect.colliderect(player.rect):
-            self.prompt.active = True
-            self.prompt.Draw(self.parent, camera)
-            self.PromptInteractedWith(player)
-
-        self.prompt.active = False
-
-    def PromptInteractedWith(self, player):
-        if self.prompt.active and Setup.setup.pressedKey == Setup.pg.key.key_code(self.prompt.key):
-            self.active = True
-
-            match self.prompt.typeOfPrompt:
-                case "MINI_MAP":
-                    self.MiniMapFunction(player)
+        if self.prompt.IsPlayerInRange(self.parent, player, camera):
+            self.MiniMapFunction(player)
 
     def MiniMapFunction(self, player):
-        player.miniMap.enlarged = not player.miniMap.enlarged
-        player.miniMap.seeWaypoints = True
-        Setup.pg.mouse.set_visible(not Setup.pg.mouse.get_visible())
-        player.miniMap.CreateWaypointButtons(gameHandler.waypoints)
+        if self.prompt.PromptInteractedWith():
+            self.waypointActive = True
+            player.miniMap.enlarged = not player.miniMap.enlarged
+            player.miniMap.seeWaypoints = True
+            Setup.pg.mouse.set_visible(not Setup.pg.mouse.get_visible())
+            player.miniMap.CreateWaypointButtons(gameHandler.waypoints)
 
 class MiniMap(Setup.pg.sprite.Sprite):
     def __init__(self):
@@ -563,7 +589,7 @@ class MiniMap(Setup.pg.sprite.Sprite):
             locationX = startX + (parentBlock.worldX / shrinkModifier) + (0.25 * 64) - 6
             locationY = startY + (parentBlock.worldY / shrinkModifier) - (0.2 * 64)
 
-            if not waypoint.active:
+            if not waypoint.waypointActive:
                 canFastTravel = "NO"
                 self.waypointButtons.add(Menus.Button(f"WAYPOINT {parentBlock.worldX} {parentBlock.worldY} {canFastTravel}", width, height, locationX, locationY, "INACTIVE_WAYPOINT_IMAGE"))
             else:
@@ -603,15 +629,22 @@ class Camera:
 
     def DisplayMap(self, gameHandler):
         blocks = gameHandler.blocks
+
+        blocksWithPrompts = []
         waypoints = gameHandler.waypoints
+        treasureChests = gameHandler.treasureChests
+
+        blocksWithPrompts.append(waypoints)
+        blocksWithPrompts.append(treasureChests)
 
         for block in blocks:
             drawX = block.worldX - self.camera.left
             drawY = block.worldY - self.camera.top
             Setup.setup.screen.blit(block.image, (drawX, drawY))
 
-        for waypoint in waypoints:
-            waypoint.IsPlayerInRange(self.player, self.camera)
+        for blocks in blocksWithPrompts:
+            for block in blocks:
+                block.IsPlayerInRange(self.player, self.camera)
 
 player = Player("Temporary") 
 gameBackground = GameBackground()
