@@ -8,9 +8,9 @@ class GameHandler(Setup.pg.sprite.Sprite):
         Setup.pg.sprite.Sprite.__init__(self)
                                         
         self.playableMap = [] # 2d list of blocks
-        self.entityMap = [] # will be format [[[]]]
 
         self.blocks = Setup.pg.sprite.Group() # a group of all blocks in the map for easier drawing
+        self.entities = Setup.pg.sprite.Group()
 
         self.blockAttributeDictionary = {0 : [False, 0, 0],
                                      1 : [True, 0, 80],
@@ -58,12 +58,15 @@ class GameHandler(Setup.pg.sprite.Sprite):
                     if block.blockNumber == 19: # treasure chests
                         self.treasureChests.append(TreaureChest(mapBlock, "wooden sword")) # temp reward
 
+                else: # entities (bosses, enemies, NPCs, pathFinders)
+                    pass
+                    
             self.playableMap.append(newRow)
             newRow = []
 
 class MapBlock(Setup.pg.sprite.Sprite): 
     def __init__(self, blockNumber, rotation, originalLocationX, originalLocationY, image, hasCollision, damage, knockback):
-        super().__init__() # init the sprite class
+        super().__init__()
         self.blockNumber = blockNumber
         self.rotation = rotation
         self.worldX = originalLocationX
@@ -126,7 +129,7 @@ class Weapon():
         self.chargingStartTime = 0
         self.mostRecentAbilityTime = 0
 
-        self.tempCounter = 0 # used until attacks have an actual function
+        self.tempCounter = 0 # TODO - used until attacks have an actual function
         self.attackStart = 0
 
     def Attack(self, endInputTime):
@@ -483,7 +486,7 @@ class TreaureChest:
         self.parent = parentBlock
         self.prompt = Prompt("E_PROMPT_IMAGE", "e")
         self.openedImage = MapCreator.mapGrid.blockSheetHandler.GetCorrectBlockImage(self.parent.blockNumber + 1, Setup.setup.BLOCK_WIDTH, Setup.setup.BLOCK_WIDTH, Setup.setup.BLOCK_WIDTH, Setup.setup.BLOCK_WIDTH, False, 0)
-        self.chestOpened = False # saved data, has the waypoint been interacted with before
+        self.chestOpened = False # TODO - saved data, has the waypoint been interacted with before
         self.reward = item
 
     def IsPlayerInRange(self, player, camera):
@@ -495,14 +498,13 @@ class TreaureChest:
         if self.prompt.PromptInteractedWith():
             self.parent.image = self.openedImage
             self.chestOpened = True
-            print(f"rewarded {self.reward}")
-            # reward item, save opened state and change image
+            # TODO - reward item, save opened state
 
 class Waypoint:
     def __init__(self, parentBlock):
         self.parent = parentBlock
         self.prompt = Prompt("E_PROMPT_IMAGE", "e")
-        self.waypointActive = False # saved data, has the waypoint been interacted with before
+        self.waypointActive = False # TODO - saved data, has the waypoint been interacted with before
 
     def IsPlayerInRange(self, player, camera):
         if self.prompt.IsPlayerInRange(self.parent, player, camera):
@@ -645,6 +647,10 @@ class Camera:
         for blocks in blocksWithPrompts:
             for block in blocks:
                 block.IsPlayerInRange(self.player, self.camera)
+
+class NPC(Setup.pg.sprite.Sprite):
+    def __init__(self, parentBlock):
+        self.parent = parentBlock
 
 player = Player("Temporary") 
 gameBackground = GameBackground()

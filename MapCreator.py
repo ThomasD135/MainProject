@@ -110,8 +110,8 @@ class MapGrid():
         self.changedZoom = True
 
         self.blockSheetHandler = BlockSheetExtractor()
-        self.selectedBlock = 0 #between 0 and 47
-        self.numberOfBlocks = 47 # 49 blocks in total
+        self.selectedBlock = 0 #between 0 and 48
+        self.numberOfBlocks = Setup.setup.NUM_OF_UNIQUE_BLOCKS_INDEX # 49 blocks in total
 
         #placement options
         self.deleting = False
@@ -132,8 +132,8 @@ class MapGrid():
     def CreateGridBlocks(self):
         blockRow = []
 
-        for gridYPosition in range(0, 48): 
-            for gridXPosition in range(0, 48): 
+        for gridYPosition in range(0, Setup.setup.BLOCKS_WIDE):
+            for gridXPosition in range(0, Setup.setup.BLOCKS_WIDE): 
                 blockRow.append(Menus.Button("BLOCK", self.blockWidth, self.blockWidth, gridXPosition * self.blockWidth, gridYPosition * self.blockWidth, "", True, self.blockSheetHandler.GetCorrectBlockImage(self.selectedBlock, self.blockWidth, self.blockWidth, self.blockWidth, self.blockWidth, False, self.rotation), self.selectedBlock, self.rotation))
 
             self.blockGrid.append(blockRow)
