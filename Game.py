@@ -2,12 +2,15 @@ import time
 import Setup
 import MapCreator
 import Menus
+import Dijkstra
 
 class GameHandler(Setup.pg.sprite.Sprite):
     def __init__(self):
         Setup.pg.sprite.Sprite.__init__(self)
                                         
         self.playableMap = [] # 2d list of blocks
+        self.weightedGraph = Dijkstra.AdjacencyList()
+        self.weightedGraphNodes = []
 
         self.blocks = Setup.pg.sprite.Group() # a group of all blocks in the map for easier drawing
         self.entities = Setup.pg.sprite.Group()
@@ -60,9 +63,14 @@ class GameHandler(Setup.pg.sprite.Sprite):
 
                 else: # entities (bosses, enemies, NPCs, pathFinders)
                     pass
+                    #if block.blockNumber == 48:
+                    #    self.weightedGraphNodes.append(block)
                     
             self.playableMap.append(newRow)
             newRow = []
+
+    def PopulateGraph(self):
+        pass
 
 class MapBlock(Setup.pg.sprite.Sprite): 
     def __init__(self, blockNumber, rotation, originalLocationX, originalLocationY, image, hasCollision, damage, knockback):
@@ -656,3 +664,4 @@ player = Player("Temporary")
 gameBackground = GameBackground()
 gameHandler = GameHandler()
 gameHandler.CreatePlayableMap()
+gameHandler.PopulateGraph()

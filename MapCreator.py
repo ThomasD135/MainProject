@@ -1,3 +1,4 @@
+from email.policy import default
 import Setup
 import Menus
 
@@ -116,6 +117,7 @@ class MapGrid():
         #placement options
         self.deleting = False
         self.rotation = 0
+        self.mostRecentBlockPlaced = None
 
         #moving around map 
         self.mouseDownPos = 0
@@ -157,12 +159,13 @@ class MapGrid():
         self.CalculateBlocksWithinRange()       
 
         for block in self.blockObjectsInView:
-            if block.CheckClick() != None and not Menus.ButtonGroupMethods.GetButton("DELETE", Menus.mapButtonGroup.buttons).hover:
-                if not Setup.setup.deletingBlocks:
+            if block.CheckClick() != None and not Menus.ButtonGroupMethods.GetButton("DELETE", Menus.mapButtonGroup.buttons).hover: 
+                if not Setup.setup.deletingBlocks: # placing                
                     block.ChangeImageClick("", self.blockSheetHandler.GetCorrectBlockImage(self.selectedBlock, self.originalBlockWidth, self.originalBlockWidth, block.width, block.height, False, self.rotation))
                     block.blockNumber = self.selectedBlock
                     block.rotation = self.rotation
-                else:
+                    self.mostRecentBlockPlaced = block
+                else: # deleting
                     block.ChangeImageClick("", self.blockSheetHandler.GetCorrectBlockImage(0, self.originalBlockWidth, self.originalBlockWidth, block.width, block.height, False, 0))        
                     block.blockNumber = 0
                     block.rotation = 0
@@ -176,6 +179,8 @@ class MapGrid():
                 if not block.hover and (block.imageType == "HOVER" or self.changedZoom):  
                     block.ChangeImageClick("", self.blockSheetHandler.GetCorrectBlockImage(block.blockNumber, self.originalBlockWidth, self.originalBlockWidth, block.width, block.height, False, block.rotation))
                     block.imageType = "NORMAL"
+
+                self.PathFindingWaypoints(block)
 
         self.changedZoom = False
 
@@ -213,6 +218,12 @@ class MapGrid():
         self.movedX = self.movedXTotal + (currentMousePos[0] - self.mouseDownPos[0])
         self.movedY = self.movedYTotal + (currentMousePos[1] - self.mouseDownPos[1]) 
 
+    def PathFindingWaypoints(self, block):
+        if block.blockNumber == 48 and block.DoesTextExist("PATHFINDING"): # path finding waypoint
+            block.CreateText("PATHFINDING", "10") 
+
+        block.UpdateText()
+
     def ChangeSelectedBlock(self):
         if Setup.pg.mouse.get_pressed()[2]: #right click 
             if not self.mouseButtonDown:
@@ -243,7 +254,7 @@ class MapGrid():
                     self.zoomFactor += 0.05
 
             case 5: # mouse wheel scrolling down
-                if self.zoomFactor > 0.25: # 4x smaller 
+                if self.zoomFactor > 0.2: # 5x smaller 
                     self.changedZoom = True
                     self.zoomFactor -= 0.05
 

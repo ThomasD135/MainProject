@@ -30,6 +30,7 @@
     <Compile Include="Game.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Dijkstra.py" />
     <Compile Include="Setup.py">
       <SubType>Code</SubType>
     </Compile>

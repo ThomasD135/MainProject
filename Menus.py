@@ -8,6 +8,7 @@ class Button(Setup.pg.sprite.Sprite):
         Setup.pg.sprite.Sprite.__init__(self)
 
         self.name = name
+        self.textList = []
 
         self.width = width
         self.height = height
@@ -78,6 +79,34 @@ class Button(Setup.pg.sprite.Sprite):
         else:
             self.image = sheetImage
 
+    def CenterText(self):
+        for text in self.textList:
+            text.locationX = self.rect.center[0]
+            text.locationY = self.rect.center[1]
+
+    def ChangeText(self, name, newText):
+        searchedText = Setup.TextMethods.GetText(name, self.textList)
+
+        if searchedText != None:
+            searchedText.text = newText
+
+    def CreateText(self, name, text):
+        text = Setup.TextMethods.CreateText(name, text, Setup.setup.GREEN, 0, 0, 40)
+        self.textList.append(text)
+
+    def UpdateText(self):
+        self.CenterText()
+        print(self.textList)
+        Setup.TextMethods.UpdateText(self.textList)
+
+    def DoesTextExist(self, name):
+        searchedText = Setup.TextMethods.GetText(name, self.textList)
+
+        if searchedText == None:
+            return False
+
+        return True
+        
 class SlidingButton(Button):
     def __init__(self, name, width, height, locationX, locationY, filePathImage, length, isSheetImage, sheetSurface):
         super().__init__(name, width, height, locationX, locationY, filePathImage, isSheetImage, sheetSurface) # calls the Button __init__ function
