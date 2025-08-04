@@ -117,7 +117,6 @@ class MapGrid():
         #placement options
         self.deleting = False
         self.rotation = 0
-        self.mostRecentBlockPlaced = None
 
         #moving around map 
         self.mouseDownPos = 0
@@ -142,18 +141,12 @@ class MapGrid():
             blockRow = [] 
 
     def CalculateBlocksWithinRange(self):  
-        if self.changedZoom or self.changedLocationMovement:
-            self.changedLocationMovement = False
+        self.blockObjectsInView.empty()
 
-            self.blockObjectsInView.empty()
-
-            userXCordCenter = Setup.setup.WIDTH // 2
-            userYCordCenter = Setup.setup.HEIGHT // 2
-             
-            for row in self.blockGrid:
-                for block in row:   
-                    if abs(block.locationX - userXCordCenter) < (Setup.setup.WIDTH // 2) + self.blockWidth and abs(block.locationY - userYCordCenter) < (Setup.setup.HEIGHT // 2) + self.blockWidth:
-                        self.blockObjectsInView.add(block)  
+        for row in self.blockGrid:
+            for block in row:
+                if Setup.setup.screenRect.colliderect(block.rect):
+                    self.blockObjectsInView.add(block)
                          
     def UpdateGridBlocks(self):
         self.CalculateBlocksWithinRange()       
@@ -162,11 +155,12 @@ class MapGrid():
             if block.CheckClick() != None and not Menus.ButtonGroupMethods.GetButton("DELETE", Menus.mapButtonGroup.buttons).hover: 
                 if not Setup.setup.deletingBlocks: # placing                
                     block.ChangeImageClick("", self.blockSheetHandler.GetCorrectBlockImage(self.selectedBlock, self.originalBlockWidth, self.originalBlockWidth, block.width, block.height, False, self.rotation))
+                    block.baseImage = block.image
                     block.blockNumber = self.selectedBlock
                     block.rotation = self.rotation
-                    self.mostRecentBlockPlaced = block
                 else: # deleting
                     block.ChangeImageClick("", self.blockSheetHandler.GetCorrectBlockImage(0, self.originalBlockWidth, self.originalBlockWidth, block.width, block.height, False, 0))        
+                    block.baseImage = block.image
                     block.blockNumber = 0
                     block.rotation = 0
 
@@ -174,15 +168,11 @@ class MapGrid():
                 block.ChangeImageClick("", self.blockSheetHandler.GetCorrectBlockImage(block.blockNumber, self.originalBlockWidth, self.originalBlockWidth, block.width, block.height, True, block.rotation))
                 block.imageType = "HOVER"
 
-        for row in self.blockGrid:
-            for block in row:
-                if not block.hover and (block.imageType == "HOVER" or self.changedZoom):  
-                    block.ChangeImageClick("", self.blockSheetHandler.GetCorrectBlockImage(block.blockNumber, self.originalBlockWidth, self.originalBlockWidth, block.width, block.height, False, block.rotation))
-                    block.imageType = "NORMAL"
+            elif block.imageType == "HOVER" and not block.hover:
+                block.ChangeImageClick("", self.blockSheetHandler.GetCorrectBlockImage(block.blockNumber, self.originalBlockWidth, self.originalBlockWidth, block.width, block.height, False, block.rotation))
+                block.imageType = "NORMAL"
 
-                self.PathFindingWaypoints(block)
-
-        self.changedZoom = False
+            self.PathFindingWaypoints(block)
 
         self.blockObjectsInView.update() 
         self.blockObjectsInView.draw(Setup.setup.screen)
@@ -193,6 +183,9 @@ class MapGrid():
         self.ChangeSelectedBlock()
         self.ShowSelectedBlock()
         self.UpdateBlockSizes() 
+
+        self.changedZoom = False
+        self.changedLocationMovement = False
 
     def UpdateBlockSizes(self):
         if self.changedZoom or self.changedLocationMovement:
@@ -206,7 +199,7 @@ class MapGrid():
                     block.width = self.blockWidth
                     block.height = self.blockWidth 
 
-                    block.image = Setup.pg.transform.scale(block.image, (block.width, block.height)) 
+                    block.image = Setup.pg.transform.scale(block.baseImage, (block.width, block.height)) 
                     block.rect = block.image.get_rect()
                     block.rect.center = (block.locationX, block.locationY) 
 
@@ -219,7 +212,7 @@ class MapGrid():
         self.movedY = self.movedYTotal + (currentMousePos[1] - self.mouseDownPos[1]) 
 
     def PathFindingWaypoints(self, block):
-        if block.blockNumber == 48 and block.DoesTextExist("PATHFINDING"): # path finding waypoint
+        if block.blockNumber == 48 and not block.DoesTextExist("PATHFINDING"): # path finding waypoint
             block.CreateText("PATHFINDING", "10") 
 
         block.UpdateText()

@@ -372,7 +372,6 @@ class Player(Setup.pg.sprite.Sprite):
 
     def Update(self):
         self.Inputs()
-        gameBackground.MoveImage(-self.movementSpeeds[0], self.movementSpeeds[1])
 
         if self.playerXCarriedMovingSpeed != 0:
             self.movementSpeeds[0] = self.playerXCarriedMovingSpeed
@@ -404,7 +403,7 @@ class Player(Setup.pg.sprite.Sprite):
             self.playerYFallingSpeed = 0
             self.movementSpeeds[1] = 0
 
-        if collisions['left'] or collisions['right']: # to avoid background moving when player is stuck on an object
+        if collisions['left'] or collisions['right']: 
             self.movementSpeeds[0] = 0
 
         if self.mostRecentDirection == "LEFT":
@@ -412,7 +411,6 @@ class Player(Setup.pg.sprite.Sprite):
         else:
             self.UpdateCurrentImage(False)
 
-        
         self.camera.Update()
         self.camera.DisplayMap(gameHandler)
         self.miniMap.ChangeScale()
@@ -450,18 +448,13 @@ class Player(Setup.pg.sprite.Sprite):
             self.spell.Attack(self.mana)
 
 class GameBackground:
-    def __init__(self):
-        self.startX, self.startY = 0, 240
-        
+    def __init__(self):  
         filePath = Setup.os.path.join("ASSETS", "BACKGROUND", "GAME_BACKGROUND_1_IMAGE")
-        self.blockImage = Setup.setup.loadImage(filePath, Setup.setup.BLOCK_WIDTH * Setup.setup.BLOCKS_WIDE - 160, Setup.setup.BLOCK_WIDTH * Setup.setup.BLOCKS_WIDE - 240)
+        self.blockImage = Setup.setup.loadImage(filePath, Setup.setup.BLOCK_WIDTH * Setup.setup.BLOCKS_WIDE, Setup.setup.BLOCK_WIDTH * Setup.setup.BLOCKS_WIDE)
 
     def DrawImage(self):
-        Setup.setup.screen.blit(self.blockImage, (self.startX, self.startY))
-
-    def MoveImage(self, moveX, moveY):
-        self.startX += moveX
-        self.startY -= moveY
+        topLeftBlock = gameHandler.playableMap[0][0]
+        Setup.setup.screen.blit(self.blockImage, (topLeftBlock.rect.left, topLeftBlock.rect.top))
 
 class Prompt:
     def __init__(self, promptName, key):

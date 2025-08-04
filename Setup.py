@@ -10,6 +10,7 @@ class Setup():
         self.FPS = 60 
         self.run = True
         self.screen = pg.display.set_mode((0, 0), pg.FULLSCREEN)
+        self.screenRect = self.screen.get_rect()
         self.clock = pg.time.Clock()
 
         self.WHITE = (255, 255, 255)
@@ -74,14 +75,17 @@ class FontHandler():
         self.size = size
 
         self.font = pg.font.SysFont('Comic Sans MS', size)
+        self.surface = self.font.render(text, True, colour)
+        self.rect = self.surface.get_rect(center=(locationX, locationY))
 
     def Draw(self):     
-        self.textSurface = self.font.render(self.text, False, self.colour)
+        setup.screen.blit(self.surface, self.rect) # draw given text on the screen
 
-        self.rect = self.textSurface.get_rect()
-        self.rect.center = (self.locationX, self.locationY)
-
-        setup.screen.blit(self.textSurface, self.rect) # draw given text on the screen
+    def SetText(self, newText):
+        if newText != self.text:
+            self.text = newText
+            self.surface = self.font.render(self.text, True, self.colour)
+            self.rect = self.surface.get_rect(center=(self.locationX, self.locationY))
 
 class SpriteSheet():
     def __init__(self, image, sheetObject, totalWidth):

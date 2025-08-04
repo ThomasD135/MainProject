@@ -23,6 +23,7 @@ class Button(Setup.pg.sprite.Sprite):
             self.image = Setup.pg.transform.scale(self.image, (self.width, self.height)) 
             self.isBlock = False
         else: # blocks and entities
+            self.baseImage = sheetSurface
             self.image = sheetSurface         
             self.blockNumber = blockNumber
             self.rotation = rotation
@@ -83,12 +84,13 @@ class Button(Setup.pg.sprite.Sprite):
         for text in self.textList:
             text.locationX = self.rect.center[0]
             text.locationY = self.rect.center[1]
+            text.rect = text.surface.get_rect(center=(text.locationX, text.locationY))
 
     def ChangeText(self, name, newText):
         searchedText = Setup.TextMethods.GetText(name, self.textList)
 
         if searchedText != None:
-            searchedText.text = newText
+            searchedText.SetText(newText)
 
     def CreateText(self, name, text):
         text = Setup.TextMethods.CreateText(name, text, Setup.setup.GREEN, 0, 0, 40)
@@ -96,7 +98,6 @@ class Button(Setup.pg.sprite.Sprite):
 
     def UpdateText(self):
         self.CenterText()
-        print(self.textList)
         Setup.TextMethods.UpdateText(self.textList)
 
     def DoesTextExist(self, name):
