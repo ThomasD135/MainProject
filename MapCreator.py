@@ -153,11 +153,12 @@ class MapGrid():
 
         for block in self.blockObjectsInView:
             if block.CheckClick() != None and not Menus.ButtonGroupMethods.GetButton("DELETE", Menus.mapButtonGroup.buttons).hover: 
-                if not Setup.setup.deletingBlocks: # placing                
-                    block.ChangeImageClick("", self.blockSheetHandler.GetCorrectBlockImage(self.selectedBlock, self.originalBlockWidth, self.originalBlockWidth, block.width, block.height, False, self.rotation))
-                    block.baseImage = block.image
-                    block.blockNumber = self.selectedBlock
-                    block.rotation = self.rotation
+                if not Setup.setup.deletingBlocks: # placing        
+                    if (block.blockNumber != self.selectedBlock or block.rotation != self.rotation):
+                        block.ChangeImageClick("", self.blockSheetHandler.GetCorrectBlockImage(self.selectedBlock, self.originalBlockWidth, self.originalBlockWidth, block.width, block.height, False, self.rotation))
+                        block.baseImage = block.image
+                        block.blockNumber = self.selectedBlock
+                        block.rotation = self.rotation
                 else: # deleting
                     block.ChangeImageClick("", self.blockSheetHandler.GetCorrectBlockImage(0, self.originalBlockWidth, self.originalBlockWidth, block.width, block.height, False, 0))        
                     block.baseImage = block.image
@@ -172,10 +173,11 @@ class MapGrid():
                 block.ChangeImageClick("", self.blockSheetHandler.GetCorrectBlockImage(block.blockNumber, self.originalBlockWidth, self.originalBlockWidth, block.width, block.height, False, block.rotation))
                 block.imageType = "NORMAL"
 
-            self.PathFindingWaypoints(block)
-
         self.blockObjectsInView.update() 
         self.blockObjectsInView.draw(Setup.setup.screen)
+
+        for block in self.blockObjectsInView:
+            self.PathFindingWaypoints(block)
 
         if self.mouseButtonDown:
             self.MoveAroundMap()
@@ -213,7 +215,7 @@ class MapGrid():
 
     def PathFindingWaypoints(self, block):
         if block.blockNumber == 48 and not block.DoesTextExist("PATHFINDING"): # path finding waypoint
-            block.CreateText("PATHFINDING", "10") 
+            Setup.setup.textInputBoxes.append(Setup.InputBox(block, "PATHFINDING", 2))
 
         block.UpdateText()
 

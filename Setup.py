@@ -1,3 +1,4 @@
+from itertools import pairwise
 import os
 import time
 import pygame as pg
@@ -31,6 +32,7 @@ class Setup():
         self.volume = 0
 
         self.pressedKey = None
+        self.textInputBoxes = []
 
         #map attributes
         self.gameState = "MENU"
@@ -41,6 +43,9 @@ class Setup():
 
     def events(self):
         for event in pg.event.get():
+            for box in self.textInputBoxes:
+                box.UserInteraction(event)
+
             if event.type == pg.QUIT: # closes if the user clicks the X button on the pygame window
                 self.run = False
                 return True # return true to only press once - important for rotation and changing selected block
@@ -64,6 +69,37 @@ class Setup():
         image = pg.transform.scale(image, (width, height))
         return image
 
+class InputBox():
+    def __init__(self, parent, name, maxLength):
+        self.parent = parent
+        self.name = name
+        self.maxLength = maxLength
+        self.active = False # can enter text
+        self.text = ""
+
+        self.parent.CreateText(self.name, self.text)
+
+    def UserInteraction(self, event):
+        self.rect = self.parent.rect
+
+        if event.type == pg.MOUSEBUTTONDOWN:
+            if self.rect.collidepoint(event.pos):
+                self.active = not self.active
+                self.parent.ChangeText(self.name, self.text)
+            else:
+                self.active = False
+
+        if event.type == pg.KEYDOWN and self.active:
+            if event.key == pg.K_RETURN:
+                self.text = ""
+                self.active = False
+            elif event.key == pg.K_BACKSPACE:
+                self.text = self.text[:-1]
+                self.parent.ChangeText(self.name, self.text)
+            else:
+                if len(self.text) < self.maxLength:
+                    self.text += event.unicode
+                    self.parent.ChangeText(self.name, self.text)
 
 class FontHandler():
     def __init__(self, name, text, colour, locationX, locationY, size):
