@@ -1,11 +1,6 @@
-from email.policy import default
+from re import X
 import Setup
 import Menus
-
-#NOTE TO SELF (DELETE LATER) 
-#THE CURRENT BLOCK GRID IS MADE OF BUTTONS, THIS IS NOT CORRECT FOR THE PLAYABLE GAME
-#IN THE MAIN GAME, MAKE A NEW GRID AND MAKE A NEW BLOCK CLASS TO STORE ALL APPROPRIATE DETALS
-#ALSO, CREATE ENTITIES IN THEIR CORRECT SIZES IN THE MAIN GAME, PLACEMENT WILL HAVE ALL IMAGES BE THE SAME SIZES
 
 class BlockSheetExtractor():
     def __init__(self):
@@ -49,6 +44,20 @@ class MapDataHandling():
                     block.rotation %= -360
 
                 dataLine += str(block.rotation // -90) # 0 for no rotation, 1 for a 90 degree rotation. Keeps data stored as a single number. Using -90 to avoid storing a negative sign (fixed in data loading)
+                
+                if block.DoesTextExist("PATHFINDING"):
+                    if len(block.textList[0].text) != 0:
+                        blockNodeNumber = int(block.textList[0].text)
+                    else:
+                        blockNodeNumber = 99
+
+                    if blockNodeNumber >= 10:
+                        dataLine += str(blockNodeNumber)
+                    else:
+                        dataLine += "0" + str(blockNodeNumber)
+                else:
+                    dataLine += "99"
+    
                 dataLine += " "
 
             dataLine += "\n" 
@@ -76,8 +85,11 @@ class MapDataHandling():
             for XPosition in range(len(lineData)):
                 blockNumber = int(lineData[XPosition][0] + lineData[XPosition][1]) 
                 rotation = int(lineData[XPosition][2]) * -90
+                blockNodeNumber = lineData[XPosition][3] + lineData[XPosition][4]
 
-                row.append(Menus.Button("BLOCK", blockWidth, blockWidth, XPosition * blockWidth, YPosition * blockWidth, "", True, mapGrid.blockSheetHandler.GetCorrectBlockImage(blockNumber, blockWidth, blockWidth, blockWidth, blockWidth, False, rotation), blockNumber, rotation))
+                newBlock = Menus.Button("BLOCK", blockWidth, blockWidth, XPosition * blockWidth, YPosition * blockWidth, "", True, mapGrid.blockSheetHandler.GetCorrectBlockImage(blockNumber, blockWidth, blockWidth, blockWidth, blockWidth, False, rotation), blockNumber, rotation)
+                mapGrid.PathFindingWaypoints(newBlock, blockNodeNumber)
+                row.append(newBlock)
 
             grid.append(row)
             row = []
@@ -152,7 +164,7 @@ class MapGrid():
         self.CalculateBlocksWithinRange()       
 
         for block in self.blockObjectsInView:
-            if block.CheckClick() != None and not Menus.ButtonGroupMethods.GetButton("DELETE", Menus.mapButtonGroup.buttons).hover: 
+            if block.CheckClick() != None and not Menus.ButtonGroupMethods.GetButton("DELETE", Menus.mapButtonGroup.buttons).hover and not Menus.ButtonGroupMethods.GetButton("EXIT", Menus.mapButtonGroup.buttons).hover: 
                 if not Setup.setup.deletingBlocks: # placing        
                     if (block.blockNumber != self.selectedBlock or block.rotation != self.rotation):
                         block.ChangeImageClick("", self.blockSheetHandler.GetCorrectBlockImage(self.selectedBlock, self.originalBlockWidth, self.originalBlockWidth, block.width, block.height, False, self.rotation))
@@ -164,6 +176,7 @@ class MapGrid():
                     block.baseImage = block.image
                     block.blockNumber = 0
                     block.rotation = 0
+                    block.textList = []
 
             if block.hover and block.imageType == "NORMAL":
                 block.ChangeImageClick("", self.blockSheetHandler.GetCorrectBlockImage(block.blockNumber, self.originalBlockWidth, self.originalBlockWidth, block.width, block.height, True, block.rotation))
@@ -213,9 +226,9 @@ class MapGrid():
         self.movedX = self.movedXTotal + (currentMousePos[0] - self.mouseDownPos[0])
         self.movedY = self.movedYTotal + (currentMousePos[1] - self.mouseDownPos[1]) 
 
-    def PathFindingWaypoints(self, block):
+    def PathFindingWaypoints(self, block, existingText=""):
         if block.blockNumber == 48 and not block.DoesTextExist("PATHFINDING"): # path finding waypoint
-            Setup.setup.textInputBoxes.append(Setup.InputBox(block, "PATHFINDING", 2))
+            Setup.setup.textInputBoxes.append(Setup.InputBox(block, "PATHFINDING", 2, existingText))
 
         block.UpdateText()
 

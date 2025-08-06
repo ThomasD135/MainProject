@@ -1,4 +1,3 @@
-from itertools import pairwise
 import os
 import time
 import pygame as pg
@@ -70,12 +69,12 @@ class Setup():
         return image
 
 class InputBox():
-    def __init__(self, parent, name, maxLength):
+    def __init__(self, parent, name, maxLength, existingText=""):
         self.parent = parent
         self.name = name
-        self.maxLength = maxLength
+        self.maxLength = maxLength # number of characters
         self.active = False # can enter text
-        self.text = ""
+        self.text = existingText
 
         self.parent.CreateText(self.name, self.text)
 
@@ -98,8 +97,9 @@ class InputBox():
                 self.parent.ChangeText(self.name, self.text)
             else:
                 if len(self.text) < self.maxLength:
-                    self.text += event.unicode
-                    self.parent.ChangeText(self.name, self.text)
+                    if (event.unicode).isnumeric():
+                        self.text += event.unicode
+                        self.parent.ChangeText(self.name, self.text)
 
 class FontHandler():
     def __init__(self, name, text, colour, locationX, locationY, size):

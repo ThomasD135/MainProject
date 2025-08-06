@@ -93,7 +93,7 @@ class Button(Setup.pg.sprite.Sprite):
             searchedText.SetText(newText)
 
     def CreateText(self, name, text):
-        text = Setup.TextMethods.CreateText(name, text, Setup.setup.BLUE, 0, 0, 15)
+        text = Setup.TextMethods.CreateText(name, text, Setup.setup.BLUE, 0, 0, 10)
         self.textList.append(text)
 
     def UpdateText(self):

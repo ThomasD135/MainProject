@@ -9,8 +9,8 @@ class GameHandler(Setup.pg.sprite.Sprite):
         Setup.pg.sprite.Sprite.__init__(self)
                                         
         self.playableMap = [] # 2d list of blocks
-        self.weightedGraph = Dijkstra.AdjacencyList()
-        self.weightedGraphNodes = []
+        self.weightedAdjacencyList = Dijkstra.AdjacencyList()
+        self.pathfindingWaypointBlocks = []
 
         self.blocks = Setup.pg.sprite.Group() # a group of all blocks in the map for easier drawing
         self.entities = Setup.pg.sprite.Group()
@@ -62,15 +62,47 @@ class GameHandler(Setup.pg.sprite.Sprite):
                         self.treasureChests.append(TreaureChest(mapBlock, "wooden sword")) # temp reward
 
                 else: # entities (bosses, enemies, NPCs, pathFinders)
-                    pass
-                    #if block.blockNumber == 48:
-                    #    self.weightedGraphNodes.append(block)
-                    
+                    if block.blockNumber == 48:    
+                        self.pathfindingWaypointBlocks.append(block) 
+
             self.playableMap.append(newRow)
             newRow = []
 
-    def PopulateGraph(self):
-        pass
+        self.PopulateGraph(self.pathfindingWaypointBlocks)
+
+    def PopulateGraph(self, blocks):
+        blockNumberToObject = {}
+
+        unweightedAdjacencyList = {0 : [1],
+                                   1 : [0, 2, 3, 4],
+                                   2 : [1],
+                                   3 : [1],
+                                   4 : [1, 5],
+                                   5 : [4]
+                                   }
+
+        for block in blocks: # populate blockNumberToObject
+            if block.DoesTextExist("PATHFINDING"):
+                blockNodeNumber = int(block.textList[0].text)
+
+                if blockNodeNumber not in blockNumberToObject:
+                    blockNumberToObject.update({blockNodeNumber : block})
+            
+        for x in range(0, len(blocks)): # extract neighbours and populate weightedAdjacencyList
+            block = blockNumberToObject[x] # orders the weightedGraph - better display of the grpah when printed
+
+            if block.DoesTextExist("PATHFINDING"):
+                blockNodeNumber = int(block.textList[0].text)
+
+                blockNeighbours = unweightedAdjacencyList[blockNodeNumber]            
+                blockNeighboursObjects = []
+
+                for neighbour in blockNeighbours:
+                    blockNeighboursObjects.append(blockNumberToObject[neighbour])
+
+                self.weightedAdjacencyList.PopulateGraph(block, blockNeighboursObjects, blockNodeNumber, blockNeighbours)
+
+        print(self.weightedAdjacencyList.weightedGraph)
 
 class MapBlock(Setup.pg.sprite.Sprite): 
     def __init__(self, blockNumber, rotation, originalLocationX, originalLocationY, image, hasCollision, damage, knockback):
@@ -657,4 +689,3 @@ player = Player("Temporary")
 gameBackground = GameBackground()
 gameHandler = GameHandler()
 gameHandler.CreatePlayableMap()
-gameHandler.PopulateGraph()
