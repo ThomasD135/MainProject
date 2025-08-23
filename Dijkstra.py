@@ -30,6 +30,9 @@ class PriorityQueue:
         self.queue = []
 
     def PeekHighestPriority(self):
+        if self.IsEmpty():
+            raise IndexError("Queue is empty (peek)")
+
         return self.queue[0]
 
     def IsEmpty(self):
@@ -55,22 +58,22 @@ class PriorityQueue:
                     self.queue.append(itemToAdd)
             
     def Dequeue(self): 
-        if not self.IsEmpty():
-            return self.queue.pop(0)
-
-        return None
+        if self.IsEmpty():
+            raise IndexError("Queue is empty (dequeue)")
+            
+        return self.queue.pop(0)
 
 class DijkstraImplementation:
     def __init__(self, graph):
         self.graph = graph
         self.priorityQueue = PriorityQueue()
-        self.unvisitedNodes = []
+        self.unvisitedNodes = set()
         self.tentativeDistances = {}
         self.predecessors = {} # used to be able to recall the shortest path
 
     def PopulateInitialListsDicts(self, startNode):
         for node in self.graph:
-            self.unvisitedNodes.append(node)
+            self.unvisitedNodes.add(node)
             self.predecessors.update({node : None})
 
             if node == startNode:
@@ -79,17 +82,33 @@ class DijkstraImplementation:
                 self.tentativeDistances.update({node : Setup.sys.maxsize})
 
     def UpdateQueue(self, currentNode):
+        if currentNode not in self.graph:
+            raise KeyError(f"{currentNode} not in graph")
+        
         neighbours = self.graph[currentNode]
 
-        for neighbourNode, neighbourNodeDistance in neighbours.items():
-            tentative = self.tentativeDistances[currentNode] + neighbourNodeDistance
+        if neighbours:
+            for neighbourNode, neighbourNodeDistance in neighbours.items():
+                tentative = self.tentativeDistances[currentNode] + neighbourNodeDistance
 
-            if tentative < self.tentativeDistances[neighbourNode]:
-                self.tentativeDistances[neighbourNode] = tentative
-                self.predecessors[neighbourNode] = currentNode
-                self.priorityQueue.Enqueue(neighbourNode, tentative)
+                if neighbourNode not in self.tentativeDistances:
+                    raise KeyError(f"{neighbourNode} not in tentativeDistances")
+            
+                if tentative < self.tentativeDistances[neighbourNode]:
+                    self.tentativeDistances[neighbourNode] = tentative
+                    self.predecessors[neighbourNode] = currentNode
+                    self.priorityQueue.Enqueue(neighbourNode, tentative)
 
     def PerformAlgorithm(self, startNode, goalNode):
+        if not self.graph:
+            raise ValueError("Graph is empty")
+
+        if startNode not in self.graph:
+            raise ValueError(f"{startNode} not in graph.")
+
+        if goalNode not in self.graph:
+            raise ValueError(f"{goalNode} not in graph.")
+
         self.PopulateInitialListsDicts(startNode)
         self.priorityQueue.Enqueue(startNode, 0)
 
@@ -111,4 +130,4 @@ class DijkstraImplementation:
             shortestPath.insert(0, current)
             current = self.predecessors[current]
 
-        return shortestPath
+        return shortestPath 

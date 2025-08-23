@@ -72,43 +72,42 @@ class GameHandler(Setup.pg.sprite.Sprite):
         self.PopulateGraph(self.pathfindingWaypointBlocks)
 
     def PopulateGraph(self, blocks):
-        blockNumberToObject = {}
+        self.blockNumberToObject = {}
 
-        unweightedAdjacencyList = {0 : [1],
-                                   1 : [0, 2, 3, 4],
-                                   2 : [1, 6],
-                                   3 : [1],
-                                   4 : [1, 5],
-                                   5 : [4, 6],
-                                   6 : [2, 5]
+        unweightedAdjacencyList = {0 : [1, 5, 9],
+                                   1 : [0, 2],
+                                   2 : [1, 4, 6],
+                                   4 : [2],
+                                   5 : [0, 6],
+                                   6 : [5, 2],
+                                   9 : [0]
                                    }
         
         for block in blocks: # populate blockNumberToObject
             if block.DoesTextExist("PATHFINDING"):
                 blockNodeNumber = int(block.textList[0].text)
 
-                if blockNodeNumber not in blockNumberToObject:
-                    blockNumberToObject.update({blockNodeNumber : block})
+                if blockNodeNumber not in self.blockNumberToObject:
+                    self.blockNumberToObject.update({blockNodeNumber : block})
             
-        for x in range(0, len(blocks)): # extract neighbours and populate weightedAdjacencyList
-            block = blockNumberToObject[x] # orders the weightedGraph - better display of the grpah when printed
+        for x in range(0, list(unweightedAdjacencyList.keys())[-1] + 1): # extract neighbours and populate weightedAdjacencyList
+            if x in self.blockNumberToObject:
+                block = self.blockNumberToObject[x] # orders the weightedGraph - better display of the grpah when printed
 
-            if block.DoesTextExist("PATHFINDING"):
-                blockNodeNumber = int(block.textList[0].text)
+                if block.DoesTextExist("PATHFINDING"):
+                    blockNodeNumber = int(block.textList[0].text)
 
-                if blockNodeNumber in unweightedAdjacencyList:
-                    blockNeighbours = unweightedAdjacencyList[blockNodeNumber]            
-                    blockNeighboursObjects = []
+                    if blockNodeNumber in unweightedAdjacencyList:
+                        blockNeighbours = unweightedAdjacencyList[blockNodeNumber]            
+                        blockNeighboursObjects = []
 
-                    for neighbour in blockNeighbours:
-                        blockNeighboursObjects.append(blockNumberToObject[neighbour])
+                        for neighbour in blockNeighbours:
+                            if neighbour in self.blockNumberToObject:
+                                blockNeighboursObjects.append(self.blockNumberToObject[neighbour])
 
-                    self.weightedAdjacencyList.PopulateGraph(block, blockNeighboursObjects, blockNodeNumber, blockNeighbours)
+                        self.weightedAdjacencyList.PopulateGraph(block, blockNeighboursObjects, blockNodeNumber, blockNeighbours)   
 
         self.dijkstraGraph = Dijkstra.DijkstraImplementation(self.weightedAdjacencyList.weightedGraph)
-        self.dijkstraGraph.PerformAlgorithm(0, 6)
-        print("Distances:", self.dijkstraGraph.tentativeDistances)
-        print("Path:", self.dijkstraGraph.RecallShortestPath(6))
 
 class MapBlock(Setup.pg.sprite.Sprite): 
     def __init__(self, blockNumber, rotation, originalLocationX, originalLocationY, image, hasCollision, damage, knockback):
@@ -454,6 +453,7 @@ class Player(Setup.pg.sprite.Sprite):
         self.miniMap.ChangeScale()
         self.miniMap.DrawMap(gameHandler.blocks, self)
         self.miniMap.DrawWaypoints(self)
+        self.miniMap.pathGuide.FindNearestNode(self)
         self.Attack()
         self.AbilitySpell()
         self.weapon.Update()
@@ -570,6 +570,8 @@ class MiniMap(Setup.pg.sprite.Sprite):
         self.playerIconImage = Setup.setup.loadImage(self.playerIconFile, self.playerIconWidth, self.playerIconHeight)
 
         self.waypointButtons = Setup.pg.sprite.Group()
+        
+        self.pathGuide = PathGuide()
 
     def ChangeScale(self):
         if Setup.setup.pressedKey == Setup.pg.key.key_code("m"):
@@ -609,6 +611,7 @@ class MiniMap(Setup.pg.sprite.Sprite):
         
         newPlayerX, newPlayerY = player.worldX / shrinkModifier, player.worldY / shrinkModifier
         
+        self.pathGuide.DrawPathGuide(shrinkModifier, startX, startY)
         self.MapFragments(player, startX, startY, shrinkModifier)
         if not self.enlarged:  
             self.playerIconImage = Setup.setup.loadImage(self.playerIconFile, self.playerIconWidth, self.playerIconHeight)
@@ -657,6 +660,56 @@ class MiniMap(Setup.pg.sprite.Sprite):
                     player.worldY = locationY
                     player.miniMap.enlarged = False
                     Setup.pg.mouse.set_visible(False)
+
+class PathGuide:
+    def __init__(self):
+        self.path = []
+        self.pathBlockObjects = []
+        self.startNode = None
+        self.endNode = None
+        self.active = True
+
+    def FindNearestNode(self, player):
+        if self.active:
+            pathfindingWaypointBlocks = gameHandler.pathfindingWaypointBlocks
+            smallestDistance = Setup.sys.maxsize
+
+            for block in pathfindingWaypointBlocks:
+                distance = Setup.math.sqrt((block.originalLocationX - player.worldX) ** 2 + (block.originalLocationY - player.worldY) ** 2)
+                if distance < smallestDistance:
+                    smallestDistance = distance
+
+                    if block.DoesTextExist("PATHFINDING"):
+                        nearestNode = int(block.textList[0].text)
+
+            newEndNode = 6 # click somewhere
+
+            if nearestNode != self.startNode or newEndNode != self.endNode:
+                self.startNode = nearestNode
+                self.endNode = newEndNode
+                self.PerformAlgorithm() # only calculate new route if a node changes
+
+    def PerformAlgorithm(self):
+        blockNumberToObject = gameHandler.blockNumberToObject
+        dijkstraGraph = gameHandler.dijkstraGraph
+        dijkstraGraph.PerformAlgorithm(self.startNode, self.endNode)
+
+        self.path = self.path = dijkstraGraph.RecallShortestPath(self.endNode)
+        self.pathBlockObjects = []
+
+        for blockNumber in self.path:
+            if blockNumber in blockNumberToObject:
+                self.pathBlockObjects.append(blockNumberToObject[blockNumber])
+
+    def DrawPathGuide(self, shrinkModifier, startX, startY):
+        if self.active:
+            for blockIndex in range(0, len(self.path) - 1):
+                blockStartX, blockStartY = self.pathBlockObjects[blockIndex].originalLocationX, self.pathBlockObjects[blockIndex].originalLocationY
+                blockEndX, blockEndY = self.pathBlockObjects[blockIndex + 1].originalLocationX, self.pathBlockObjects[blockIndex + 1].originalLocationY
+
+                blockStartCords = (blockStartX // shrinkModifier + startX, blockStartY // shrinkModifier + startY) # for mini map
+                blockEndCords = (blockEndX // shrinkModifier + startX, blockEndY // shrinkModifier + startY) 
+                Setup.pg.draw.line(Setup.setup.screen, Setup.setup.RED, blockStartCords, blockEndCords, 80 // shrinkModifier)            
 
 class Camera:
     def __init__(self, player):

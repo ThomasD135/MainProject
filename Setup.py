@@ -2,6 +2,7 @@ import os
 import time
 import pygame as pg
 import sys
+import math
 
 pg.mixer.init()
 pg.font.init()
