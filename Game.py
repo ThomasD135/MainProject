@@ -10,6 +10,7 @@ class GameHandler(Setup.pg.sprite.Sprite):
                                         
         self.playableMap = [] # 2d list of blocks
         self.weightedAdjacencyList = Dijkstra.AdjacencyList()
+        self.dijkstraGraph = None
         self.pathfindingWaypointBlocks = []
 
         self.blocks = Setup.pg.sprite.Group() # a group of all blocks in the map for easier drawing
@@ -75,12 +76,13 @@ class GameHandler(Setup.pg.sprite.Sprite):
 
         unweightedAdjacencyList = {0 : [1],
                                    1 : [0, 2, 3, 4],
-                                   2 : [1],
+                                   2 : [1, 6],
                                    3 : [1],
                                    4 : [1, 5],
-                                   5 : [4]
+                                   5 : [4, 6],
+                                   6 : [2, 5]
                                    }
-
+        
         for block in blocks: # populate blockNumberToObject
             if block.DoesTextExist("PATHFINDING"):
                 blockNodeNumber = int(block.textList[0].text)
@@ -94,15 +96,19 @@ class GameHandler(Setup.pg.sprite.Sprite):
             if block.DoesTextExist("PATHFINDING"):
                 blockNodeNumber = int(block.textList[0].text)
 
-                blockNeighbours = unweightedAdjacencyList[blockNodeNumber]            
-                blockNeighboursObjects = []
+                if blockNodeNumber in unweightedAdjacencyList:
+                    blockNeighbours = unweightedAdjacencyList[blockNodeNumber]            
+                    blockNeighboursObjects = []
 
-                for neighbour in blockNeighbours:
-                    blockNeighboursObjects.append(blockNumberToObject[neighbour])
+                    for neighbour in blockNeighbours:
+                        blockNeighboursObjects.append(blockNumberToObject[neighbour])
 
-                self.weightedAdjacencyList.PopulateGraph(block, blockNeighboursObjects, blockNodeNumber, blockNeighbours)
+                    self.weightedAdjacencyList.PopulateGraph(block, blockNeighboursObjects, blockNodeNumber, blockNeighbours)
 
-        print(self.weightedAdjacencyList.weightedGraph)
+        self.dijkstraGraph = Dijkstra.DijkstraImplementation(self.weightedAdjacencyList.weightedGraph)
+        self.dijkstraGraph.PerformAlgorithm(0, 6)
+        print("Distances:", self.dijkstraGraph.tentativeDistances)
+        print("Path:", self.dijkstraGraph.RecallShortestPath(6))
 
 class MapBlock(Setup.pg.sprite.Sprite): 
     def __init__(self, blockNumber, rotation, originalLocationX, originalLocationY, image, hasCollision, damage, knockback):

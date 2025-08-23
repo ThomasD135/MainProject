@@ -41,26 +41,37 @@ class PriorityQueue:
     def Enqueue(self, value, priority): # a smaller number is a higher priority than a large number
         itemToAdd = (value, priority)
     
-        if not self.IsEmpty():
-            for itemIndex in range(0, len(self.queue)):
-                if itemIndex[1] > priority:
-                    self.queue.insert(itemIndex, itemToAdd)
-        else:
+        if self.IsEmpty():
             self.queue.append(itemToAdd)
+        else:
+            inserted = False
 
+            for itemIndex in range(0, len(self.queue)):
+                if itemToAdd[1] < self.queue[itemIndex][1]:
+                    self.queue.insert(itemIndex, itemToAdd)
+                    inserted = True
+                    break
+                if not inserted:
+                    self.queue.append(itemToAdd)
+            
     def Dequeue(self): 
-        return self.queue.pop(0)
+        if not self.IsEmpty():
+            return self.queue.pop(0)
 
-class Dijkstra:
+        return None
+
+class DijkstraImplementation:
     def __init__(self, graph):
         self.graph = graph
         self.priorityQueue = PriorityQueue()
         self.unvisitedNodes = []
         self.tentativeDistances = {}
+        self.predecessors = {} # used to be able to recall the shortest path
 
     def PopulateInitialListsDicts(self, startNode):
         for node in self.graph:
             self.unvisitedNodes.append(node)
+            self.predecessors.update({node : None})
 
             if node == startNode:
                 self.tentativeDistances.update({node : 0})
@@ -68,21 +79,36 @@ class Dijkstra:
                 self.tentativeDistances.update({node : Setup.sys.maxsize})
 
     def UpdateQueue(self, currentNode):
-        neighbours = self.graph[currentNode] # stored in format {{neighbour : distance}, {neighbour2 : distance2}}
+        neighbours = self.graph[currentNode]
 
         for neighbourNode, neighbourNodeDistance in neighbours.items():
             tentative = self.tentativeDistances[currentNode] + neighbourNodeDistance
 
             if tentative < self.tentativeDistances[neighbourNode]:
                 self.tentativeDistances[neighbourNode] = tentative
+                self.predecessors[neighbourNode] = currentNode
                 self.priorityQueue.Enqueue(neighbourNode, tentative)
 
-    def PerformAlgorithm(self, startNode):
+    def PerformAlgorithm(self, startNode, goalNode):
         self.PopulateInitialListsDicts(startNode)
+        self.priorityQueue.Enqueue(startNode, 0)
 
         while not self.priorityQueue.IsEmpty():
             currentNode = self.priorityQueue.Dequeue()[0]
 
+            if currentNode == goalNode:
+                break
+
             if currentNode in self.unvisitedNodes:
                 self.UpdateQueue(currentNode)
                 self.unvisitedNodes.remove(currentNode)
+
+    def RecallShortestPath(self, goalNode):
+        shortestPath = []
+        current = goalNode
+
+        while current != None:
+            shortestPath.insert(0, current)
+            current = self.predecessors[current]
+
+        return shortestPath
