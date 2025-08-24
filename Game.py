@@ -669,35 +669,76 @@ class PathGuide:
         self.pathBlockObjects = []
         self.startNode = None
         self.endNode = None
-        self.active = True
+        self.active = False
+        self.mouseClickX, self.mouseClickY = None, None
 
     def FindNearestNode(self, player):
-        if self.active:
-            pathfindingWaypointBlocks = gameHandler.pathfindingWaypointBlocks
-            smallestDistance = Setup.sys.maxsize
-            nearestNode = None
+        keys = Setup.pg.key.get_pressed()
+        pathfindingWaypointBlocks = gameHandler.pathfindingWaypointBlocks
+        
+        smallestDistancePlayer = Setup.sys.maxsize
+        nearestNodePlayer = None
 
+        smallestDistanceMouse = Setup.sys.maxsize
+        nearestNodeMouse = None
+
+        if player.miniMap.enlarged:
+            if keys[Setup.pg.K_LCTRL]:
+                Setup.pg.mouse.set_visible(True)
+
+            if Setup.pg.mouse.get_visible():
+                if Setup.pg.mouse.get_pressed()[0]: # left click
+                    self.active = True
+                    self.mouseClickX, self.mouseClickY = Setup.pg.mouse.get_pos()
+                elif Setup.pg.mouse.get_pressed()[2]: # right click
+                    self.active = False
+
+        if self.active:
             for block in pathfindingWaypointBlocks:
-                distance = Setup.math.sqrt((block.originalLocationX - player.worldX) ** 2 + (block.originalLocationY - player.worldY) ** 2)
-                if distance < smallestDistance:
-                    smallestDistance = distance
+                #----------------------------------------------------------- player
+                distancePlayer = Setup.math.sqrt((block.originalLocationX - player.worldX) ** 2 + (block.originalLocationY - player.worldY) ** 2)
+                
+                if distancePlayer < smallestDistancePlayer:
+                    if self.CheckIfBlockIsValid(gameHandler.blocks, player, block): # check if it doesnt intersect a block
+                        smallestDistancePlayer = distancePlayer
+
+                        if block.DoesTextExist("PATHFINDING"):
+                            nearestNodePlayer = int(block.textList[0].text)
+                #----------------------------------------------------------- mini map
+                miniMapOffsetX, miniMapOffsetY = 480, 60
+                miniMapScale = 8
+                blockMiniMapX, blockMiniMapY = (block.originalLocationX // miniMapScale) + miniMapOffsetX, (block.originalLocationY // miniMapScale) + miniMapOffsetY
+
+                distanceMouse = Setup.math.sqrt((blockMiniMapX - self.mouseClickX) ** 2 + (blockMiniMapY - self.mouseClickY) ** 2)
+
+                if distanceMouse < smallestDistanceMouse:
+                    smallestDistanceMouse = distanceMouse
 
                     if block.DoesTextExist("PATHFINDING"):
-                        nearestNode = int(block.textList[0].text)
+                        nearestNodeMouse = int(block.textList[0].text)
 
-            newEndNode = 6 # click somewhere
-
-            if nearestNode != self.startNode or newEndNode != self.endNode:
-                self.startNode = nearestNode
-                self.endNode = newEndNode
+            if (nearestNodePlayer != self.startNode or nearestNodeMouse != self.endNode) and (nearestNodeMouse != None and nearestNodePlayer != None):         
+                self.startNode = nearestNodePlayer
+                self.endNode = nearestNodeMouse
                 self.PerformAlgorithm() # only calculate new route if a node changes
+
+    def CheckIfBlockIsValid(self, allBlocks, player, node):
+        playerCoords = (player.worldX, player.worldY)
+        nodeCoords = (node.originalLocationX, node.originalLocationY)
+
+        for block in allBlocks:       
+            if block.rect.clipline(playerCoords, nodeCoords):
+                return False
+
+        return True
 
     def PerformAlgorithm(self):
         blockNumberToObject = gameHandler.blockNumberToObject
         dijkstraGraph = gameHandler.dijkstraGraph
+
         dijkstraGraph.PerformAlgorithm(self.startNode, self.endNode)
 
-        self.path = self.path = dijkstraGraph.RecallShortestPath(self.endNode)
+        self.path = dijkstraGraph.RecallShortestPath(self.endNode)
         self.pathBlockObjects = []
 
         for blockNumber in self.path:
@@ -706,8 +747,18 @@ class PathGuide:
 
     def DrawPathGuides(self, shrinkModifier, startX, startY, camera): 
         if self.active: 
+            if len(self.path) == 1: # draw from player to last waypoint
+                playerCordsMini = (player.rect.centerx // shrinkModifier + startX, player.rect.centery // shrinkModifier + startY)
+                blockCordsMini = ((self.pathBlockObjects[0].originalLocationX + Setup.setup.BLOCK_WIDTH // 2) // shrinkModifier + startX, (self.pathBlockObjects[0].originalLocationY + Setup.setup.BLOCK_WIDTH // 2) // shrinkModifier + startY)
+                Setup.pg.draw.line(Setup.setup.screen, Setup.setup.RED, playerCordsMini, blockCordsMini, 80 // shrinkModifier) 
+
+                playerCordsScreen = (player.rect.centerx - camera.left, player.rect.centery - camera.top)
+                blockCordsScreen = ((self.pathBlockObjects[0].originalLocationX + Setup.setup.BLOCK_WIDTH // 2) - camera.left, (self.pathBlockObjects[0].originalLocationY + Setup.setup.BLOCK_WIDTH // 2 - camera.top))
+                Setup.pg.draw.line(Setup.setup.screen, Setup.setup.RED, playerCordsScreen, blockCordsScreen, 20)
+                Setup.pg.draw.circle(Setup.setup.screen, Setup.setup.RED, blockCordsScreen, 40)
+
             for blockIndex in range(0, len(self.path) - 1): 
-                #-------------------- mini map
+                #----------------------------------------------------------- mini map
                 blockStartX, blockStartY = self.pathBlockObjects[blockIndex].originalLocationX + Setup.setup.BLOCK_WIDTH // 2, self.pathBlockObjects[blockIndex].originalLocationY + Setup.setup.BLOCK_WIDTH // 2
                 blockEndX, blockEndY = self.pathBlockObjects[blockIndex + 1].originalLocationX + Setup.setup.BLOCK_WIDTH // 2, self.pathBlockObjects[blockIndex + 1].originalLocationY + Setup.setup.BLOCK_WIDTH // 2
                 playerCordsMini = (player.rect.centerx // shrinkModifier + startX, player.rect.centery // shrinkModifier + startY) 
@@ -715,20 +766,22 @@ class PathGuide:
                 blockStartCordsMini = (blockStartX // shrinkModifier + startX, blockStartY // shrinkModifier + startY) 
                 blockEndCordsMini = (blockEndX // shrinkModifier + startX, blockEndY // shrinkModifier + startY) 
                 
-                if blockIndex == 0: 
+                if blockIndex == 0: # draw from player to first waypoint
                     Setup.pg.draw.line(Setup.setup.screen, Setup.setup.RED, playerCordsMini, blockStartCordsMini, 80 // shrinkModifier) 
                 
                 Setup.pg.draw.line(Setup.setup.screen, Setup.setup.RED, blockStartCordsMini, blockEndCordsMini, 80 // shrinkModifier) 
-                #------------------- main screen
+                #----------------------------------------------------------- main screen
                 if not player.miniMap.enlarged:
                     playerCordsScreen = (player.rect.centerx - camera.left, player.rect.centery - camera.top) 
                     blockStartCordsScreen = (blockStartX - camera.left, blockStartY - camera.top) 
                     blockEndCordsScreen = (blockEndX - camera.left, blockEndY - camera.top) 
                    
-                    if blockIndex == 0: 
+                    if blockIndex == 0: # draw from player to first waypoint
                         Setup.pg.draw.line(Setup.setup.screen, Setup.setup.RED, playerCordsScreen, blockStartCordsScreen, 20) 
                      
                     Setup.pg.draw.line(Setup.setup.screen, Setup.setup.RED, blockStartCordsScreen, blockEndCordsScreen, 20)
+                    Setup.pg.draw.circle(Setup.setup.screen, Setup.setup.RED, blockStartCordsScreen, 20)
+                    Setup.pg.draw.circle(Setup.setup.screen, Setup.setup.RED, blockEndCordsScreen, 20)
 
 class Camera:
     def __init__(self, player):

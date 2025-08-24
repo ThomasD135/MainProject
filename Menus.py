@@ -277,7 +277,7 @@ class CreateSettingsMenu(Setup.pg.sprite.Sprite):
         soundControlSliderText.locationX = soundControlSlider.rect.center[0]
         soundControlSliderText.locationY = soundControlSlider.rect.center[1]
 
-        soundControlSliderText.text = f"{volume}"
+        soundControlSliderText.SetText(f"{volume}")
 
         if volume == 0:
             muteButton.ChangeImageClick("UNMUTE_BUTTON", None)

@@ -233,7 +233,7 @@ class MapGrid():
         block.UpdateText()
 
     def ChangeSelectedBlock(self):
-        if Setup.pg.mouse.get_pressed()[2]: #right click 
+        if Setup.pg.mouse.get_pressed()[2]: # right click 
             if not self.mouseButtonDown:
                 self.mouseButtonDown = True
                 self.mouseDownPos = Setup.pg.mouse.get_pos()
