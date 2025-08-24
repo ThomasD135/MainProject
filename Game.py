@@ -74,13 +74,15 @@ class GameHandler(Setup.pg.sprite.Sprite):
     def PopulateGraph(self, blocks):
         self.blockNumberToObject = {}
 
-        unweightedAdjacencyList = {0 : [1, 5, 9],
-                                   1 : [0, 2],
-                                   2 : [1, 4, 6],
-                                   4 : [2],
-                                   5 : [0, 6],
-                                   6 : [5, 2],
-                                   9 : [0]
+        unweightedAdjacencyList = {0 : [1],
+                                   1 : [0, 2, 7],
+                                   2 : [1, 3],
+                                   3 : [2, 4],
+                                   4 : [3, 5],
+                                   5 : [4, 6, 7],
+                                   6 : [5],
+                                   7 : [1, 5, 8],
+                                   8 : [7]
                                    }
         
         for block in blocks: # populate blockNumberToObject
@@ -611,7 +613,7 @@ class MiniMap(Setup.pg.sprite.Sprite):
         
         newPlayerX, newPlayerY = player.worldX / shrinkModifier, player.worldY / shrinkModifier
         
-        self.pathGuide.DrawPathGuide(shrinkModifier, startX, startY)
+        self.pathGuide.DrawPathGuides(shrinkModifier, startX, startY, player.camera.camera)
         self.MapFragments(player, startX, startY, shrinkModifier)
         if not self.enlarged:  
             self.playerIconImage = Setup.setup.loadImage(self.playerIconFile, self.playerIconWidth, self.playerIconHeight)
@@ -673,6 +675,7 @@ class PathGuide:
         if self.active:
             pathfindingWaypointBlocks = gameHandler.pathfindingWaypointBlocks
             smallestDistance = Setup.sys.maxsize
+            nearestNode = None
 
             for block in pathfindingWaypointBlocks:
                 distance = Setup.math.sqrt((block.originalLocationX - player.worldX) ** 2 + (block.originalLocationY - player.worldY) ** 2)
@@ -701,15 +704,31 @@ class PathGuide:
             if blockNumber in blockNumberToObject:
                 self.pathBlockObjects.append(blockNumberToObject[blockNumber])
 
-    def DrawPathGuide(self, shrinkModifier, startX, startY):
-        if self.active:
-            for blockIndex in range(0, len(self.path) - 1):
-                blockStartX, blockStartY = self.pathBlockObjects[blockIndex].originalLocationX, self.pathBlockObjects[blockIndex].originalLocationY
-                blockEndX, blockEndY = self.pathBlockObjects[blockIndex + 1].originalLocationX, self.pathBlockObjects[blockIndex + 1].originalLocationY
-
-                blockStartCords = (blockStartX // shrinkModifier + startX, blockStartY // shrinkModifier + startY) # for mini map
-                blockEndCords = (blockEndX // shrinkModifier + startX, blockEndY // shrinkModifier + startY) 
-                Setup.pg.draw.line(Setup.setup.screen, Setup.setup.RED, blockStartCords, blockEndCords, 80 // shrinkModifier)            
+    def DrawPathGuides(self, shrinkModifier, startX, startY, camera): 
+        if self.active: 
+            for blockIndex in range(0, len(self.path) - 1): 
+                #-------------------- mini map
+                blockStartX, blockStartY = self.pathBlockObjects[blockIndex].originalLocationX + Setup.setup.BLOCK_WIDTH // 2, self.pathBlockObjects[blockIndex].originalLocationY + Setup.setup.BLOCK_WIDTH // 2
+                blockEndX, blockEndY = self.pathBlockObjects[blockIndex + 1].originalLocationX + Setup.setup.BLOCK_WIDTH // 2, self.pathBlockObjects[blockIndex + 1].originalLocationY + Setup.setup.BLOCK_WIDTH // 2
+                playerCordsMini = (player.rect.centerx // shrinkModifier + startX, player.rect.centery // shrinkModifier + startY) 
+                
+                blockStartCordsMini = (blockStartX // shrinkModifier + startX, blockStartY // shrinkModifier + startY) 
+                blockEndCordsMini = (blockEndX // shrinkModifier + startX, blockEndY // shrinkModifier + startY) 
+                
+                if blockIndex == 0: 
+                    Setup.pg.draw.line(Setup.setup.screen, Setup.setup.RED, playerCordsMini, blockStartCordsMini, 80 // shrinkModifier) 
+                
+                Setup.pg.draw.line(Setup.setup.screen, Setup.setup.RED, blockStartCordsMini, blockEndCordsMini, 80 // shrinkModifier) 
+                #------------------- main screen
+                if not player.miniMap.enlarged:
+                    playerCordsScreen = (player.rect.centerx - camera.left, player.rect.centery - camera.top) 
+                    blockStartCordsScreen = (blockStartX - camera.left, blockStartY - camera.top) 
+                    blockEndCordsScreen = (blockEndX - camera.left, blockEndY - camera.top) 
+                   
+                    if blockIndex == 0: 
+                        Setup.pg.draw.line(Setup.setup.screen, Setup.setup.RED, playerCordsScreen, blockStartCordsScreen, 20) 
+                     
+                    Setup.pg.draw.line(Setup.setup.screen, Setup.setup.RED, blockStartCordsScreen, blockEndCordsScreen, 20)
 
 class Camera:
     def __init__(self, player):
