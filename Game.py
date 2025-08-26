@@ -7,6 +7,8 @@ import Dijkstra
 class GameHandler(Setup.pg.sprite.Sprite):
     def __init__(self):
         Setup.pg.sprite.Sprite.__init__(self)
+        self.player = Player("Temporary", self)
+        self.background = GameBackground(self)
                                         
         self.playableMap = [] # 2d list of blocks
         self.weightedAdjacencyList = Dijkstra.AdjacencyList()
@@ -39,13 +41,20 @@ class GameHandler(Setup.pg.sprite.Sprite):
                                      20 : [False, 0, 0],
                                      }# (collision with player, damage if any, knockback when hit (is increased if player takes damage from block)
 
+        self.CreatePlayableMap()
+        self.OpenSaveFile()
+
+    def OpenSaveFile(self):
+        self.filePath = Setup.os.path.join("ASSETS", "SAVED_DATA", f"SAVE_FILE_{Setup.setup.SAVE_SLOT}.txt")
+        self.saveFile = open(self.filePath, "r")
+
     def CreatePlayableMap(self):
         self.playableMap = []
         self.waypoints = []
         self.treasureChests = []
         newRow = []
 
-        for row in MapCreator.mapGrid.blockGrid:
+        for row in MapCreator.mapDataHandler.mapGrid.blockGrid:
             for block in row:
                 if block.blockNumber <= 20: # a block and not an entity
                     attributes = self.blockAttributeDictionary.get(block.blockNumber)
@@ -108,6 +117,9 @@ class GameHandler(Setup.pg.sprite.Sprite):
                                 blockNeighboursObjects.append(self.blockNumberToObject[neighbour])
 
                         self.weightedAdjacencyList.PopulateGraph(block, blockNeighboursObjects, blockNodeNumber, blockNeighbours)   
+
+        #for keyValuePair in self.weightedAdjacencyList.weightedGraph.items():
+        #    print("\n", keyValuePair)
 
         self.dijkstraGraph = Dijkstra.DijkstraImplementation(self.weightedAdjacencyList.weightedGraph)
 
@@ -238,12 +250,21 @@ class WoodenSword(Weapon):
     def BasicAttack(self):
         if self.attackStart <= self.basicAttackLength:
             pass
-            #attack
-       
+            #attack     
+
+class Inventory():
+    def __init__(self, player):
+        self.parentPlayer = player
+        self.inventoryMainMenu = Menus.menuManagement.inventoryButtonGroup
+
+    def UpdatePlayerModel(self):
+        pass
 
 class Player(Setup.pg.sprite.Sprite):
-    def __init__(self, name):
+    def __init__(self, name, gameHandler):
         super().__init__()
+        self.gameHandler = gameHandler
+
         self.name = name
         self.width = Setup.setup.BLOCK_WIDTH
         self.height = Setup.setup.BLOCK_WIDTH
@@ -259,6 +280,7 @@ class Player(Setup.pg.sprite.Sprite):
         self.miniMap = MiniMap()
         self.weapon = Weapon("Wooden sword", "weapon", "ability", 100, 200, 300, 20, 5, None, self) # temp
         self.spell = Spell("Fireball", "fire", 100, 20, self) # temp
+        self.inventory = Inventory(self)
         self.mapFragments = {1 : True, 2 : True, 3 : True, 4 : False}
 
         self.idleFilePath = Setup.os.path.join("ASSETS", "PLAYER", "PLAYER_IDLE_SHEET")
@@ -349,10 +371,23 @@ class Player(Setup.pg.sprite.Sprite):
         if self.miniMap.enlarged and self.miniMap.seeWaypoints: # cannot move when currently at a waypoint - can move when viewing mini map normally
             self.movementSpeeds, self.playerXCarriedMovingSpeed = [0, 0], 0
         else:
+            self.OpenCloseInventory()
+            self.OpenCloseInGameMenu()
             self.MovementKeyHandler(keys)
             self.JumpHandler(keys)
             self.DashHandler(keys)
             self.CrouchHandler(keys)
+
+    def OpenCloseInventory(self):
+        if Setup.setup.pressedKey == Setup.pg.K_i:
+            Menus.menuManagement.ChangeStateOfMenu(self.inventory.inventoryMainMenu, "GAME", cursor=True)
+
+            if Menus.menuManagement.inGameMenuButtonGroup in Menus.menuManagement.gameMenus:
+                Menus.menuManagement.RemoveMenu(Menus.menuManagement.inGameMenuButtonGroup, "GAME")
+
+    def OpenCloseInGameMenu(self):
+        if Setup.setup.pressedKey == Setup.pg.K_TAB and self.inventory.inventoryMainMenu not in Menus.menuManagement.gameMenus:
+            Menus.menuManagement.ChangeStateOfMenu(Menus.menuManagement.inGameMenuButtonGroup, "GAME", cursor=True)
 
     def MovementKeyHandler(self, keys):
         if keys[Setup.pg.K_d] or keys[Setup.pg.K_RIGHT]: # d key or right arrow key
@@ -427,7 +462,7 @@ class Player(Setup.pg.sprite.Sprite):
         if self.playerYFallingSpeed > 30:
             self.playerYFallingSpeed = 30 
 
-        collisions = self.Movement(gameHandler.blocks)
+        collisions = self.Movement(self.gameHandler.blocks)
 
         if collisions['bottom']:
             self.currentSheet = self.idleSheet
@@ -451,9 +486,9 @@ class Player(Setup.pg.sprite.Sprite):
             self.UpdateCurrentImage(False)
 
         self.camera.Update()
-        self.camera.DisplayMap(gameHandler)
+        self.camera.DisplayMap()
         self.miniMap.ChangeScale()
-        self.miniMap.DrawMap(gameHandler.blocks, self)
+        self.miniMap.DrawMap(self.gameHandler.blocks, self)
         self.miniMap.DrawWaypoints(self)
         self.miniMap.pathGuide.FindNearestNode(self)
         self.Attack()
@@ -488,12 +523,14 @@ class Player(Setup.pg.sprite.Sprite):
             self.spell.Attack(self.mana)
 
 class GameBackground:
-    def __init__(self):  
+    def __init__(self, gameHandler):  
+        self.gameHandler = gameHandler
+
         filePath = Setup.os.path.join("ASSETS", "BACKGROUND", "GAME_BACKGROUND_1_IMAGE")
         self.blockImage = Setup.setup.loadImage(filePath, Setup.setup.BLOCK_WIDTH * Setup.setup.BLOCKS_WIDE, Setup.setup.BLOCK_WIDTH * Setup.setup.BLOCKS_WIDE)
 
     def DrawImage(self):
-        topLeftBlock = gameHandler.playableMap[0][0]
+        topLeftBlock = self.gameHandler.playableMap[0][0]
         Setup.setup.screen.blit(self.blockImage, (topLeftBlock.rect.left, topLeftBlock.rect.top))
 
 class Prompt:
@@ -526,7 +563,7 @@ class TreaureChest:
     def __init__(self, parentBlock, item):
         self.parent = parentBlock
         self.prompt = Prompt("E_PROMPT_IMAGE", "e")
-        self.openedImage = MapCreator.mapGrid.blockSheetHandler.GetCorrectBlockImage(self.parent.blockNumber + 1, Setup.setup.BLOCK_WIDTH, Setup.setup.BLOCK_WIDTH, Setup.setup.BLOCK_WIDTH, Setup.setup.BLOCK_WIDTH, False, 0)
+        self.openedImage = MapCreator.mapDataHandler.mapGrid.blockSheetHandler.GetCorrectBlockImage(self.parent.blockNumber + 1, Setup.setup.BLOCK_WIDTH, Setup.setup.BLOCK_WIDTH, Setup.setup.BLOCK_WIDTH, Setup.setup.BLOCK_WIDTH, False, 0)
         self.chestOpened = False # TODO - saved data, has the waypoint been interacted with before
         self.reward = item
 
@@ -557,7 +594,7 @@ class Waypoint:
             player.miniMap.enlarged = not player.miniMap.enlarged
             player.miniMap.seeWaypoints = True
             Setup.pg.mouse.set_visible(not Setup.pg.mouse.get_visible())
-            player.miniMap.CreateWaypointButtons(gameHandler.waypoints)
+            player.miniMap.CreateWaypointButtons(player.gameHandler.waypoints)
 
 class MiniMap(Setup.pg.sprite.Sprite):
     def __init__(self):
@@ -613,7 +650,7 @@ class MiniMap(Setup.pg.sprite.Sprite):
         
         newPlayerX, newPlayerY = player.worldX / shrinkModifier, player.worldY / shrinkModifier
         
-        self.pathGuide.DrawPathGuides(shrinkModifier, startX, startY, player.camera.camera)
+        self.pathGuide.DrawPathGuides(shrinkModifier, startX, startY, player.camera.camera, player)
         self.MapFragments(player, startX, startY, shrinkModifier)
         if not self.enlarged:  
             self.playerIconImage = Setup.setup.loadImage(self.playerIconFile, self.playerIconWidth, self.playerIconHeight)
@@ -674,7 +711,7 @@ class PathGuide:
 
     def FindNearestNode(self, player):
         keys = Setup.pg.key.get_pressed()
-        pathfindingWaypointBlocks = gameHandler.pathfindingWaypointBlocks
+        pathfindingWaypointBlocks = player.gameHandler.pathfindingWaypointBlocks
         
         smallestDistancePlayer = Setup.sys.maxsize
         nearestNodePlayer = None
@@ -699,7 +736,7 @@ class PathGuide:
                 distancePlayer = Setup.math.sqrt((block.originalLocationX - player.worldX) ** 2 + (block.originalLocationY - player.worldY) ** 2)
                 
                 if distancePlayer < smallestDistancePlayer:
-                    if self.CheckIfBlockIsValid(gameHandler.blocks, player, block): # check if it doesnt intersect a block
+                    if self.CheckIfBlockIsValid(player.gameHandler.blocks, player, block): # check if it doesnt intersect a block
                         smallestDistancePlayer = distancePlayer
 
                         if block.DoesTextExist("PATHFINDING"):
@@ -720,21 +757,21 @@ class PathGuide:
             if (nearestNodePlayer != self.startNode or nearestNodeMouse != self.endNode) and (nearestNodeMouse != None and nearestNodePlayer != None):         
                 self.startNode = nearestNodePlayer
                 self.endNode = nearestNodeMouse
-                self.PerformAlgorithm() # only calculate new route if a node changes
+                self.PerformAlgorithm(player) # only calculate new route if a node changes
 
     def CheckIfBlockIsValid(self, allBlocks, player, node):
         playerCoords = (player.worldX, player.worldY)
         nodeCoords = (node.originalLocationX, node.originalLocationY)
 
         for block in allBlocks:       
-            if block.rect.clipline(playerCoords, nodeCoords):
+            if block.rect.clipline(playerCoords, nodeCoords) and block.collision:
                 return False
 
         return True
 
-    def PerformAlgorithm(self):
-        blockNumberToObject = gameHandler.blockNumberToObject
-        dijkstraGraph = gameHandler.dijkstraGraph
+    def PerformAlgorithm(self, player):
+        blockNumberToObject = player.gameHandler.blockNumberToObject
+        dijkstraGraph = player.gameHandler.dijkstraGraph
 
         dijkstraGraph.PerformAlgorithm(self.startNode, self.endNode)
 
@@ -745,7 +782,7 @@ class PathGuide:
             if blockNumber in blockNumberToObject:
                 self.pathBlockObjects.append(blockNumberToObject[blockNumber])
 
-    def DrawPathGuides(self, shrinkModifier, startX, startY, camera): 
+    def DrawPathGuides(self, shrinkModifier, startX, startY, camera, player): 
         if self.active: 
             if len(self.path) == 1: # draw from player to last waypoint
                 playerCordsMini = (player.rect.centerx // shrinkModifier + startX, player.rect.centery // shrinkModifier + startY)
@@ -768,7 +805,7 @@ class PathGuide:
                 
                 if blockIndex == 0: # draw from player to first waypoint
                     Setup.pg.draw.line(Setup.setup.screen, Setup.setup.RED, playerCordsMini, blockStartCordsMini, 80 // shrinkModifier) 
-                
+                           
                 Setup.pg.draw.line(Setup.setup.screen, Setup.setup.RED, blockStartCordsMini, blockEndCordsMini, 80 // shrinkModifier) 
                 #----------------------------------------------------------- main screen
                 if not player.miniMap.enlarged:
@@ -777,8 +814,8 @@ class PathGuide:
                     blockEndCordsScreen = (blockEndX - camera.left, blockEndY - camera.top) 
                    
                     if blockIndex == 0: # draw from player to first waypoint
-                        Setup.pg.draw.line(Setup.setup.screen, Setup.setup.RED, playerCordsScreen, blockStartCordsScreen, 20) 
-                     
+                        Setup.pg.draw.line(Setup.setup.screen, Setup.setup.RED, playerCordsScreen, blockStartCordsScreen, 20)         
+                        
                     Setup.pg.draw.line(Setup.setup.screen, Setup.setup.RED, blockStartCordsScreen, blockEndCordsScreen, 20)
                     Setup.pg.draw.circle(Setup.setup.screen, Setup.setup.RED, blockStartCordsScreen, 20)
                     Setup.pg.draw.circle(Setup.setup.screen, Setup.setup.RED, blockEndCordsScreen, 20)
@@ -793,12 +830,12 @@ class Camera:
     def Update(self):
         self.camera.center = self.player.rect.center
 
-    def DisplayMap(self, gameHandler):
-        blocks = gameHandler.blocks
+    def DisplayMap(self):
+        blocks = self.player.gameHandler.blocks
 
         blocksWithPrompts = []
-        waypoints = gameHandler.waypoints
-        treasureChests = gameHandler.treasureChests
+        waypoints = self.player.gameHandler.waypoints
+        treasureChests = self.player.gameHandler.treasureChests
 
         blocksWithPrompts.append(waypoints)
         blocksWithPrompts.append(treasureChests)
@@ -816,7 +853,4 @@ class NPC(Setup.pg.sprite.Sprite):
     def __init__(self, parentBlock):
         self.parent = parentBlock
 
-player = Player("Temporary") 
-gameBackground = GameBackground()
 gameHandler = GameHandler()
-gameHandler.CreatePlayableMap()

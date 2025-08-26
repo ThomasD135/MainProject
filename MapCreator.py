@@ -27,6 +27,9 @@ class BlockSheetExtractor():
 class MapDataHandling():
     def __init__(self):
         self.filePath = Setup.os.path.join("ASSETS", "MAP", "MAP_DATA_FILE")
+        self.mapGrid = MapGrid()
+
+        self.LoadDataOrCreateMap()
 
     def SaveData(self, blockGrid):
         file = open(self.filePath + ".txt", "w")
@@ -87,8 +90,8 @@ class MapDataHandling():
                 rotation = int(lineData[XPosition][2]) * -90
                 blockNodeNumber = lineData[XPosition][3] + lineData[XPosition][4]
 
-                newBlock = Menus.Button("BLOCK", blockWidth, blockWidth, XPosition * blockWidth, YPosition * blockWidth, "", True, mapGrid.blockSheetHandler.GetCorrectBlockImage(blockNumber, blockWidth, blockWidth, blockWidth, blockWidth, False, rotation), blockNumber, rotation)
-                mapGrid.PathFindingWaypoints(newBlock, blockNodeNumber)
+                newBlock = Menus.Button("BLOCK", blockWidth, blockWidth, XPosition * blockWidth, YPosition * blockWidth, "", True, self.mapGrid.blockSheetHandler.GetCorrectBlockImage(blockNumber, blockWidth, blockWidth, blockWidth, blockWidth, False, rotation), blockNumber, rotation)
+                self.mapGrid.PathFindingWaypoints(newBlock, blockNodeNumber)
                 row.append(newBlock)
 
             grid.append(row)
@@ -104,9 +107,9 @@ class MapDataHandling():
         numberOfLines = len(file.readlines())
 
         if numberOfLines == 0:
-            mapGrid.CreateGridBlocks()
+            self.mapGrid.CreateGridBlocks()
         else:
-            mapGrid.blockGrid = self.LoadData()
+            self.mapGrid.blockGrid = self.LoadData()
 
 class MapGrid():
     def __init__(self):
@@ -164,7 +167,7 @@ class MapGrid():
         self.CalculateBlocksWithinRange()       
 
         for block in self.blockObjectsInView:
-            if block.CheckClick() != None and not Menus.ButtonGroupMethods.GetButton("DELETE", Menus.mapButtonGroup.buttons).hover and not Menus.ButtonGroupMethods.GetButton("EXIT", Menus.mapButtonGroup.buttons).hover: 
+            if block.CheckClick() != None and not Menus.ButtonGroupMethods.GetButton("DELETE", Menus.menuManagement.mapButtonGroup.buttons).hover and not Menus.ButtonGroupMethods.GetButton("EXIT", Menus.menuManagement.mapButtonGroup.buttons).hover: 
                 if not Setup.setup.deletingBlocks: # placing        
                     if (block.blockNumber != self.selectedBlock or block.rotation != self.rotation):
                         block.ChangeImageClick("", self.blockSheetHandler.GetCorrectBlockImage(self.selectedBlock, self.originalBlockWidth, self.originalBlockWidth, block.width, block.height, False, self.rotation))
@@ -275,7 +278,4 @@ class MapGrid():
 
         Setup.setup.screen.blit(self.blockSheetHandler.GetCorrectBlockImage(self.selectedBlock, self.originalBlockWidth, self.originalBlockWidth, self.originalBlockWidth, self.originalBlockWidth, False, self.rotation), (50, 100))
          
-mapGrid = MapGrid() 
 mapDataHandler = MapDataHandling()
-
-mapDataHandler.LoadDataOrCreateMap()

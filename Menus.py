@@ -73,7 +73,7 @@ class Button(Setup.pg.sprite.Sprite):
         else:
             self.ChangeImage(".png")
 
-    def ChangeImageClick(self, fileName, sheetImage):
+    def ChangeImageClick(self, fileName, sheetImage=None):
         if self.canHover:
             self.filePath = Setup.os.path.join("ASSETS", "BUTTON_IMAGES", fileName) # change the image to a completely different image
             self.ChangeImage(".png")
@@ -175,8 +175,6 @@ class CreateMainMenu(Setup.pg.sprite.Sprite):
         self.buttons.add(mapButton)
         self.buttons.add(quitButton) 
 
-        menuManagement.AddMenu(self, "MENU") 
-
     def ChildActions(self):
         ButtonGroupMethods.UpdateChildButton(self.buttons)
 
@@ -193,11 +191,11 @@ class CreateMainMenu(Setup.pg.sprite.Sprite):
                 self.MapEditor()
 
     def PlayButton(self):
-        menuManagement.AddMenu(newGameButtonGroup, "MENU")
+        menuManagement.AddMenu(menuManagement.newGameButtonGroup, "MENU")
         menuManagement.RemoveMenu(self, "MENU") 
 
     def SettingsButton(self):
-        menuManagement.AddMenu(settingsButtonGroup, "MENU")
+        menuManagement.AddMenu(menuManagement.settingsButtonGroup, "MENU")
         menuManagement.RemoveMenu(self, "MENU")
 
     def QuitGame(self):
@@ -205,7 +203,7 @@ class CreateMainMenu(Setup.pg.sprite.Sprite):
         Setup.setup.run = False
 
     def MapEditor(self):
-        menuManagement.AddMenu(mapButtonGroup, "MENU")
+        menuManagement.AddMenu(menuManagement.mapButtonGroup, "MENU")
         menuManagement.RemoveMenu(self, "MENU")
 
         Setup.setup.gameState = "MAP"
@@ -260,7 +258,7 @@ class CreateSettingsMenu(Setup.pg.sprite.Sprite):
                 self.MuteButton()
 
     def ExitButton(self):
-        menuManagement.AddMenu(menuButtonGroup, "MENU") 
+        menuManagement.AddMenu(menuManagement.menuButtonGroup, "MENU") 
         menuManagement.RemoveMenu(self, "MENU")
 
     def CrouchButton(self):
@@ -280,9 +278,9 @@ class CreateSettingsMenu(Setup.pg.sprite.Sprite):
         soundControlSliderText.SetText(f"{volume}")
 
         if volume == 0:
-            muteButton.ChangeImageClick("UNMUTE_BUTTON", None)
+            muteButton.ChangeImageClick("UNMUTE_BUTTON")
         else:
-            muteButton.ChangeImageClick("MUTE_BUTTON", None)
+            muteButton.ChangeImageClick("MUTE_BUTTON")
         
         Setup.SoundHandler.ChangeVolume(volume)
 
@@ -294,13 +292,13 @@ class CreateSettingsMenu(Setup.pg.sprite.Sprite):
 
         if Setup.SoundHandler.GetVolume() == 0: #unmute
             if volume != 0:
-                muteButton.ChangeImageClick("MUTE_BUTTON", None)
+                muteButton.ChangeImageClick("MUTE_BUTTON")
 
             Setup.SoundHandler.ChangeVolume(volume)
                 
         else: # mute
             Setup.SoundHandler.ChangeVolume(0)
-            muteButton.ChangeImageClick("UNMUTE_BUTTON", None) 
+            muteButton.ChangeImageClick("UNMUTE_BUTTON") 
 
 class CreateNewGameMenu(Setup.pg.sprite.Sprite):
     def __init__(self):
@@ -339,25 +337,71 @@ class CreateNewGameMenu(Setup.pg.sprite.Sprite):
             case "EXIT":
                 self.ExitButton()
 
-    def newGameHandler(self):
+    def newGameHandler(self, saveSlot):
+        Setup.setup.SAVE_SLOT = saveSlot
+        menuManagement.AddMenu(menuManagement.newGameSettingsButtonGroup, "MENU")
+        menuManagement.RemoveMenu(self, "MENU")
+
+    def NewGame1Button(self):
+        self.newGameHandler(1)
+
+    def NewGame2Button(self):
+        self.newGameHandler(2)
+    
+    def NewGame3Button(self):
+        self.newGameHandler(3)
+
+    def ExitButton(self):
+        menuManagement.AddMenu(menuManagement.menuButtonGroup, "MENU") 
+        menuManagement.RemoveMenu(self, "MENU")
+
+class NewGameSettings(Setup.pg.sprite.Sprite):
+    def __init__(self):
+        Setup.pg.sprite.Sprite.__init__(self)
+
+        self.buttons = Setup.pg.sprite.Group()
+
+    def CreateButtons(self):
+        width, height = 320, 320
+        xLocation, yLocation = Setup.setup.WIDTH // 2, 300
+        spacing = 400
+
+        gainHealthFromBossesButton = ButtonGroupMethods.CreateButton("GAIN_HEALTH", width, height, xLocation, yLocation, "BONUS_HEALTH_BUTTON")
+        confirmSettingsButton = ButtonGroupMethods.CreateButton("CONFIRM", width, height, xLocation, yLocation + spacing, "CONFIRM_BUTTON")
+
+        xLocation, yLocation = 150, 1000
+        exitButton = ButtonGroupMethods.CreateButton("EXIT", width, height, xLocation, yLocation, "QUIT_BUTTON")
+
+        self.buttons.add(gainHealthFromBossesButton)
+        self.buttons.add(confirmSettingsButton)
+        self.buttons.add(exitButton)
+
+    def ChildActions(self):
+        ButtonGroupMethods.UpdateChildButton(self.buttons)
+
+        clicked = ButtonGroupMethods.CheckClicks(self.buttons)
+
+        match clicked:
+            case "GAIN_HEALTH":
+                self.GainHealthFromBossesButton()
+            case "CONFIRM":
+                self.ConfirmSettingsButton()
+            case "EXIT":
+                self.ExitButton()
+
+    def GainHealthFromBossesButton(self):
+        # change settings in correct save file - can only be changed here once and never again (for this save file)
+        # if settings = OFF, change image etc
+        pass
+
+    def ConfirmSettingsButton(self):
         Setup.setup.gameState = "GAME"
-        menuManagement.AddMenu(inGameButtonGroup, "GAME")
         menuManagement.RemoveMenu(self, "MENU")
         Setup.pg.mouse.set_visible(False)
 
-    def NewGame1Button(self):
-        # create new save file, and change button to a save slot (new button object)
-        self.newGameHandler()
-
-    def NewGame2Button(self):
-        self.newGameHandler()
-    
-    def NewGame3Button(self):
-        self.newGameHandler()
-
     def ExitButton(self):
-        menuManagement.AddMenu(menuButtonGroup, "MENU") 
-        menuManagement.RemoveMenu(self, "MENU")
+        menuManagement.AddMenu(menuManagement.menuButtonGroup, "MENU") 
+        menuManagement.RemoveMenu(self, "MENU")      
 
 class CreateMapMenu(Setup.pg.sprite.Sprite):
     def __init__(self):
@@ -389,7 +433,7 @@ class CreateMapMenu(Setup.pg.sprite.Sprite):
                 self.DeleteButton()
 
     def ExitButton(self):
-        menuManagement.AddMenu(menuButtonGroup, "MENU") 
+        menuManagement.AddMenu(menuManagement.menuButtonGroup, "MENU") 
         menuManagement.RemoveMenu(self, "MENU")      
 
         Setup.setup.gameState = "MENU"
@@ -399,10 +443,10 @@ class CreateMapMenu(Setup.pg.sprite.Sprite):
 
         if Setup.setup.deletingBlocks:
             Setup.setup.deletingBlocks = False
-            deleteButton.ChangeImageClick("DELETE_OFF_BUTTON", None)
+            deleteButton.ChangeImageClick("DELETE_OFF_BUTTON")
         else:
             Setup.setup.deletingBlocks = True
-            deleteButton.ChangeImageClick("DELETE_ON_BUTTON", None)
+            deleteButton.ChangeImageClick("DELETE_ON_BUTTON")
 
 class CreateInGameMenu(Setup.pg.sprite.Sprite):
     def __init__(self):
@@ -435,25 +479,40 @@ class CreateInGameMenu(Setup.pg.sprite.Sprite):
             case "EXIT":
                 self.ExitButton()
 
-        if Setup.setup.pressedKey == Setup.pg.K_TAB: # opening in-game menu using tab
-            if len(self.buttons) == 0:
-                Setup.pg.mouse.set_visible(True)
-                self.CreateButtons()
-            else:
-                Setup.pg.mouse.set_visible(False)
-                self.buttons.empty()
-
     def InventoryButton(self):
-        pass
+        menuManagement.AddMenu(menuManagement.inventoryButtonGroup, "GAME")
+        menuManagement.RemoveMenu(self, "GAME")
 
     def SaveButton(self):
         pass
 
     def ExitButton(self):
         Setup.setup.gameState = "MENU"
-        menuManagement.AddMenu(menuButtonGroup, "MENU")
+        menuManagement.AddMenu(menuManagement.menuButtonGroup, "MENU")
         menuManagement.RemoveMenu(self, "GAME")
         self.buttons.empty()
+
+class CreateInventoryMenu(Setup.pg.sprite.Sprite):
+    def __init__(self):
+        Setup.pg.sprite.Sprite.__init__(self)
+
+        self.buttons = Setup.pg.sprite.Group()
+
+    def CreateButtons(self):       
+        width, height = 160, 160
+        xLocation, yLocation = 800, 200
+        inventoryButton = ButtonGroupMethods.CreateButton("INVENTORY", width, height, xLocation, yLocation, "INVENTORY_BUTTON") 
+        
+        self.buttons.add(inventoryButton)
+
+    def ChildActions(self):
+        ButtonGroupMethods.UpdateChildButton(self.buttons)
+
+        clicked = ButtonGroupMethods.CheckClicks(self.buttons)
+
+        match clicked:
+            case "INVENTORY":
+                pass
 
 class ButtonGroupMethods():
     @staticmethod
@@ -490,32 +549,48 @@ class MenuManagement(Setup.pg.sprite.Sprite):
         self.gameMenus = Setup.pg.sprite.Group()
         self.menus = {"MENU" : self.menuMenus, "GAME" : self.gameMenus}
 
+        self.menuButtonGroup = CreateMainMenu() #create all menus and buttons, add / remove menus from MenuManagement to display / hide
+        self.menuButtonGroup.CreateButtons()
+        self.AddMenu(self.menuButtonGroup, "MENU")
+
+        self.settingsButtonGroup = CreateSettingsMenu()
+        self.settingsButtonGroup.CreateButtons()
+
+        self.mapButtonGroup = CreateMapMenu()
+        self.mapButtonGroup.CreateButtons()
+
+        self.newGameButtonGroup = CreateNewGameMenu()
+        self.newGameButtonGroup.CreateButtons()
+
+        self.newGameSettingsButtonGroup = NewGameSettings()
+        self.newGameSettingsButtonGroup.CreateButtons()
+
+        self.inGameMenuButtonGroup = CreateInGameMenu()
+        self.inGameMenuButtonGroup.CreateButtons()
+
+        self.inventoryButtonGroup = CreateInventoryMenu()
+        self.inventoryButtonGroup.CreateButtons()
+
+        self.background = Background("BACKGROUND_SHEET_FULL")
+
     def RemoveMenu(self, menu, keyword):
         self.menus[keyword].remove(menu)
 
     def AddMenu(self, menu, keyword):
         self.menus[keyword].add(menu)
 
+    def ChangeStateOfMenu(self, menu, keyword, cursor=False):
+        if menu not in self.menus[keyword]:
+            self.AddMenu(menu, keyword)
+            if cursor:
+                Setup.pg.mouse.set_visible(True)
+        else:
+            self.RemoveMenu(menu, keyword)
+            if cursor:
+                Setup.pg.mouse.set_visible(False)
+
     def MenuChildActions(self, keyword):
         for menu in self.menus[keyword]:
             menu.ChildActions()
 
 menuManagement = MenuManagement()
-
-menuButtonGroup = CreateMainMenu() #create all menus and buttons, add / remove menus from MenuManagement to display / hide
-menuButtonGroup.CreateButtons()
-
-settingsButtonGroup = CreateSettingsMenu()
-settingsButtonGroup.CreateButtons()
-
-mapButtonGroup = CreateMapMenu()
-mapButtonGroup.CreateButtons()
-
-newGameButtonGroup = CreateNewGameMenu()
-newGameButtonGroup.CreateButtons()
-
-inGameButtonGroup = CreateInGameMenu()
-
-background = Background("BACKGROUND_SHEET_FULL")
-
-Setup.SoundHandler.PlaySound("MENU_MUSIC")
