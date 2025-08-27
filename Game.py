@@ -1,4 +1,3 @@
-from ast import Raise
 import time
 import Setup
 import MapCreator
@@ -18,6 +17,7 @@ class GameHandler(Setup.pg.sprite.Sprite):
 
         self.blocks = Setup.pg.sprite.Group() # a group of all blocks in the map for easier drawing
         self.entities = Setup.pg.sprite.Group()
+        self.hitBoxes = Setup.pg.sprite.Group()
 
         self.blockAttributeDictionary = {0 : [False, 0, 0],
                                      1 : [True, 0, 80],
@@ -156,7 +156,7 @@ class MapBlock(Setup.pg.sprite.Sprite):
         self.damage = damage
         self.knockback = knockback
 
-class Spell():
+class Spell:
     def __init__(self, name, description, damage, manaCost, parentPlayer):
         self.name = name
         self.description = description
@@ -167,9 +167,8 @@ class Spell():
         self.currentState = "NONE" # "NONE" "SPELL"
         self.tempCounter = 0 # used until spells have an actual function
 
-    def Attack(self, currentMana):
-        if currentMana >= self.manaCost:
-            self.parentPlayer.mana -= self.manaCost
+    def Attack(self):
+        if self.parentPlayer.UseMana(self.manaCost):
             self.currentState = "SPELL"
 
     def Update(self):
@@ -184,7 +183,7 @@ class Spell():
 
         self.tempCounter += 1
 
-class Weapon():
+class Weapon:
     def __init__(self, name, description, abilityDescription, damage, chargedDamage, abilityDamage, abilityManaCost, abilityCooldown, images, parentPlayer): # images is a list of all the different filepaths for the corresponding attacks
         self.name = name
         self.description = description
@@ -239,7 +238,6 @@ class Weapon():
 
         self.tempCounter += 1
         
-
     def ChargedAttack(self):
         if self.tempCounter >= 120:
             self.currentState = "NONE" # after the attack is finished
@@ -266,7 +264,19 @@ class WoodenSword(Weapon):
             pass
             #attack     
 
-class Inventory():
+class HitBox(Setup.pg.sprite.Sprite): # USE SPRITE FUNCTIONALITY FOR COLLISION - THIS WILL MOST LIKELY NOT BE IN THIS CLASS
+    def __init__(self, worldX, worldY, width, height):
+        super().__init__()
+        self.worldX = worldX
+        self.worldY = worldY
+        self.width = width
+        self.height = height
+        self.rect = Setup.pg.Rect(self.worldX, self.worldY, self.width, self.height)
+
+    def update(self):
+        self.rect.topleft = (self.worldX, self.worldY)
+
+class Inventory:
     def __init__(self, player):
         self.parentPlayer = player
         self.inventoryMainMenu = Menus.menuManagement.inventoryButtonGroup
@@ -280,16 +290,21 @@ class Player(Setup.pg.sprite.Sprite):
         super().__init__()
         self.gameHandler = gameHandler
 
+        self.dead = False
         self.name = name
         self.width = Setup.setup.BLOCK_WIDTH
         self.height = Setup.setup.BLOCK_WIDTH
         self.worldX = Setup.setup.WIDTH / 2
         self.worldY = Setup.setup.HEIGHT / 2
+        self.mostRecentWaypointCords = None
 
-        self.maxHealth = 100 # temp
-        self.maxMana = 100 # temp
-        self.health = 100 # temp
-        self.mana = 100 # temp
+        self.maxHealth = 800 # temp
+        self.maxMana = 400 # temp
+        self.health = 500 # temp
+        self.mana = 300 # temp
+        self.manaRegenerationSpeed = 50 / 60 # 50 a second, divided by 60 for each frame
+        self.manaRegenerationCooldown = 1 # second
+        self.mostRecentManaUse = 0
 
         self.camera = Camera(self)
         self.miniMap = MiniMap()
@@ -336,12 +351,9 @@ class Player(Setup.pg.sprite.Sprite):
         collided = []
         self.rect.topleft = (self.worldX, self.worldY)
 
-        for block in mapBlocks:
-            if block.collision: # if the block can be collided with
-                block.rect.topleft = (block.worldX, block.worldY) # using original locations for both the player and block to make collision less confusing
-
-                if self.rect.colliderect(block.rect):
-                    collided.append(block)
+        for collidedBlock in Setup.pg.sprite.spritecollide(self, mapBlocks, False):
+            if collidedBlock.collision:
+                collided.append(collidedBlock)
 
         return collided
 
@@ -460,62 +472,120 @@ class Player(Setup.pg.sprite.Sprite):
             self.keyPressVelocity = 6     
 
     def Update(self):
-        self.Inputs()
+        if self.health <= 0:
+            self.dead = True
 
-        if self.playerXCarriedMovingSpeed != 0:
-            self.movementSpeeds[0] = self.playerXCarriedMovingSpeed
+        if not self.dead:
+            self.Inputs()
 
-        self.movementSpeeds[1] = self.playerYFallingSpeed
+            if self.playerXCarriedMovingSpeed != 0:
+                self.movementSpeeds[0] = self.playerXCarriedMovingSpeed
 
-        if self.playerXCarriedMovingSpeed < 0:
-            self.playerXCarriedMovingSpeed += 1
-        elif self.playerXCarriedMovingSpeed > 0:
-            self.playerXCarriedMovingSpeed -= 1
+            self.movementSpeeds[1] = self.playerYFallingSpeed
 
-        self.playerYFallingSpeed += self.gravity
+            if self.playerXCarriedMovingSpeed < 0:
+                self.playerXCarriedMovingSpeed += 1
+            elif self.playerXCarriedMovingSpeed > 0:
+                self.playerXCarriedMovingSpeed -= 1
 
-        if self.playerYFallingSpeed > 30:
-            self.playerYFallingSpeed = 30 
+            self.playerYFallingSpeed += self.gravity
 
-        collisions = self.Movement(self.gameHandler.blocks)
+            if self.playerYFallingSpeed > 30:
+                self.playerYFallingSpeed = 30 
 
-        if collisions['bottom']:
-            self.currentSheet = self.idleSheet
-            self.state = "IDLE"
-            self.playerYFallingSpeed = 0
-            self.gravity = Setup.setup.GRAVITY
-            self.movementSpeeds[1] = 0
+            collisions = self.Movement(self.gameHandler.blocks)
+
+            if collisions['bottom']:
+                self.currentSheet = self.idleSheet
+                self.state = "IDLE"
+                self.playerYFallingSpeed = 0
+                self.gravity = Setup.setup.GRAVITY
+                self.movementSpeeds[1] = 0
+            else:
+                self.state = "AIR"
+
+            if collisions['top']:
+                self.playerYFallingSpeed = 0
+                self.movementSpeeds[1] = 0
+
+            if collisions['left'] or collisions['right']: 
+                self.movementSpeeds[0] = 0
+
+            if self.mostRecentDirection == "LEFT":
+                self.UpdateCurrentImage(True)
+            else:
+                self.UpdateCurrentImage(False)
+
+            self.camera.Update()
+            self.camera.DisplayMap()
+            self.miniMap.ChangeScale()
+            self.miniMap.DrawMap(self.gameHandler.blocks, self)
+            self.miniMap.DrawWaypoints(self)
+            self.miniMap.pathGuide.FindNearestNode(self)
+            self.Attack()
+            self.AbilitySpell()
+            self.PassiveManaRegeneration()
+            self.weapon.Update()
+            self.spell.Update()
+            self.DrawPlayerAndUI()
         else:
-            self.state = "AIR"
+            self.DrawDeathScreen()
 
-        if collisions['top']:
-            self.playerYFallingSpeed = 0
-            self.movementSpeeds[1] = 0
+    def UseMana(self, manaCost):
+        if self.mana >= manaCost:
+            self.mostRecentManaUse = time.time()
+            self.mana -= manaCost
+            return True
 
-        if collisions['left'] or collisions['right']: 
-            self.movementSpeeds[0] = 0
+        return False
 
-        if self.mostRecentDirection == "LEFT":
-            self.UpdateCurrentImage(True)
-        else:
-            self.UpdateCurrentImage(False)
+    def ApplyKnockback(self, knockback):
+        self.playerXCarriedMovingSpeed = knockback # cannot dash out of a knockback
+        self.playerYFallingSpeed = -abs(knockback / 1.75)
 
-        self.camera.Update()
-        self.camera.DisplayMap()
-        self.miniMap.ChangeScale()
-        self.miniMap.DrawMap(self.gameHandler.blocks, self)
-        self.miniMap.DrawWaypoints(self)
-        self.miniMap.pathGuide.FindNearestNode(self)
-        self.Attack()
-        self.AbilitySpell()
-        self.weapon.Update()
-        self.spell.Update()
+    def PassiveManaRegeneration(self):
+        currentTime = time.time()
+        
+        if currentTime - self.mostRecentManaUse >= self.manaRegenerationCooldown:
+            if self.mana + self.manaRegenerationSpeed > self.maxMana:
+                self.mana += self.maxMana - self.mana
+            else:
+                self.mana += self.manaRegenerationSpeed
 
-    def DrawFrame(self):
+    def DrawPlayerAndUI(self):
         if not self.miniMap.enlarged:
             drawX = self.worldX - self.camera.camera.left # always in centre of the screen
             drawY = self.worldY - self.camera.camera.top
-            Setup.setup.screen.blit(self.currentImage, (drawX, drawY))
+            Setup.setup.screen.blit(self.currentImage, (drawX, drawY)) # draw player image
+
+            Setup.pg.draw.rect(Setup.setup.screen, Setup.pg.Color("red4"), (0, 0, self.maxHealth, 50)) # red health bar (background of bar)
+            Setup.pg.draw.rect(Setup.setup.screen, Setup.pg.Color("forestgreen"), (0, 0, self.health, 50)) # green health bar
+
+            Setup.pg.draw.rect(Setup.setup.screen, Setup.pg.Color("dimgrey"), (0, 50, self.maxMana, 50)) # grey mana bar (background of bar)
+            Setup.pg.draw.rect(Setup.setup.screen, Setup.pg.Color("dodgerblue3"), (0, 50, self.mana, 50)) # blue mana bar
+
+    def DrawDeathScreen(self):
+        deathScreenText = Setup.TextMethods.CreateText("DEATH", "DEAD", Setup.setup.RED, Setup.setup.WIDTH // 2, Setup.setup.HEIGHT // 2, 100)
+        respawnText = Setup.TextMethods.CreateText("RESPAWN", "Press SPACE to respawn", Setup.setup.WHITE, Setup.setup.WIDTH // 2, Setup.setup.HEIGHT // 2 + 200, 40)
+        deathScreenText.Draw()
+        respawnText.Draw()
+
+        if Setup.setup.pressedKey == Setup.pg.K_SPACE:
+            self.Respawn()
+
+    def Respawn(self):
+        self.dead = False
+        self.ResetHealthAndMana()
+
+        if self.mostRecentWaypointCords:
+            (self.worldX, self.worldY) = self.mostRecentWaypointCords
+        else:
+            self.worldX = Setup.setup.WIDTH / 2
+            self.worldY = Setup.setup.HEIGHT / 2
+
+    def ResetHealthAndMana(self):
+        self.mana = self.maxMana
+        self.health = self.maxHealth
 
     def Attack(self):
         if Setup.pg.mouse.get_pressed()[0] and not self.weapon.isChargingAttack:
@@ -535,7 +605,7 @@ class Player(Setup.pg.sprite.Sprite):
             self.weapon.Ability(currentTime)
 
         if keys[Setup.pg.K_f]:
-            self.spell.Attack(self.mana)
+            self.spell.Attack()
 
 class GameBackground:
     def __init__(self, gameHandler):  
@@ -606,6 +676,8 @@ class Waypoint:
     def MiniMapFunction(self, player):
         if self.prompt.PromptInteractedWith():
             self.waypointActive = True
+            player.ResetHealthAndMana()
+            player.mostRecentWaypointCords = (self.parent.worldX, self.parent.worldY)
             player.miniMap.enlarged = not player.miniMap.enlarged
             player.miniMap.seeWaypoints = True
             Setup.pg.mouse.set_visible(not Setup.pg.mouse.get_visible())
@@ -848,8 +920,8 @@ class Camera:
 
     def DisplayMap(self):
         blocks = self.player.gameHandler.blocks
-
         blocksWithPrompts = []
+
         waypoints = self.player.gameHandler.waypoints
         treasureChests = self.player.gameHandler.treasureChests
         friendlyCharacters = self.player.gameHandler.friendlyCharacters
@@ -867,7 +939,7 @@ class Camera:
             for block in blocks:
                 block.IsPlayerInRange(self.player, self.camera)
 
-class FriendlyCharacter(Setup.pg.sprite.Sprite):
+class FriendlyCharacter:
     def __init__(self, parentBlock, friendlyCharacterNumber):
         self.parent = parentBlock
         self.prompt = Prompt("E_PROMPT_IMAGE", "e")
