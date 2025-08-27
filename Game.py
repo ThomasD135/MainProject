@@ -1,3 +1,4 @@
+from ast import Raise
 import time
 import Setup
 import MapCreator
@@ -39,6 +40,11 @@ class GameHandler(Setup.pg.sprite.Sprite):
                                      18 : [False, 0, 0],
                                      19 : [False, 0, 0],
                                      20 : [False, 0, 0],
+                                     43 : [False, 0, 0], # friendly character start
+                                     44 : [False, 0, 0],
+                                     45 : [False, 0, 0],
+                                     46 : [False, 0, 0],
+                                     47 : [False, 0, 0], # friendly character end
                                      }# (collision with player, damage if any, knockback when hit (is increased if player takes damage from block)
 
         self.CreatePlayableMap()
@@ -52,26 +58,34 @@ class GameHandler(Setup.pg.sprite.Sprite):
         self.playableMap = []
         self.waypoints = []
         self.treasureChests = []
+        self.friendlyCharacters = []
+
         newRow = []
 
         for row in MapCreator.mapDataHandler.mapGrid.blockGrid:
             for block in row:
-                if block.blockNumber <= 20: # a block and not an entity
+                if block.blockNumber <= 20 or (block.blockNumber >= 43 and block.blockNumber <= 47): # a block and not an entity - friendly characters only display text so are represented as a block
                     attributes = self.blockAttributeDictionary.get(block.blockNumber)
 
-                    mapBlock = MapBlock(block.blockNumber, block.rotation, block.originalLocationX, block.originalLocationY, block.image, attributes[0], attributes[1], attributes[2])
-                    newRow.append(mapBlock)
+                    if attributes:
+                        mapBlock = MapBlock(block.blockNumber, block.rotation, block.originalLocationX, block.originalLocationY, block.image, attributes[0], attributes[1], attributes[2])
+                        newRow.append(mapBlock)
                      
-                    if block.blockNumber != 0: # self.blocks will be used to display the blocks, block 0 is a filler block for the map creator and should not be visible in game
-                        self.blocks.add(mapBlock)
+                        if block.blockNumber != 0: # self.blocks will be used to display the blocks, block 0 is a filler block for the map creator and should not be visible in game
+                            self.blocks.add(mapBlock)
 
-                    if block.blockNumber == 17 or block.blockNumber == 18: # waypoints
-                        self.waypoints.append(Waypoint(mapBlock))
+                        if block.blockNumber == 17 or block.blockNumber == 18: # waypoints
+                            self.waypoints.append(Waypoint(mapBlock))
 
-                    if block.blockNumber == 19: # treasure chests
-                        self.treasureChests.append(TreaureChest(mapBlock, "wooden sword")) # temp reward
+                        if block.blockNumber == 19: # treasure chests
+                            self.treasureChests.append(TreaureChest(mapBlock, "wooden sword")) # temp reward
 
-                else: # entities (bosses, enemies, NPCs, pathFinders)
+                        if block.blockNumber >= 43 and block.blockNumber <= 47: # friendly characters
+                            self.friendlyCharacters.append(FriendlyCharacter(mapBlock, block.blockNumber - 43)) # between 0 and 4
+                    else:
+                        raise ValueError("block has no attributes")
+
+                else: # entities (bosses, enemies, pathFinders)
                     if block.blockNumber == 48:    
                         self.pathfindingWaypointBlocks.append(block) 
 
@@ -257,8 +271,9 @@ class Inventory():
         self.parentPlayer = player
         self.inventoryMainMenu = Menus.menuManagement.inventoryButtonGroup
 
-    def UpdatePlayerModel(self):
-        pass
+    def UpdatePlayerModelScreen(self):
+        Setup.pg.draw.rect(Setup.setup.screen, Setup.setup.BLACK, (0, 0, Setup.setup.WIDTH, Setup.setup.HEIGHT)) # background
+        Setup.setup.screen.blit(self.parentPlayer.currentImage, (0, 0)) # current player image
 
 class Player(Setup.pg.sprite.Sprite):
     def __init__(self, name, gameHandler):
@@ -370,7 +385,7 @@ class Player(Setup.pg.sprite.Sprite):
 
         if self.miniMap.enlarged and self.miniMap.seeWaypoints: # cannot move when currently at a waypoint - can move when viewing mini map normally
             self.movementSpeeds, self.playerXCarriedMovingSpeed = [0, 0], 0
-        else:
+        else:           
             self.OpenCloseInventory()
             self.OpenCloseInGameMenu()
             self.MovementKeyHandler(keys)
@@ -789,10 +804,11 @@ class PathGuide:
                 blockCordsMini = ((self.pathBlockObjects[0].originalLocationX + Setup.setup.BLOCK_WIDTH // 2) // shrinkModifier + startX, (self.pathBlockObjects[0].originalLocationY + Setup.setup.BLOCK_WIDTH // 2) // shrinkModifier + startY)
                 Setup.pg.draw.line(Setup.setup.screen, Setup.setup.RED, playerCordsMini, blockCordsMini, 80 // shrinkModifier) 
 
-                playerCordsScreen = (player.rect.centerx - camera.left, player.rect.centery - camera.top)
-                blockCordsScreen = ((self.pathBlockObjects[0].originalLocationX + Setup.setup.BLOCK_WIDTH // 2) - camera.left, (self.pathBlockObjects[0].originalLocationY + Setup.setup.BLOCK_WIDTH // 2 - camera.top))
-                Setup.pg.draw.line(Setup.setup.screen, Setup.setup.RED, playerCordsScreen, blockCordsScreen, 20)
-                Setup.pg.draw.circle(Setup.setup.screen, Setup.setup.RED, blockCordsScreen, 40)
+                if not player.miniMap.enlarged:
+                    playerCordsScreen = (player.rect.centerx - camera.left, player.rect.centery - camera.top)
+                    blockCordsScreen = ((self.pathBlockObjects[0].originalLocationX + Setup.setup.BLOCK_WIDTH // 2) - camera.left, (self.pathBlockObjects[0].originalLocationY + Setup.setup.BLOCK_WIDTH // 2 - camera.top))
+                    Setup.pg.draw.line(Setup.setup.screen, Setup.setup.RED, playerCordsScreen, blockCordsScreen, 20)
+                    Setup.pg.draw.circle(Setup.setup.screen, Setup.setup.RED, blockCordsScreen, 40)
 
             for blockIndex in range(0, len(self.path) - 1): 
                 #----------------------------------------------------------- mini map
@@ -836,9 +852,11 @@ class Camera:
         blocksWithPrompts = []
         waypoints = self.player.gameHandler.waypoints
         treasureChests = self.player.gameHandler.treasureChests
+        friendlyCharacters = self.player.gameHandler.friendlyCharacters
 
         blocksWithPrompts.append(waypoints)
         blocksWithPrompts.append(treasureChests)
+        blocksWithPrompts.append(friendlyCharacters)
 
         for block in blocks:
             drawX = block.worldX - self.camera.left
@@ -849,8 +867,50 @@ class Camera:
             for block in blocks:
                 block.IsPlayerInRange(self.player, self.camera)
 
-class NPC(Setup.pg.sprite.Sprite):
-    def __init__(self, parentBlock):
+class FriendlyCharacter(Setup.pg.sprite.Sprite):
+    def __init__(self, parentBlock, friendlyCharacterNumber):
         self.parent = parentBlock
+        self.prompt = Prompt("E_PROMPT_IMAGE", "e")
+        self.textNumber = 0
+        self.hasRewardedItem = False
+        self.displayActive = False
+
+        allItems = {0 : None,
+                    1 : None,
+                    2 : None,
+                    3 : None,
+                    4 : None}
+
+        allText = {0 : ["Hi this is the first text, i will help you throughout the game", 
+                        "Hi this is the second text", 
+                        "Hi this is the third text",
+                        "Hi this is the summary text"],
+                    1 : ["Hi this is the first text, i will help you throughout the game"],
+                    2 : ["Hi this is the first text, i will help you throughout the game"],
+                    3 : ["Hi this is the first text, i will help you throughout the game"],
+                    4 : ["Hi this is the first text, i will help you throughout the game"]}
+
+        self.text = allText[friendlyCharacterNumber]
+        self.item = allItems[friendlyCharacterNumber]
+
+    def IsPlayerInRange(self, player, camera):
+        if self.prompt.IsPlayerInRange(self.parent, player, camera):
+            self.FriendlyCharacterChestFunction(player) 
+        else:
+            self.displayActive = False
+
+    def FriendlyCharacterChestFunction(self, player):
+        if self.prompt.PromptInteractedWith() or self.displayActive:
+            self.displayActive = True
+            Setup.pg.draw.rect(Setup.setup.screen, Setup.setup.BLACK, (500, Setup.setup.HEIGHT * (4 / 5), 920, Setup.setup.HEIGHT // 5))
+            textToDraw = Setup.TextMethods.CreateText(f"{self.textNumber}", self.text[self.textNumber], Setup.setup.WHITE, Setup.setup.WIDTH // 2, Setup.setup.HEIGHT * (4.5 / 5), 30)
+            textToDraw.Draw()
+
+            if Setup.setup.pressedKey == Setup.pg.K_RETURN:
+                if self.textNumber < len(self.text) - 1:
+                    self.textNumber += 1
+                else:
+                    self.displayActive = False
+                    # REWARD ITEM - use player parameter
 
 gameHandler = GameHandler()
