@@ -4,9 +4,10 @@ import Setup
 Setup.pg.font.init()
 
 class Button(Setup.pg.sprite.Sprite):
-    def __init__(self, name, width, height, locationX, locationY, filePathImage, isSheetImage=False, sheetSurface=None, blockNumber=-1, rotation=0):
+    def __init__(self, name, width, height, locationX, locationY, filePathImage):
         Setup.pg.sprite.Sprite.__init__(self)
 
+        self.isBlock = False
         self.name = name
         self.textList = []
 
@@ -14,24 +15,10 @@ class Button(Setup.pg.sprite.Sprite):
         self.height = height
         self.locationX = locationX
         self.locationY = locationY
-
-        self.canHover = not isSheetImage
-
-        if not isSheetImage: # normal buttons
-            self.filePath = Setup.os.path.join("ASSETS", "BUTTON_IMAGES", filePathImage)
-            self.image = Setup.pg.image.load(self.filePath + ".png").convert_alpha();
-            self.image = Setup.pg.transform.scale(self.image, (self.width, self.height)) 
-            self.isBlock = False
-        else: # blocks and entities
-            self.baseImage = sheetSurface
-            self.image = sheetSurface         
-            self.blockNumber = blockNumber
-            self.rotation = rotation
-            self.originalLocationX = self.locationX
-            self.originalLocationY = self.locationY 
-            self.imageType = "NORMAL" # either NORMAL or HOVER. Used to avoid changing image to the same image
-            self.isBlock = True
-
+   
+        self.filePath = Setup.os.path.join("ASSETS", "BUTTON_IMAGES", filePathImage)
+        self.image = Setup.pg.image.load(self.filePath + ".png").convert_alpha();
+        self.image = Setup.pg.transform.scale(self.image, (self.width, self.height)) 
         self.mask = Setup.pg.mask.from_surface(self.image) # mask allows for more accurate collision detection
 
         self.rect = self.image.get_rect()
@@ -60,12 +47,12 @@ class Button(Setup.pg.sprite.Sprite):
         if Setup.pg.mouse.get_pressed()[0] == 0:
             self.clicked = False
 
-        self.ChangeImageHover()
+        if not self.isBlock:
+            self.ChangeImageHover()
 
     def ChangeImage(self, fileNameEnd):
-        if self.canHover:
-            self.image = Setup.pg.image.load(self.filePath + fileNameEnd)
-            self.image = Setup.pg.transform.scale(self.image, (self.width, self.height))
+        self.image = Setup.pg.image.load(self.filePath + fileNameEnd)
+        self.image = Setup.pg.transform.scale(self.image, (self.width, self.height))
 
     def ChangeImageHover(self):
         if self.hover:
@@ -73,12 +60,9 @@ class Button(Setup.pg.sprite.Sprite):
         else:
             self.ChangeImage(".png")
 
-    def ChangeImageClick(self, fileName, sheetImage=None):
-        if self.canHover:
-            self.filePath = Setup.os.path.join("ASSETS", "BUTTON_IMAGES", fileName) # change the image to a completely different image
-            self.ChangeImage(".png")
-        else:
-            self.image = sheetImage
+    def ChangeImageClick(self, fileName):
+        self.filePath = Setup.os.path.join("ASSETS", "BUTTON_IMAGES", fileName) # change the image to a completely different image
+        self.ChangeImage(".png")          
 
     def CenterText(self):
         for text in self.textList:
@@ -107,10 +91,40 @@ class Button(Setup.pg.sprite.Sprite):
             return False
 
         return True
+
+class BlockButton(Button):
+    def __init__(self, name, width, height, locationX, locationY, blockNumber, rotation, sheetSurface):
+        Setup.pg.sprite.Sprite.__init__(self)
+
+        self.isBlock = True
+        self.name = name
+        self.textList = []
+
+        self.width = width
+        self.height = height
+        self.originalLocationX = locationX
+        self.originalLocationY = locationY 
+
+        self.baseImage = sheetSurface
+        self.image = sheetSurface         
+        self.blockNumber = blockNumber
+        self.rotation = rotation      
+        self.imageType = "NORMAL" # either NORMAL or HOVER. Used to avoid changing image to the same image
+
+        self.mask = Setup.pg.mask.from_surface(self.image) # mask allows for more accurate collision detection
+
+        self.rect = self.image.get_rect()
+        self.rect.center = (self.originalLocationX, self.originalLocationY)
+
+        self.clicked = False
+        self.hover = False
+
+    def ChangeImageClick(self, sheetImage):
+        self.image = sheetImage
         
 class SlidingButton(Button):
-    def __init__(self, name, width, height, locationX, locationY, filePathImage, length, isSheetImage, sheetSurface):
-        super().__init__(name, width, height, locationX, locationY, filePathImage, isSheetImage, sheetSurface) # calls the Button __init__ function
+    def __init__(self, name, width, height, locationX, locationY, filePathImage, length):
+        super().__init__(name, width, height, locationX, locationY, filePathImage) 
         self.length = length
 
     def CheckClick(self):
@@ -490,7 +504,6 @@ class CreateInGameMenu(Setup.pg.sprite.Sprite):
         Setup.setup.gameState = "MENU"
         menuManagement.AddMenu(menuManagement.menuButtonGroup, "MENU")
         menuManagement.RemoveMenu(self, "GAME")
-        self.buttons.empty()
 
 class CreateInventoryMenu(Setup.pg.sprite.Sprite):
     def __init__(self):
@@ -516,12 +529,12 @@ class CreateInventoryMenu(Setup.pg.sprite.Sprite):
 
 class ButtonGroupMethods():
     @staticmethod
-    def CreateButton(name, width, height, locationX, locationY, filePathImage, isSheetImage=False, sheetSurface=None):
-        return Button(name, width, height, locationX, locationY, filePathImage, isSheetImage, sheetSurface)
+    def CreateButton(name, width, height, locationX, locationY, filePathImage):
+        return Button(name, width, height, locationX, locationY, filePathImage)
 
     @staticmethod
-    def CreateSlidingButton(name, width, height, locationX, locationY, filePathImage, length, isSheetSurface=False, sheetSurface=None):
-        return SlidingButton(name, width, height, locationX, locationY, filePathImage, length, isSheetSurface, sheetSurface) 
+    def CreateSlidingButton(name, width, height, locationX, locationY, filePathImage, length):
+        return SlidingButton(name, width, height, locationX, locationY, filePathImage, length) 
 
     @staticmethod
     def UpdateChildButton(buttonList):

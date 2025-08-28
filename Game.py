@@ -27,12 +27,12 @@ class GameHandler(Setup.pg.sprite.Sprite):
                                      5 : [True, 0, 10],
                                      6 : [True, 0, 10],
                                      7 : [True, 0, 10],
-                                     8 : [True, 10, 20], # spike start
-                                     9 : [True, 10, 20],
-                                     10 : [True, 10, 20],
-                                     11 : [True, 10, 20],
-                                     12 : [True, 10, 20],
-                                     13 : [True, 10, 20], # spike end
+                                     8 : [True, 30, 20], # spike start
+                                     9 : [True, 30, 20],
+                                     10 : [True, 30, 20],
+                                     11 : [True, 30, 20],
+                                     12 : [True, 30, 20],
+                                     13 : [True, 30, 20], # spike end
                                      14 : [False, 0, 0],
                                      15 : [False, 0, 0],
                                      16 : [False, 0, 0],
@@ -154,7 +154,7 @@ class MapBlock(Setup.pg.sprite.Sprite):
 
         self.image = Setup.pg.transform.scale(image, (self.width, self.height)) 
         self.rect = self.image.get_rect()
-        self.rect.topleft = (self.worldX, self.worldY)  
+        self.rect.topleft = (self.worldX, self.worldY)    
 
         self.collision = hasCollision 
         self.damage = damage
@@ -376,14 +376,18 @@ class Player(Setup.pg.sprite.Sprite):
             if self.movementSpeeds[0] > 0: # moving right so colliding with the left side of the block (right side of the player)
                 self.worldX = block.worldX - self.rect.width # always snap the player to outside the block
                 
-                if not self.BlockCollision(block, "LEFT"): # opposite to direction of travel - if the collided block is not something with knockback (make sure to not negate the knockback)                   
-                    collisions['right'] = True # do not create a collision as the knockback forces the player out of the block (otherwise the falling logic won't work as the game resets the falling speed)
+                if self.BlockCollision(block, "LEFT"): # opposite to direction of travel - if the collided block is not something with knockback (make sure to not negate the knockback)                   
+                    break # break out of loop to avoid mutliple spike collisions occuring on the same frame
+                
+                collisions['right'] = True # do not create a collision as the knockback forces the player out of the block (otherwise the falling logic won't work as the game resets the falling speed)
 
             elif self.movementSpeeds[0] < 0: # moving left so colliding with the right side of the block (left side of the player)
                 self.worldX = block.worldX + block.rect.width
                 
-                if not self.BlockCollision(block, "RIGHT"):                   
-                    collisions['left'] = True
+                if self.BlockCollision(block, "RIGHT"):   
+                    break
+                
+                collisions['left'] = True    
 
             self.rect.topleft = (self.worldX, self.worldY)
 
@@ -395,14 +399,18 @@ class Player(Setup.pg.sprite.Sprite):
             if self.movementSpeeds[1] > 0: # moving down so colliding with the top of the block (bottom of the player)
                 self.worldY = block.worldY - self.rect.height
                 
-                if not self.BlockCollision(block, "UP"):                     
-                    collisions['bottom'] = True
+                if self.BlockCollision(block, "UP"):   
+                    break
+                
+                collisions['bottom'] = True
                 
             elif self.movementSpeeds[1] < 0: # moving up so colliding with the bottom of the block (top of the player)
                 self.worldY = block.worldY + block.rect.height
                 
-                if not self.BlockCollision(block, "DOWN"):                   
-                    collisions['top'] = True
+                if self.BlockCollision(block, "DOWN"):   
+                    break
+                
+                collisions['top'] = True
           
             self.rect.topleft = (self.worldX, self.worldY)
 
@@ -458,9 +466,11 @@ class Player(Setup.pg.sprite.Sprite):
                 self.state = "AIR"
                 self.playerYFallingSpeed = -20
                 self.gravity = Setup.setup.GRAVITY
-
+            
             elif self.movementSpeeds[1] < 0: # if the player is holding space while still moving upwards (different to falling)
-                if self.gravity >= Setup.setup.GRAVITY * 0.4:
+                if self.gravity * 0.95 < Setup.setup.GRAVITY * 0.4:
+                    self.gravity = Setup.setup.GRAVITY * 0.4
+                else:
                     self.gravity *= 0.95
 
             elif self.movementSpeeds[1] > 0: # if the player is holding space while falling (constant falling speed)
@@ -559,15 +569,16 @@ class Player(Setup.pg.sprite.Sprite):
         return False
 
     def BlockCollision(self, block, directionOfKnockback):
-        if block.topFace == directionOfKnockback:
-            if block.damage:
-                self.TakeHealth(block.damage)
-                self.ApplyKnockback(block.knockback, directionOfKnockback)
-                return True
+        if block.topFace == directionOfKnockback and block.damage > 0: # if block has no damage, there is no knockback
+            self.TakeHealth(block.damage)
+            self.ApplyKnockback(block.knockback, directionOfKnockback)
+            return True
 
         return False
 
     def ApplyKnockback(self, knockback, direction):
+        self.gravity = 1
+
         if direction in ("RIGHT", "LEFT"):
             if direction == "RIGHT":
                 self.playerXCarriedMovingSpeed = knockback # cannot dash out of a knockback
@@ -580,7 +591,7 @@ class Player(Setup.pg.sprite.Sprite):
             if direction == "UP":
                 self.playerYFallingSpeed = -knockback # pushes the player upwards
             else:
-                self.playerYFallingSpeed = knockback # pushes the player downwards
+                self.playerYFallingSpeed = knockback / 2 # pushes the player downwards
 
         self.movementSpeeds[1] = self.playerYFallingSpeed # update speeds early to move the player before speed is reset (collision with the ground)
 
