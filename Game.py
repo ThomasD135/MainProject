@@ -20,19 +20,19 @@ class GameHandler(Setup.pg.sprite.Sprite):
         self.hitBoxes = Setup.pg.sprite.Group()
 
         self.blockAttributeDictionary = {0 : [False, 0, 0],
-                                     1 : [True, 0, 80],
-                                     2 : [True, 0, 80],
-                                     3 : [True, 0, 80],
-                                     4 : [True, 0, 80],
-                                     5 : [True, 0, 80],
-                                     6 : [True, 0, 80],
-                                     7 : [True, 0, 80],
-                                     8 : [False, 10, 80], # spike start
-                                     9 : [False, 10, 80],
-                                     10 : [False, 10, 80],
-                                     11 : [False, 10, 80],
-                                     12 : [False, 10, 80],
-                                     13 : [False, 10, 80], # spike end
+                                     1 : [True, 0, 10],
+                                     2 : [True, 0, 10],
+                                     3 : [True, 0, 10],
+                                     4 : [True, 0, 10],
+                                     5 : [True, 0, 10],
+                                     6 : [True, 0, 10],
+                                     7 : [True, 0, 10],
+                                     8 : [True, 10, 20], # spike start
+                                     9 : [True, 10, 20],
+                                     10 : [True, 10, 20],
+                                     11 : [True, 10, 20],
+                                     12 : [True, 10, 20],
+                                     13 : [True, 10, 20], # spike end
                                      14 : [False, 0, 0],
                                      15 : [False, 0, 0],
                                      16 : [False, 0, 0],
@@ -67,8 +67,11 @@ class GameHandler(Setup.pg.sprite.Sprite):
                 if block.blockNumber <= 20 or (block.blockNumber >= 43 and block.blockNumber <= 47): # a block and not an entity - friendly characters only display text so are represented as a block
                     attributes = self.blockAttributeDictionary.get(block.blockNumber)
 
+                    if block.rotation <= -360:
+                        block.rotation %= 360
+
                     if attributes:
-                        mapBlock = MapBlock(block.blockNumber, block.rotation, block.originalLocationX, block.originalLocationY, block.image, attributes[0], attributes[1], attributes[2])
+                        mapBlock = MapBlock(block.blockNumber, block.rotation, block.rotation // -90, block.originalLocationX, block.originalLocationY, block.image, attributes[0], attributes[1], attributes[2])
                         newRow.append(mapBlock)
                      
                         if block.blockNumber != 0: # self.blocks will be used to display the blocks, block 0 is a filler block for the map creator and should not be visible in game
@@ -138,10 +141,11 @@ class GameHandler(Setup.pg.sprite.Sprite):
         self.dijkstraGraph = Dijkstra.DijkstraImplementation(self.weightedAdjacencyList.weightedGraph)
 
 class MapBlock(Setup.pg.sprite.Sprite): 
-    def __init__(self, blockNumber, rotation, originalLocationX, originalLocationY, image, hasCollision, damage, knockback):
+    def __init__(self, blockNumber, rotation, smallRotation, originalLocationX, originalLocationY, image, hasCollision, damage, knockback):
         super().__init__()
         self.blockNumber = blockNumber
         self.rotation = rotation
+        self.smallRotation = smallRotation
         self.worldX = originalLocationX
         self.worldY = originalLocationY
 
@@ -155,6 +159,9 @@ class MapBlock(Setup.pg.sprite.Sprite):
         self.collision = hasCollision 
         self.damage = damage
         self.knockback = knockback
+
+        directions = ["UP", "RIGHT", "DOWN", "LEFT"]
+        self.topFace = directions[self.smallRotation]
 
 class Spell:
     def __init__(self, name, description, damage, manaCost, parentPlayer):
@@ -257,7 +264,7 @@ class WoodenSword(Weapon):
         super.__init__()
 
         self.basicAttackLength = 2 # seconds
-        self.basicAttackSheet = 0
+        self.basicAttackSheet = None
 
     def BasicAttack(self):
         if self.attackStart <= self.basicAttackLength:
@@ -265,8 +272,9 @@ class WoodenSword(Weapon):
             #attack     
 
 class HitBox(Setup.pg.sprite.Sprite): # USE SPRITE FUNCTIONALITY FOR COLLISION - THIS WILL MOST LIKELY NOT BE IN THIS CLASS
-    def __init__(self, worldX, worldY, width, height):
+    def __init__(self, worldX, worldY, width, height, parentObject):
         super().__init__()
+        self.parent = parentObject
         self.worldX = worldX
         self.worldY = worldY
         self.width = width
@@ -366,12 +374,16 @@ class Player(Setup.pg.sprite.Sprite):
 
         for block in self.CollideWithObject(mapBlocks):
             if self.movementSpeeds[0] > 0: # moving right so colliding with the left side of the block (right side of the player)
-                self.worldX = block.worldX - self.rect.width
-                collisions['right'] = True
+                self.worldX = block.worldX - self.rect.width # always snap the player to outside the block
+                
+                if not self.BlockCollision(block, "LEFT"): # opposite to direction of travel - if the collided block is not something with knockback (make sure to not negate the knockback)                   
+                    collisions['right'] = True # do not create a collision as the knockback forces the player out of the block (otherwise the falling logic won't work as the game resets the falling speed)
 
             elif self.movementSpeeds[0] < 0: # moving left so colliding with the right side of the block (left side of the player)
                 self.worldX = block.worldX + block.rect.width
-                collisions['left'] = True
+                
+                if not self.BlockCollision(block, "RIGHT"):                   
+                    collisions['left'] = True
 
             self.rect.topleft = (self.worldX, self.worldY)
 
@@ -382,12 +394,16 @@ class Player(Setup.pg.sprite.Sprite):
         for block in self.CollideWithObject(mapBlocks):
             if self.movementSpeeds[1] > 0: # moving down so colliding with the top of the block (bottom of the player)
                 self.worldY = block.worldY - self.rect.height
-                collisions['bottom'] = True
-
+                
+                if not self.BlockCollision(block, "UP"):                     
+                    collisions['bottom'] = True
+                
             elif self.movementSpeeds[1] < 0: # moving up so colliding with the bottom of the block (top of the player)
                 self.worldY = block.worldY + block.rect.height
-                collisions['top'] = True
-
+                
+                if not self.BlockCollision(block, "DOWN"):                   
+                    collisions['top'] = True
+          
             self.rect.topleft = (self.worldX, self.worldY)
 
         return collisions
@@ -531,6 +547,9 @@ class Player(Setup.pg.sprite.Sprite):
         else:
             self.DrawDeathScreen()
 
+    def TakeHealth(self, damage):
+        self.health -= damage
+
     def UseMana(self, manaCost):
         if self.mana >= manaCost:
             self.mostRecentManaUse = time.time()
@@ -539,9 +558,31 @@ class Player(Setup.pg.sprite.Sprite):
 
         return False
 
-    def ApplyKnockback(self, knockback):
-        self.playerXCarriedMovingSpeed = knockback # cannot dash out of a knockback
-        self.playerYFallingSpeed = -abs(knockback / 1.75)
+    def BlockCollision(self, block, directionOfKnockback):
+        if block.topFace == directionOfKnockback:
+            if block.damage:
+                self.TakeHealth(block.damage)
+                self.ApplyKnockback(block.knockback, directionOfKnockback)
+                return True
+
+        return False
+
+    def ApplyKnockback(self, knockback, direction):
+        if direction in ("RIGHT", "LEFT"):
+            if direction == "RIGHT":
+                self.playerXCarriedMovingSpeed = knockback # cannot dash out of a knockback
+            else:
+                self.playerXCarriedMovingSpeed = -knockback 
+
+            self.playerYFallingSpeed = -abs(knockback / 1.25) # pushes the player slightly upwards           
+
+        else: # "UP" or "DOWN" - No movement on the x axis
+            if direction == "UP":
+                self.playerYFallingSpeed = -knockback # pushes the player upwards
+            else:
+                self.playerYFallingSpeed = knockback # pushes the player downwards
+
+        self.movementSpeeds[1] = self.playerYFallingSpeed # update speeds early to move the player before speed is reset (collision with the ground)
 
     def PassiveManaRegeneration(self):
         currentTime = time.time()
@@ -933,8 +974,11 @@ class Camera:
         for block in blocks:
             drawX = block.worldX - self.camera.left
             drawY = block.worldY - self.camera.top
-            Setup.setup.screen.blit(block.image, (drawX, drawY))
+            tempRect = Setup.pg.Rect(drawX, drawY, block.width, block.height)
 
+            if Setup.setup.screenRect.colliderect(tempRect): # if on the screen
+                Setup.setup.screen.blit(block.image, (drawX, drawY))
+        
         for blocks in blocksWithPrompts:
             for block in blocks:
                 block.IsPlayerInRange(self.player, self.camera)

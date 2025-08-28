@@ -43,7 +43,7 @@ class MapDataHandling():
                 else:
                     dataLine += "0" + str(block.blockNumber)
 
-                if block.rotation < -360:
+                if block.rotation <= -360:
                     block.rotation %= -360
 
                 dataLine += str(block.rotation // -90) # 0 for no rotation, 1 for a 90 degree rotation. Keeps data stored as a single number. Using -90 to avoid storing a negative sign (fixed in data loading)
