@@ -1,4 +1,8 @@
+from multiprocessing import Value
 import time
+from turtle import width
+
+from pygame import draw
 import Setup
 import MapCreator
 import Menus
@@ -16,10 +20,11 @@ class GameHandler(Setup.pg.sprite.Sprite):
         self.pathfindingWaypointBlocks = []
 
         self.blocks = Setup.pg.sprite.Group() # a group of all blocks in the map for easier drawing
-        self.entities = Setup.pg.sprite.Group()
+        self.enemies = Setup.pg.sprite.Group()
+        self.bosses = Setup.pg.sprite.Group()
         self.hitBoxes = Setup.pg.sprite.Group()
 
-        self.blockAttributeDictionary = {0 : [False, 0, 0],
+        self.blockAttributeDictionary = {0 : [False, 0, 0], # enemies and bosses all have no collision so no need for attributes
                                      1 : [True, 0, 10],
                                      2 : [True, 0, 10],
                                      3 : [True, 0, 10],
@@ -45,7 +50,23 @@ class GameHandler(Setup.pg.sprite.Sprite):
                                      45 : [False, 0, 0],
                                      46 : [False, 0, 0],
                                      47 : [False, 0, 0], # friendly character end
-                                     }# (collision with player, damage if any, knockback when hit (is increased if player takes damage from block)
+                                     }# [collision with player, damage if any, knockback when hit (is increased if player takes damage from block]
+
+        self.enemyTypes = {1 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "speed": 5, "size": 160, "suspicionRange": 200, "detectionRange": 100},
+                           2 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "speed": 5, "size": 160, "suspicionRange": 200, "detectionRange": 100},
+                           3 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "speed": 5, "size": 160, "suspicionRange": 200, "detectionRange": 100},   
+                           4 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "speed": 5, "size": 192, "suspicionRange": 200, "detectionRange": 100},
+                           5 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "speed": 5, "size": 160, "suspicionRange": 200, "detectionRange": 100},
+                           6 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "speed": 5, "size": 192, "suspicionRange": 200, "detectionRange": 100},
+                           7 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "speed": 5, "size": 192, "suspicionRange": 200, "detectionRange": 100},
+                           8 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "speed": 5, "size": 160, "suspicionRange": 200, "detectionRange": 100},
+                           9 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "speed": 5, "size": 224, "suspicionRange": 200, "detectionRange": 100},
+                           10 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "speed": 5, "size": 160, "suspicionRange": 200, "detectionRange": 100},
+                           11 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "speed": 5, "size": 192, "suspicionRange": 200, "detectionRange": 100},
+                           12 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "speed": 5, "size": 160, "suspicionRange": 200, "detectionRange": 100},
+                           13 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "speed": 5, "size": 160, "suspicionRange": 200, "detectionRange": 100},
+                           14 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "speed": 5, "size": 160, "suspicionRange": 200, "detectionRange": 100},
+                            } # [class, health, movementType, speed]
 
         self.CreatePlayableMap()
         self.OpenSaveFile()
@@ -63,14 +84,14 @@ class GameHandler(Setup.pg.sprite.Sprite):
         newRow = []
 
         for row in MapCreator.mapDataHandler.mapGrid.blockGrid:
-            for block in row:
-                if block.blockNumber <= 20 or (block.blockNumber >= 43 and block.blockNumber <= 47): # a block and not an entity - friendly characters only display text so are represented as a block
-                    attributes = self.blockAttributeDictionary.get(block.blockNumber)
-
-                    if block.rotation <= -360:
-                        block.rotation %= 360
+            for block in row:          
+                if block.blockNumber <= 20 or (block.blockNumber >= 43 and block.blockNumber <= 47): # a block and not an entity - friendly characters cannot move so are represented as a block
+                    attributes = self.blockAttributeDictionary[block.blockNumber] 
 
                     if attributes:
+                        if block.rotation <= -360:
+                            block.rotation %= 360
+
                         mapBlock = MapBlock(block.blockNumber, block.rotation, block.rotation // -90, block.originalLocationX, block.originalLocationY, block.image, attributes[0], attributes[1], attributes[2])
                         newRow.append(mapBlock)
                      
@@ -86,16 +107,46 @@ class GameHandler(Setup.pg.sprite.Sprite):
                         if block.blockNumber >= 43 and block.blockNumber <= 47: # friendly characters
                             self.friendlyCharacters.append(FriendlyCharacter(mapBlock, block.blockNumber - 43)) # between 0 and 4
                     else:
-                        raise ValueError("block has no attributes")
+                        raise ValueError("block has not attributes")
 
                 else: # entities (bosses, enemies, pathFinders)
-                    if block.blockNumber == 48:    
-                        self.pathfindingWaypointBlocks.append(block) 
+                    if block.blockNumber >= 21 and block.blockNumber <= 28:
+                        pass
+                    elif block.blockNumber >= 29 and block.blockNumber <= 42:
+                        self.enemies.add(self.CreateEnemy(block, block.blockNumber))
+                    elif block.blockNumber == 48:    
+                        self.pathfindingWaypointBlocks.append(block)                
 
             self.playableMap.append(newRow)
             newRow = []
 
         self.PopulateGraph(self.pathfindingWaypointBlocks)
+
+    def CreateEnemy(self, block, enemyNumber):
+        enemyNumber -= 28 # numbers starting at 1 
+        
+        filePath = Setup.os.path.join("ASSETS", "ENEMIES", f"ENEMY{enemyNumber}_IMAGE")
+        image = Setup.pg.image.load(filePath + ".png")
+        
+        enemyClass = self.enemyTypes[enemyNumber]      
+
+        if not enemyClass:
+            raise ValueError(f"Enemy class does not exist, number : {enemyNumber}")
+          
+        width = enemyClass["size"]
+        widthDifferenceToNormalBlock = width - Setup.setup.BLOCK_WIDTH 
+
+        return enemyClass["class"](
+            worldX = block.originalLocationX,
+            worldY = block.originalLocationY - widthDifferenceToNormalBlock,
+            image = image,
+            health = enemyClass["health"],
+            movementType = enemyClass["movementType"],
+            speed = enemyClass["speed"],
+            size = enemyClass["size"],
+            suspicionRange = enemyClass["suspicionRange"],
+            detectionRange = enemyClass["detectionRange"],
+    )
 
     def PopulateGraph(self, blocks):
         self.blockNumberToObject = {}
@@ -139,6 +190,10 @@ class GameHandler(Setup.pg.sprite.Sprite):
         #    print("\n", keyValuePair)
 
         self.dijkstraGraph = Dijkstra.DijkstraImplementation(self.weightedAdjacencyList.weightedGraph)
+
+    def UpdateEnemies(self):
+        for enemy in self.enemies:
+            enemy.PerformAction()
 
 class MapBlock(Setup.pg.sprite.Sprite): 
     def __init__(self, blockNumber, rotation, smallRotation, originalLocationX, originalLocationY, image, hasCollision, damage, knockback):
@@ -971,28 +1026,162 @@ class Camera:
         self.camera.center = self.player.rect.center
 
     def DisplayMap(self):
-        blocks = self.player.gameHandler.blocks
-        blocksWithPrompts = []
+        blocks = self.player.gameHandler.blocks.sprites()
+        enemies = self.player.gameHandler.enemies.sprites()
+        bosses = self.player.gameHandler.bosses.sprites()
+        drawWithCameraLocation = blocks + enemies + bosses     
 
+        for drawObject in drawWithCameraLocation:
+            drawX = drawObject.worldX - self.camera.left
+            drawY = drawObject.worldY - self.camera.top
+            tempRect = Setup.pg.Rect(drawX, drawY, drawObject.width, drawObject.height)
+
+            if Setup.setup.screenRect.colliderect(tempRect): # if on the screen
+                Setup.setup.screen.blit(drawObject.image, (drawX, drawY))
+        
+        blocksWithPrompts = []
         waypoints = self.player.gameHandler.waypoints
         treasureChests = self.player.gameHandler.treasureChests
         friendlyCharacters = self.player.gameHandler.friendlyCharacters
-
+        
         blocksWithPrompts.append(waypoints)
         blocksWithPrompts.append(treasureChests)
         blocksWithPrompts.append(friendlyCharacters)
 
-        for block in blocks:
-            drawX = block.worldX - self.camera.left
-            drawY = block.worldY - self.camera.top
-            tempRect = Setup.pg.Rect(drawX, drawY, block.width, block.height)
-
-            if Setup.setup.screenRect.colliderect(tempRect): # if on the screen
-                Setup.setup.screen.blit(block.image, (drawX, drawY))
-        
         for blocks in blocksWithPrompts:
             for block in blocks:
                 block.IsPlayerInRange(self.player, self.camera)
+
+class Enemy(Setup.pg.sprite.Sprite):
+    def __init__(self, worldX, worldY, image, health, movementType, speed, size, suspicionRange, detectionRange):
+        super().__init__()
+        self.worldX = worldX
+        self.worldY = worldY
+        self.startLocationX = worldX
+        self.startLocationY = worldY
+
+        self.width = size
+        self.height = size # square
+
+        self.image = image
+        self.mask = Setup.pg.mask.from_surface(self.image)
+
+        self.health = health
+        self.maxHealth = health
+        self.movementType = movementType
+        self.speed = speed
+        self.slowSpeed = self.speed / 2
+
+        # detection
+        self.suspicionRange = suspicionRange
+        self.detectionRange = detectionRange
+        self.state = "NORMAL" # "NORMAL", "SUSPICIOUS", "DETECTED", "RETURNING"
+        self.maxDistanceFromStart = 100 # distance from start before returning
+        self.detectedPlayerLocation = None
+
+        # timers
+        self.suspicionWaitTime = 5 # how long the enemy waits at the detected player location before returning
+        self.suspicionWaitStart = 0
+
+        self.outsideSuspicionRangeWhenDetectedTime = 10 # how long the player must be outside the suspicion range for the enemy to go from DETECTED to SUSPICIOUS
+        self.outsideSuspicionRangeWhenDetectedStart = 0
+
+        self.returningDetectionCooldownTime = 10 # the cooldown before an enemy can detect a player after starting to return
+        self.returningDetectionCooldownStart = 0
+
+        self.movementFunctions = {"STATIONARY" : self.StationaryMovement,
+                                  "GUARD" : self.GuardMovement,
+                                  "RANDOM" : self.RandomMovement,
+                                  "FIXED_PATROL" : self.FixedPatrolMovement,
+                                  "MULTIPLE_PATROL" : self.MultiplePatrolMovement,
+                                  "SMART_PATROL" : self.SmartPatrol,
+                                  }
+
+    def UpdateState(self, player):
+        distanceFromPlayer = Setup.math.sqrt((self.worldX - player.worldX) ** 2 + (self.worldY - player.worldY) ** 2)
+        distanceFromStart = Setup.math.sqrt((self.worldX - self.startLocationX) ** 2 + (self.worldY - self.startLocationY) ** 2)
+
+        if distanceFromPlayer <= self.detectionRange:
+            self.state = "DETECTED"
+
+        elif distanceFromPlayer <= self.suspicionRange:
+            self.state = "SUSPICIOUS"
+            self.detectedPlayerLocation = (player.worldX, player.worldY)
+
+        elif distanceFromStart > self.maxDistanceFromStart:
+            self.state = "RETURNING"
+
+    def PerformAction(self):
+        self.UpdateState()
+
+        match self.state:
+            case "NORMAL":
+                self.movementFunctions[self.movementType]()
+            case "DETECTED":
+                self.Detected()
+            case "SUSPICIOUS":
+                self.Suspicious()
+            case "RETURNING":
+                self.Returning()
+
+    def Detected(self):
+        pass
+
+    def Suspicious(self):
+        playerX = self.detectedPlayerLocation[0] # enemies move left and right
+
+        currentTime = time.time()
+
+        if currentTime - self.suspicionWaitStart >= self.suspicionWaitTime:
+            self.state = "RETURNING"
+            self.suspicionWaitStart = 0
+            return # end 
+
+        if self.MoveToPoint(playerX):
+            if self.suspicionWaitStart == 0:
+                self.suspicionWaitStart = time.time() 
+
+    def Returning(self):
+        if self.MoveToPoint(self.startLocationX):
+            self.state = "NORMAL"
+
+    def MoveToPoint(self, endLocation):
+        if self.worldX == endLocation: 
+            return True
+                
+        elif self.worldX > endLocation: # move left
+            if self.worldX - self.slowSpeed < endLocation:
+                self.worldX = endLocation
+            else:
+                self.worldX -= self.slowSpeed
+
+        else: # move right
+            if self.worldX + self.slowSpeed > endLocation:
+                self.worldX = endLocation
+            else:
+                self.worldX += self.slowSpeed
+
+    def StationaryMovement(self):
+        pass
+
+    def GuardMovement(self):
+        pass
+
+    def RandomMovement(self):
+        pass
+
+    def FixedPatrolMovement(self):
+        pass
+
+    def MultiplePatrolMovement(self):
+        pass
+
+    def SmartPatrol(self):
+        pass
+
+class Enemy1(Enemy):
+    def __init__(self, worldX, worldY, image, health, movementType, speed, size, suspicionRange, detectionRange):
+        super().__init__(worldX, worldY, image, health, movementType, speed, size, suspicionRange, detectionRange)
 
 class FriendlyCharacter:
     def __init__(self, parentBlock, friendlyCharacterNumber):

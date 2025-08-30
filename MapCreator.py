@@ -176,6 +176,7 @@ class MapGrid():
                         block.image = self.blockSheetHandler.ScaleImage(block.image, block.width, block.height) # scale the current image to fix
                         block.blockNumber = self.selectedBlock
                         block.rotation = self.rotation
+                        block.textList = []
                 else: # deleting
                     block.ChangeImageClick(self.blockSheetHandler.GetCorrectBlockImage(0, self.originalBlockWidth, self.originalBlockWidth, False, 0))        
                     block.baseImage = block.image
