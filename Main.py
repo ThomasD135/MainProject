@@ -22,6 +22,7 @@ def main():
             case "GAME":
                 Game.gameHandler.background.DrawImage()
                 Game.gameHandler.player.Update()
+                Game.gameHandler.UpdateEnemies()
                 Menus.menuManagement.MenuChildActions("GAME")
                 
         Setup.pg.display.update()

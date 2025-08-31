@@ -1,8 +1,3 @@
-from multiprocessing import Value
-import time
-from turtle import width
-
-from pygame import draw
 import Setup
 import MapCreator
 import Menus
@@ -52,21 +47,21 @@ class GameHandler(Setup.pg.sprite.Sprite):
                                      47 : [False, 0, 0], # friendly character end
                                      }# [collision with player, damage if any, knockback when hit (is increased if player takes damage from block]
 
-        self.enemyTypes = {1 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "speed": 5, "size": 160, "suspicionRange": 200, "detectionRange": 100},
-                           2 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "speed": 5, "size": 160, "suspicionRange": 200, "detectionRange": 100},
-                           3 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "speed": 5, "size": 160, "suspicionRange": 200, "detectionRange": 100},   
-                           4 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "speed": 5, "size": 192, "suspicionRange": 200, "detectionRange": 100},
-                           5 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "speed": 5, "size": 160, "suspicionRange": 200, "detectionRange": 100},
-                           6 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "speed": 5, "size": 192, "suspicionRange": 200, "detectionRange": 100},
-                           7 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "speed": 5, "size": 192, "suspicionRange": 200, "detectionRange": 100},
-                           8 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "speed": 5, "size": 160, "suspicionRange": 200, "detectionRange": 100},
-                           9 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "speed": 5, "size": 224, "suspicionRange": 200, "detectionRange": 100},
-                           10 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "speed": 5, "size": 160, "suspicionRange": 200, "detectionRange": 100},
-                           11 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "speed": 5, "size": 192, "suspicionRange": 200, "detectionRange": 100},
-                           12 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "speed": 5, "size": 160, "suspicionRange": 200, "detectionRange": 100},
-                           13 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "speed": 5, "size": 160, "suspicionRange": 200, "detectionRange": 100},
-                           14 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "speed": 5, "size": 160, "suspicionRange": 200, "detectionRange": 100},
-                            } # [class, health, movementType, speed]
+        self.enemyTypes = {1 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           2 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           3 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},   
+                           4 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 192, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           5 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           6 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 192, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           7 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 192, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           8 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           9 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 224, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           10 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           11 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 192, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           12 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           13 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           14 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                            }
 
         self.CreatePlayableMap()
         self.OpenSaveFile()
@@ -142,7 +137,7 @@ class GameHandler(Setup.pg.sprite.Sprite):
             image = image,
             health = enemyClass["health"],
             movementType = enemyClass["movementType"],
-            speed = enemyClass["speed"],
+            velocity = enemyClass["velocity"],
             size = enemyClass["size"],
             suspicionRange = enemyClass["suspicionRange"],
             detectionRange = enemyClass["detectionRange"],
@@ -193,7 +188,7 @@ class GameHandler(Setup.pg.sprite.Sprite):
 
     def UpdateEnemies(self):
         for enemy in self.enemies:
-            enemy.PerformAction()
+            enemy.PerformAction(self.player)
 
 class MapBlock(Setup.pg.sprite.Sprite): 
     def __init__(self, blockNumber, rotation, smallRotation, originalLocationX, originalLocationY, image, hasCollision, damage, knockback):
@@ -273,22 +268,24 @@ class Weapon:
         if self.currentState == "NONE":
             if lengthOfAttackCharge < chargeAttackThreshold:
                 self.currentState = "BASIC"
+                print("basic")
             else:
                 self.currentState = "CHARGED"
+                print("charged")
 
     def Ability(self, currentTime):
         if self.currentState == "NONE":
-            if currentTime - self.mostRecentAbilityTime >= self.abilityCooldown:
+            if currentTime - self.mostRecentAbilityTime >= self.abilityCooldown and self.parentPlayer.UseMana(self.abilityManaCost):
                 self.mostRecentAbilityTime = currentTime
                 self.currentState = "ABILITY"
 
     def Update(self):
         match self.currentState:
             case "BASIC":
-                self.attackStart = time.time()
+                self.attackStart = Setup.time.time()
                 self.BasicAttack()
             case "CHARGED":
-                self.attackStart = time.time()
+                self.attackStart = Setup.time.time()
                 self.ChargedAttack()
             case "ABILITY":
                 self.PerformAbility()
@@ -367,7 +364,7 @@ class Player(Setup.pg.sprite.Sprite):
         self.mana = 300 # temp
         self.manaRegenerationSpeed = 50 / 60 # 50 a second, divided by 60 for each frame
         self.manaRegenerationCooldown = 1 # second
-        self.mostRecentManaUse = 0
+        self.manaRegenDelayTimer = CooldownTimer(self.manaRegenerationCooldown)
 
         self.camera = Camera(self)
         self.miniMap = MiniMap()
@@ -387,7 +384,7 @@ class Player(Setup.pg.sprite.Sprite):
         self.state = "IDLE"
         self.currentFrame = 0
         self.currentSheet = self.idleSheet
-        self.startTime = time.time()
+        self.startTime = Setup.time.time()
         self.isCrouched = False
 
         # movement
@@ -600,7 +597,7 @@ class Player(Setup.pg.sprite.Sprite):
             self.camera.Update()
             self.camera.DisplayMap()
             self.miniMap.ChangeScale()
-            self.miniMap.DrawMap(self.gameHandler.blocks, self)
+            self.miniMap.DrawMap(self.gameHandler.blocks, self.gameHandler.enemies, self)
             self.miniMap.DrawWaypoints(self)
             self.miniMap.pathGuide.FindNearestNode(self)
             self.Attack()
@@ -609,6 +606,7 @@ class Player(Setup.pg.sprite.Sprite):
             self.weapon.Update()
             self.spell.Update()
             self.DrawPlayerAndUI()
+            self.KillPlayerOnKeyPress()
         else:
             self.DrawDeathScreen()
 
@@ -617,7 +615,7 @@ class Player(Setup.pg.sprite.Sprite):
 
     def UseMana(self, manaCost):
         if self.mana >= manaCost:
-            self.mostRecentManaUse = time.time()
+            self.manaRegenDelayTimer.StartTimer()
             self.mana -= manaCost
             return True
 
@@ -650,10 +648,8 @@ class Player(Setup.pg.sprite.Sprite):
 
         self.movementSpeeds[1] = self.playerYFallingSpeed # update speeds early to move the player before speed is reset (collision with the ground)
 
-    def PassiveManaRegeneration(self):
-        currentTime = time.time()
-        
-        if currentTime - self.mostRecentManaUse >= self.manaRegenerationCooldown:
+    def PassiveManaRegeneration(self):        
+        if self.manaRegenDelayTimer.CheckFinished():
             if self.mana + self.manaRegenerationSpeed > self.maxMana:
                 self.mana += self.maxMana - self.mana
             else:
@@ -673,12 +669,16 @@ class Player(Setup.pg.sprite.Sprite):
 
     def DrawDeathScreen(self):
         deathScreenText = Setup.TextMethods.CreateText("DEATH", "DEAD", Setup.setup.RED, Setup.setup.WIDTH // 2, Setup.setup.HEIGHT // 2, 100)
-        respawnText = Setup.TextMethods.CreateText("RESPAWN", "Press SPACE to respawn", Setup.setup.WHITE, Setup.setup.WIDTH // 2, Setup.setup.HEIGHT // 2 + 200, 40)
+        respawnText = Setup.TextMethods.CreateText("RESPAWN", "Press ENTER / RETURN to respawn", Setup.setup.WHITE, Setup.setup.WIDTH // 2, Setup.setup.HEIGHT // 2 + 200, 40)
         deathScreenText.Draw()
         respawnText.Draw()
 
-        if Setup.setup.pressedKey == Setup.pg.K_SPACE:
+        if Setup.setup.pressedKey == Setup.pg.K_RETURN:
             self.Respawn()
+
+    def KillPlayerOnKeyPress(self):
+        if Setup.setup.pressedKey == Setup.pg.K_k:
+            self.health = 0
 
     def Respawn(self):
         self.dead = False
@@ -697,10 +697,10 @@ class Player(Setup.pg.sprite.Sprite):
     def Attack(self):
         if Setup.pg.mouse.get_pressed()[0] and not self.weapon.isChargingAttack:
             self.weapon.isChargingAttack = True
-            self.weapon.chargingStartTime = time.time()
+            self.weapon.chargingStartTime = Setup.time.time()
 
         if not Setup.pg.mouse.get_pressed()[0] and self.weapon.isChargingAttack:
-            currentTime = time.time()
+            currentTime = Setup.time.time()
             self.weapon.isChargingAttack = False
             self.weapon.Attack(currentTime)
 
@@ -708,7 +708,7 @@ class Player(Setup.pg.sprite.Sprite):
         keys = Setup.pg.key.get_pressed()
 
         if keys[Setup.pg.K_e]:
-            currentTime = time.time()
+            currentTime = Setup.time.time()
             self.weapon.Ability(currentTime)
 
         if keys[Setup.pg.K_f]:
@@ -825,7 +825,7 @@ class MiniMap(Setup.pg.sprite.Sprite):
             if not fragmentValue:
                 Setup.pg.draw.rect(Setup.setup.screen, (Setup.setup.BLACK), (fragmentLocations[fragment][0], fragmentLocations[fragment][1], fragmentWidthHeight, fragmentWidthHeight))
 
-    def DrawMap(self, blocks, player):
+    def DrawMap(self, blocks, enemies, player):
         if not self.enlarged:
             shrinkModifier = 20
             startX = 20
@@ -840,6 +840,11 @@ class MiniMap(Setup.pg.sprite.Sprite):
         for block in blocks:
             newImage = Setup.pg.transform.scale(block.image, (block.width / shrinkModifier, block.height / shrinkModifier))
             newX, newY = block.worldX / shrinkModifier, block.worldY / shrinkModifier
+            Setup.setup.screen.blit(newImage, (startX + newX, startY + newY))
+
+        for enemy in enemies:
+            newImage = Setup.pg.transform.scale(enemy.image, (enemy.width / shrinkModifier, enemy.height / shrinkModifier))
+            newX, newY = enemy.worldX / shrinkModifier, enemy.worldY / shrinkModifier
             Setup.setup.screen.blit(newImage, (startX + newX, startY + newY))
         
         newPlayerX, newPlayerY = player.worldX / shrinkModifier, player.worldY / shrinkModifier
@@ -1052,8 +1057,26 @@ class Camera:
             for block in blocks:
                 block.IsPlayerInRange(self.player, self.camera)
 
+class CooldownTimer:
+    def __init__(self, cooldown):
+        self.cooldown = cooldown
+        self.startTime = None
+
+    def StartTimer(self):
+        self.startTime = Setup.time.time()
+
+    def CheckFinished(self):
+        if self.startTime is None:
+            return False
+
+        if Setup.time.time() - self.startTime >= self.cooldown:
+            return True
+
+    def Reset(self):
+        self.startTime = None
+
 class Enemy(Setup.pg.sprite.Sprite):
-    def __init__(self, worldX, worldY, image, health, movementType, speed, size, suspicionRange, detectionRange):
+    def __init__(self, worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange):
         super().__init__()
         self.worldX = worldX
         self.worldY = worldY
@@ -1065,29 +1088,24 @@ class Enemy(Setup.pg.sprite.Sprite):
 
         self.image = image
         self.mask = Setup.pg.mask.from_surface(self.image)
+        self.rect = self.image.get_rect()
+        self.rect.topleft = (self.worldX, self.worldY)
 
         self.health = health
         self.maxHealth = health
         self.movementType = movementType
-        self.speed = speed
-        self.slowSpeed = self.speed / 2
+        self.velocity = velocity
+        self.slowVelocity = velocity / 2
 
         # detection
         self.suspicionRange = suspicionRange
         self.detectionRange = detectionRange
         self.state = "NORMAL" # "NORMAL", "SUSPICIOUS", "DETECTED", "RETURNING"
-        self.maxDistanceFromStart = 100 # distance from start before returning
         self.detectedPlayerLocation = None
 
         # timers
-        self.suspicionWaitTime = 5 # how long the enemy waits at the detected player location before returning
-        self.suspicionWaitStart = 0
-
-        self.outsideSuspicionRangeWhenDetectedTime = 10 # how long the player must be outside the suspicion range for the enemy to go from DETECTED to SUSPICIOUS
-        self.outsideSuspicionRangeWhenDetectedStart = 0
-
-        self.returningDetectionCooldownTime = 10 # the cooldown before an enemy can detect a player after starting to return
-        self.returningDetectionCooldownStart = 0
+        self.suspicionTimer = CooldownTimer(5) # how long the enemy waits at the detected player location before returning
+        self.outsideSuspicionRangeWhenDetected = CooldownTimer(5) # how long the player must be outside the suspicion range for the enemy to go from DETECTED to SUSPICIOUS
 
         self.movementFunctions = {"STATIONARY" : self.StationaryMovement,
                                   "GUARD" : self.GuardMovement,
@@ -1099,67 +1117,82 @@ class Enemy(Setup.pg.sprite.Sprite):
 
     def UpdateState(self, player):
         distanceFromPlayer = Setup.math.sqrt((self.worldX - player.worldX) ** 2 + (self.worldY - player.worldY) ** 2)
-        distanceFromStart = Setup.math.sqrt((self.worldX - self.startLocationX) ** 2 + (self.worldY - self.startLocationY) ** 2)
 
         if distanceFromPlayer <= self.detectionRange:
             self.state = "DETECTED"
+            self.outsideSuspicionRangeWhenDetected.Reset()
 
         elif distanceFromPlayer <= self.suspicionRange:
-            self.state = "SUSPICIOUS"
-            self.detectedPlayerLocation = (player.worldX, player.worldY)
+            if self.state != "DETECTED" and self.state != "RETURNING": # must be within detection range to detect player while returning
+                self.state = "SUSPICIOUS"
+                self.detectedPlayerLocation = (player.worldX, player.worldY)
 
-        elif distanceFromStart > self.maxDistanceFromStart:
-            self.state = "RETURNING"
+        elif distanceFromPlayer > self.suspicionRange and self.state == "DETECTED":
+            self.TransitionFromDetectedToSuspicion(player)
 
-    def PerformAction(self):
-        self.UpdateState()
+    def TransitionFromDetectedToSuspicion(self, player):
+        if self.outsideSuspicionRangeWhenDetected.startTime is None:
+                self.outsideSuspicionRangeWhenDetected.StartTimer()
+        else:
+            if self.outsideSuspicionRangeWhenDetected.CheckFinished():
+                self.state = "SUSPICIOUS"                   
+                self.outsideSuspicionRangeWhenDetected.Reset()
+
+                if player.worldX < self.worldX:
+                    self.detectedPlayerLocation = (self.worldX - self.suspicionRange, self.worldY)
+                else:
+                    self.detectedPlayerLocation = (self.worldX + self.suspicionRange, self.worldY)
+
+    def PerformAction(self, player):
+        self.UpdateState(player)
 
         match self.state:
             case "NORMAL":
                 self.movementFunctions[self.movementType]()
             case "DETECTED":
-                self.Detected()
+                self.Detected(player)
             case "SUSPICIOUS":
                 self.Suspicious()
             case "RETURNING":
                 self.Returning()
 
-    def Detected(self):
-        pass
+        self.rect.topleft = (self.worldX, self.worldY)
+
+    def Detected(self, player):
+        playerX = player.worldX # the current location
+
+        self.MoveToPoint(playerX, self.velocity)
 
     def Suspicious(self):
         playerX = self.detectedPlayerLocation[0] # enemies move left and right
 
-        currentTime = time.time()
+        if self.MoveToPoint(playerX, self.slowVelocity):
+            if self.suspicionTimer.startTime is None:
+               self.suspicionTimer.StartTimer()
 
-        if currentTime - self.suspicionWaitStart >= self.suspicionWaitTime:
+        if self.suspicionTimer.CheckFinished():
             self.state = "RETURNING"
-            self.suspicionWaitStart = 0
-            return # end 
+            self.suspicionTimer.Reset()
 
-        if self.MoveToPoint(playerX):
-            if self.suspicionWaitStart == 0:
-                self.suspicionWaitStart = time.time() 
-
-    def Returning(self):
-        if self.MoveToPoint(self.startLocationX):
+    def Returning(self):    
+        if self.MoveToPoint(self.startLocationX, self.slowVelocity):
             self.state = "NORMAL"
-
-    def MoveToPoint(self, endLocation):
+        
+    def MoveToPoint(self, endLocation, velocity):
         if self.worldX == endLocation: 
             return True
                 
         elif self.worldX > endLocation: # move left
-            if self.worldX - self.slowSpeed < endLocation:
+            if self.worldX - velocity < endLocation:
                 self.worldX = endLocation
             else:
-                self.worldX -= self.slowSpeed
+                self.worldX -= velocity
 
         else: # move right
-            if self.worldX + self.slowSpeed > endLocation:
+            if self.worldX + velocity > endLocation:
                 self.worldX = endLocation
             else:
-                self.worldX += self.slowSpeed
+                self.worldX += velocity
 
     def StationaryMovement(self):
         pass
@@ -1180,8 +1213,8 @@ class Enemy(Setup.pg.sprite.Sprite):
         pass
 
 class Enemy1(Enemy):
-    def __init__(self, worldX, worldY, image, health, movementType, speed, size, suspicionRange, detectionRange):
-        super().__init__(worldX, worldY, image, health, movementType, speed, size, suspicionRange, detectionRange)
+    def __init__(self, worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange):
+        super().__init__(worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange)
 
 class FriendlyCharacter:
     def __init__(self, parentBlock, friendlyCharacterNumber):
