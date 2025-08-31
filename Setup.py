@@ -3,6 +3,7 @@ import time
 import pygame as pg
 import sys
 import math
+import random
 
 pg.mixer.init()
 pg.font.init()

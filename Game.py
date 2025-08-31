@@ -9,12 +9,11 @@ class GameHandler(Setup.pg.sprite.Sprite):
         self.player = Player("Temporary", self)
         self.background = GameBackground(self)
                                         
-        self.playableMap = [] # 2d list of blocks
         self.weightedAdjacencyList = Dijkstra.AdjacencyList()
         self.dijkstraGraph = None
         self.pathfindingWaypointBlocks = []
 
-        self.blocks = Setup.pg.sprite.Group() # a group of all blocks in the map for easier drawing
+        self.blocks = Setup.pg.sprite.Group() 
         self.enemies = Setup.pg.sprite.Group()
         self.bosses = Setup.pg.sprite.Group()
         self.hitBoxes = Setup.pg.sprite.Group()
@@ -76,8 +75,6 @@ class GameHandler(Setup.pg.sprite.Sprite):
         self.treasureChests = []
         self.friendlyCharacters = []
 
-        newRow = []
-
         for row in MapCreator.mapDataHandler.mapGrid.blockGrid:
             for block in row:          
                 if block.blockNumber <= 20 or (block.blockNumber >= 43 and block.blockNumber <= 47): # a block and not an entity - friendly characters cannot move so are represented as a block
@@ -88,7 +85,6 @@ class GameHandler(Setup.pg.sprite.Sprite):
                             block.rotation %= 360
 
                         mapBlock = MapBlock(block.blockNumber, block.rotation, block.rotation // -90, block.originalLocationX, block.originalLocationY, block.image, attributes[0], attributes[1], attributes[2])
-                        newRow.append(mapBlock)
                      
                         if block.blockNumber != 0: # self.blocks will be used to display the blocks, block 0 is a filler block for the map creator and should not be visible in game
                             self.blocks.add(mapBlock)
@@ -111,9 +107,6 @@ class GameHandler(Setup.pg.sprite.Sprite):
                         self.enemies.add(self.CreateEnemy(block, block.blockNumber))
                     elif block.blockNumber == 48:    
                         self.pathfindingWaypointBlocks.append(block)                
-
-            self.playableMap.append(newRow)
-            newRow = []
 
         self.PopulateGraph(self.pathfindingWaypointBlocks)
 
@@ -141,6 +134,7 @@ class GameHandler(Setup.pg.sprite.Sprite):
             size = enemyClass["size"],
             suspicionRange = enemyClass["suspicionRange"],
             detectionRange = enemyClass["detectionRange"],
+            player = self.player,
     )
 
     def PopulateGraph(self, blocks):
@@ -188,7 +182,17 @@ class GameHandler(Setup.pg.sprite.Sprite):
 
     def UpdateEnemies(self):
         for enemy in self.enemies:
-            enemy.PerformAction(self.player)
+            enemy.PerformAction()
+
+    def CollideWithObjects(self, mainObject):
+        collided = []
+        mainObject.rect.topleft = (mainObject.worldX, mainObject.worldY)
+
+        for collidedBlock in Setup.pg.sprite.spritecollide(mainObject, self.blocks, False):
+            if collidedBlock.collision:
+                collided.append(collidedBlock)
+
+        return collided
 
 class MapBlock(Setup.pg.sprite.Sprite): 
     def __init__(self, blockNumber, rotation, smallRotation, originalLocationX, originalLocationY, image, hasCollision, damage, knockback):
@@ -268,10 +272,8 @@ class Weapon:
         if self.currentState == "NONE":
             if lengthOfAttackCharge < chargeAttackThreshold:
                 self.currentState = "BASIC"
-                print("basic")
             else:
                 self.currentState = "CHARGED"
-                print("charged")
 
     def Ability(self, currentTime):
         if self.currentState == "NONE":
@@ -407,16 +409,6 @@ class Player(Setup.pg.sprite.Sprite):
         self.rect = self.mask.get_rect()
         self.rect.topleft = (self.worldX, self.worldY)
 
-    def CollideWithObject(self, mapBlocks):
-        collided = []
-        self.rect.topleft = (self.worldX, self.worldY)
-
-        for collidedBlock in Setup.pg.sprite.spritecollide(self, mapBlocks, False):
-            if collidedBlock.collision:
-                collided.append(collidedBlock)
-
-        return collided
-
     def Movement(self, mapBlocks):
         collisions = {'top': False, 'bottom': False, 'left': False, 'right': False}
 
@@ -424,7 +416,7 @@ class Player(Setup.pg.sprite.Sprite):
         self.worldX += self.movementSpeeds[0]
         self.rect.topleft = (self.worldX, self.worldY)
 
-        for block in self.CollideWithObject(mapBlocks):
+        for block in self.gameHandler.CollideWithObjects(self):
             if self.movementSpeeds[0] > 0: # moving right so colliding with the left side of the block (right side of the player)
                 self.worldX = block.worldX - self.rect.width # always snap the player to outside the block
                 
@@ -447,7 +439,7 @@ class Player(Setup.pg.sprite.Sprite):
         self.worldY += self.movementSpeeds[1]
         self.rect.topleft = (self.worldX, self.worldY)
 
-        for block in self.CollideWithObject(mapBlocks):
+        for block in self.gameHandler.CollideWithObjects(self):
             if self.movementSpeeds[1] > 0: # moving down so colliding with the top of the block (bottom of the player)
                 self.worldY = block.worldY - self.rect.height
                 
@@ -722,7 +714,7 @@ class GameBackground:
         self.blockImage = Setup.setup.loadImage(filePath, Setup.setup.BLOCK_WIDTH * Setup.setup.BLOCKS_WIDE, Setup.setup.BLOCK_WIDTH * Setup.setup.BLOCKS_WIDE)
 
     def DrawImage(self):
-        topLeftBlock = self.gameHandler.playableMap[0][0]
+        topLeftBlock = self.gameHandler.blocks.sprites()[0]
         Setup.setup.screen.blit(self.blockImage, (topLeftBlock.rect.left, topLeftBlock.rect.top))
 
 class Prompt:
@@ -1076,8 +1068,10 @@ class CooldownTimer:
         self.startTime = None
 
 class Enemy(Setup.pg.sprite.Sprite):
-    def __init__(self, worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange):
+    def __init__(self, worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange, player):
         super().__init__()
+        self.player = player
+
         self.worldX = worldX
         self.worldY = worldY
         self.startLocationX = worldX
@@ -1093,7 +1087,6 @@ class Enemy(Setup.pg.sprite.Sprite):
 
         self.health = health
         self.maxHealth = health
-        self.movementType = movementType
         self.velocity = velocity
         self.slowVelocity = velocity / 2
 
@@ -1104,19 +1097,26 @@ class Enemy(Setup.pg.sprite.Sprite):
         self.detectedPlayerLocation = None
 
         # timers
-        self.suspicionTimer = CooldownTimer(5) # how long the enemy waits at the detected player location before returning
+        self.suspicionTimer = CooldownTimer(5)
+        self.suspicionWaitTimer = CooldownTimer(3) # how long the enemy waits at the detected player location before returning
         self.outsideSuspicionRangeWhenDetected = CooldownTimer(5) # how long the player must be outside the suspicion range for the enemy to go from DETECTED to SUSPICIOUS
+        self.randomMovementTimer = CooldownTimer(3) # how often the enemy decides a new direction
 
-        self.movementFunctions = {"STATIONARY" : self.StationaryMovement,
-                                  "GUARD" : self.GuardMovement,
-                                  "RANDOM" : self.RandomMovement,
+        self.movementClasses = {"STATIONARY" : None,
+                                  "GUARD" : GuardMovement,
+                                  "RANDOM" : RandomMovement,
                                   "FIXED_PATROL" : self.FixedPatrolMovement,
                                   "MULTIPLE_PATROL" : self.MultiplePatrolMovement,
                                   "SMART_PATROL" : self.SmartPatrol,
                                   }
 
-    def UpdateState(self, player):
-        distanceFromPlayer = Setup.math.sqrt((self.worldX - player.worldX) ** 2 + (self.worldY - player.worldY) ** 2)
+        if self.movementClasses[movementType] is not None:
+            self.movementClass = self.movementClasses[movementType]()
+        else:
+            self.movementClass = None
+
+    def UpdateState(self):
+        distanceFromPlayer = Setup.math.sqrt((self.worldX - self.player.worldX) ** 2 + (self.worldY - self.player.worldY) ** 2)
 
         if distanceFromPlayer <= self.detectionRange:
             self.state = "DETECTED"
@@ -1125,12 +1125,12 @@ class Enemy(Setup.pg.sprite.Sprite):
         elif distanceFromPlayer <= self.suspicionRange:
             if self.state != "DETECTED" and self.state != "RETURNING": # must be within detection range to detect player while returning
                 self.state = "SUSPICIOUS"
-                self.detectedPlayerLocation = (player.worldX, player.worldY)
+                self.detectedPlayerLocation = (self.player.worldX, self.player.worldY)
 
         elif distanceFromPlayer > self.suspicionRange and self.state == "DETECTED":
-            self.TransitionFromDetectedToSuspicion(player)
+            self.TransitionFromDetectedToSuspicion()
 
-    def TransitionFromDetectedToSuspicion(self, player):
+    def TransitionFromDetectedToSuspicion(self):
         if self.outsideSuspicionRangeWhenDetected.startTime is None:
                 self.outsideSuspicionRangeWhenDetected.StartTimer()
         else:
@@ -1138,69 +1138,91 @@ class Enemy(Setup.pg.sprite.Sprite):
                 self.state = "SUSPICIOUS"                   
                 self.outsideSuspicionRangeWhenDetected.Reset()
 
-                if player.worldX < self.worldX:
+                if self.player.worldX < self.worldX:
                     self.detectedPlayerLocation = (self.worldX - self.suspicionRange, self.worldY)
                 else:
                     self.detectedPlayerLocation = (self.worldX + self.suspicionRange, self.worldY)
 
-    def PerformAction(self, player):
-        self.UpdateState(player)
+    def CalculateDistanceFromStart(self):
+        return Setup.math.sqrt((self.worldX - self.startLocationX) ** 2 + (self.worldY - self.startLocationY))
 
-        match self.state:
-            case "NORMAL":
-                self.movementFunctions[self.movementType]()
-            case "DETECTED":
-                self.Detected(player)
-            case "SUSPICIOUS":
-                self.Suspicious()
-            case "RETURNING":
-                self.Returning()
+    def PerformAction(self):
+        if self.movementClass is not None: # stationary enemies cannot move
+            self.UpdateState()
 
-        self.rect.topleft = (self.worldX, self.worldY)
+            match self.state:
+                case "NORMAL":
+                    self.PerformMovement()
+                case "DETECTED":
+                    self.Detected()
+                case "SUSPICIOUS":
+                    self.Suspicious()
+                case "RETURNING":
+                    self.Returning()
 
-    def Detected(self, player):
-        playerX = player.worldX # the current location
+            self.rect.topleft = (self.worldX, self.worldY)
 
-        self.MoveToPoint(playerX, self.velocity)
+    def Detected(self):
+        playerX = self.player.worldX # the current location
+
+        self.MoveToPoint(playerX, self.velocity, self.player)
 
     def Suspicious(self):
         playerX = self.detectedPlayerLocation[0] # enemies move left and right
 
-        if self.MoveToPoint(playerX, self.slowVelocity):
-            if self.suspicionTimer.startTime is None:
-               self.suspicionTimer.StartTimer()
+        if self.suspicionTimer.startTime is None:
+            self.suspicionTimer.StartTimer()
 
-        if self.suspicionTimer.CheckFinished():
-            self.state = "RETURNING"
+        if self.MoveToPoint(playerX, self.slowVelocity, self.player) or self.suspicionTimer.CheckFinished():
             self.suspicionTimer.Reset()
 
+            if self.suspicionWaitTimer.startTime is None:
+               self.suspicionWaitTimer.StartTimer()
+
+        if self.suspicionWaitTimer.CheckFinished():
+            self.state = "RETURNING"
+            self.suspicionWaitTimer.Reset()
+
     def Returning(self):    
-        if self.MoveToPoint(self.startLocationX, self.slowVelocity):
+        if self.MoveToPoint(self.startLocationX, self.slowVelocity, self.player):
             self.state = "NORMAL"
-        
-    def MoveToPoint(self, endLocation, velocity):
+
+    def MoveToPoint(self, endLocation, velocity, player):
         if self.worldX == endLocation: 
             return True
-                
-        elif self.worldX > endLocation: # move left
+
+        direction = None
+
+        if self.worldX > endLocation: 
             if self.worldX - velocity < endLocation:
                 self.worldX = endLocation
             else:
                 self.worldX -= velocity
 
-        else: # move right
+            direction = "LEFT"
+        else:
             if self.worldX + velocity > endLocation:
                 self.worldX = endLocation
             else:
                 self.worldX += velocity
 
+            direction = "RIGHT"
+
+        self.rect.topleft = (self.worldX, self.worldY)
+
+        for block in player.gameHandler.CollideWithObjects(self):
+            if direction == "RIGHT":
+                self.worldX = block.worldX - self.rect.width 
+
+            elif direction == "LEFT": 
+                self.worldX = block.worldX + block.rect.width            
+
+            self.rect.topleft = (self.worldX, self.worldY)     
+
+    def PerformMovement(self):
+        self.movementClass.Movement(self)
+
     def StationaryMovement(self):
-        pass
-
-    def GuardMovement(self):
-        pass
-
-    def RandomMovement(self):
         pass
 
     def FixedPatrolMovement(self):
@@ -1212,9 +1234,43 @@ class Enemy(Setup.pg.sprite.Sprite):
     def SmartPatrol(self):
         pass
 
+class GuardMovement:
+    def Movement(self, enemy):
+        enemy.MoveToPoint(enemy.startLocationX, enemy.velocity)
+
+class RandomMovement:
+    def __init__(self):
+        self.directions = ["RIGHT", "LEFT"] # or return which forces the enemy back towards its start
+        self.direction = None
+        self.randomMovementTimer = CooldownTimer(3)
+        self.maxDistanceFromStart = Setup.setup.BLOCK_WIDTH * 10
+
+    def Movement(self, enemy):
+        if self.randomMovementTimer.startTime is None:
+            self.randomMovementTimer.StartTimer()
+
+        elif self.randomMovementTimer.CheckFinished():
+            if self.direction is None:
+                if enemy.CalculateDistanceFromStart() >= self.maxDistanceFromStart:
+                    self.direction = "RETURN"
+                else:
+                    randomDirection = Setup.random.randint(0, 1)
+                    self.direction = self.directions[randomDirection]
+            else:
+                self.direction = None
+
+            self.randomMovementTimer.Reset()
+
+        if self.direction == "RETURN":
+            enemy.MoveToPoint(enemy.startLocationX, enemy.slowVelocity, enemy.player) # return to start
+        if self.direction == "RIGHT":
+            enemy.MoveToPoint(Setup.sys.maxsize, enemy.slowVelocity, enemy.player) # anywhere to the right
+        elif self.direction == "LEFT":
+            enemy.MoveToPoint(-Setup.sys.maxsize, enemy.slowVelocity, enemy.player) # anywhere to the left
+
 class Enemy1(Enemy):
-    def __init__(self, worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange):
-        super().__init__(worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange)
+    def __init__(self, worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange, player):
+        super().__init__(worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange, player)
 
 class FriendlyCharacter:
     def __init__(self, parentBlock, friendlyCharacterNumber):
