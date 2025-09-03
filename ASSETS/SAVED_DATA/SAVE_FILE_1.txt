@@ -1,0 +1,38 @@
+{
+    "player": {
+        "worldX": 4480,
+        "worldY": 2400,
+        "health": 710,
+        "maxHealth": 800,
+        "mana": 163.3333333333307,
+        "maxMana": 400,
+        "mostRecentWaypointCords": [
+            1920,
+            1440
+        ],
+        "weapon": {
+            "name": "Wooden sword",
+            "description": "weapon",
+            "abilityDescription": "ability",
+            "damage": 100,
+            "chargedDamage": 200,
+            "abilityDamage": 300,
+            "abilityManaCost": 20,
+            "abilityCooldown": 5
+        },
+        "spell": {
+            "name": "Fireball",
+            "description": "fire",
+            "damage": 100,
+            "manaCost": 20,
+            "currentState": "SPELL",
+            "tempCounter": 52
+        },
+        "mapFragments": {
+            "1": true,
+            "2": true,
+            "3": true,
+            "4": false
+        }
+    }
+}

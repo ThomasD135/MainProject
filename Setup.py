@@ -4,6 +4,7 @@ import pygame as pg
 import sys
 import math
 import random
+import json
 
 pg.mixer.init()
 pg.font.init()

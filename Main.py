@@ -5,6 +5,7 @@ import MapCreator
 
 def main():
     Setup.SoundHandler.PlaySound("MENU_MUSIC")
+    Game.gameHandler.LoadGame()
 
     while Setup.setup.run:
         Setup.setup.update()
@@ -28,6 +29,7 @@ def main():
         Setup.pg.display.update()
 
     MapCreator.mapDataHandler.mapGrid.SaveMapData()
+    Game.gameHandler.SaveGame()
 
 if __name__ == "__main__":
     main()

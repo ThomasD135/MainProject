@@ -6,8 +6,8 @@ import Dijkstra
 class GameHandler(Setup.pg.sprite.Sprite):
     def __init__(self):
         Setup.pg.sprite.Sprite.__init__(self)
-        self.player = Player("Temporary", self)
-        self.background = GameBackground(self)
+        self.player = Player("Player", self)
+        self.background = GameBackground(self)      
                                         
         self.weightedAdjacencyList = Dijkstra.AdjacencyList()
         self.dijkstraGraph = None
@@ -62,12 +62,35 @@ class GameHandler(Setup.pg.sprite.Sprite):
                            14 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
                             }
 
-        self.CreatePlayableMap()
-        self.OpenSaveFile()
+        #self.CreatePlayableMap()
+        #self.LoadGame()
 
-    def OpenSaveFile(self):
-        self.filePath = Setup.os.path.join("ASSETS", "SAVED_DATA", f"SAVE_FILE_{Setup.setup.SAVE_SLOT}.txt")
-        self.saveFile = open(self.filePath, "r")
+    def DataToDictionary(self):
+        return {
+            "player": self.player.DataToDictionary() if self.player else None,
+            #"enemies" : self.enemies.DataToDictionary(),
+            #"bosses" : self.bosses.DataToDictionary(),
+            #"blocks" : self.blocks.DataToDictionary()
+        }
+
+    def DataFromDictionary(self, data):
+        if "player" in data:
+            self.player = Player.DataFromDictionary(data["player"])
+            self.player.gameHandler = self           
+
+    def SaveGame(self):
+        filePath = Setup.os.path.join("ASSETS", "SAVED_DATA", f"SAVE_FILE_{Setup.setup.SAVE_SLOT}.txt")     
+        with open(filePath, "w") as file:
+            Setup.json.dump(self.DataToDictionary(), file, indent=4)
+
+    def LoadGame(self):
+        filePath = Setup.os.path.join("ASSETS", "SAVED_DATA", f"SAVE_FILE_{Setup.setup.SAVE_SLOT}.txt")            
+        if Setup.os.path.exists(filePath) and Setup.os.path.getsize(filePath) > 0:
+            with open(filePath, "r") as file:
+                data = Setup.json.load(file)
+                self.DataFromDictionary(data)
+
+        self.CreatePlayableMap()
 
     def CreatePlayableMap(self):
         self.playableMap = []
@@ -228,6 +251,27 @@ class Spell:
         self.currentState = "NONE" # "NONE" "SPELL"
         self.tempCounter = 0 # used until spells have an actual function
 
+    def DataToDictionary(self):
+        return {
+            "name": self.name,
+            "description": self.description,
+            "damage": self.damage,
+            "manaCost": self.manaCost,
+            #"parentPlayer": self.parentPlayer.name if self.parentPlayer else None,
+            "currentState": self.currentState,
+            "tempCounter": self.tempCounter
+        }
+
+    @classmethod
+    def DataFromDictionary(cls, data, parentPlayer=None):
+        spell = cls(name = "Spell", description = "", damage = 1, manaCost = 1, parentPlayer = None)
+        spell.name = data.get("name", "")
+        spell.description = data.get("description", "")
+        spell.damage = data.get("damage", 0)
+        spell.manaCost = data.get("manaCost", 0)
+        spell.parentPlayer = parentPlayer 
+        return spell
+
     def Attack(self):
         if self.parentPlayer.UseMana(self.manaCost):
             self.currentState = "SPELL"
@@ -244,8 +288,19 @@ class Spell:
 
         self.tempCounter += 1
 
+class Fireball(Spell):
+    def __init__(self, name, description, damage, manaCost, parentPlayer):
+        super().__init__(name, description, damage, manaCost, parentPlayer)
+
+        self.images = None
+
+    def UseSpell(self):
+        if self.attackStart <= self.basicAttackLength:
+            pass
+            #attack     
+
 class Weapon:
-    def __init__(self, name, description, abilityDescription, damage, chargedDamage, abilityDamage, abilityManaCost, abilityCooldown, images, parentPlayer): # images is a list of all the different filepaths for the corresponding attacks
+    def __init__(self, name, description, abilityDescription, damage, chargedDamage, abilityDamage, abilityManaCost, abilityCooldown, parentPlayer): # images is a list of all the different filepaths for the corresponding attacks
         self.name = name
         self.description = description
         self.abilityDescription = abilityDescription
@@ -254,7 +309,7 @@ class Weapon:
         self.abilityDamage = abilityDamage
         self.abilityManaCost = abilityManaCost
         self.abilityCooldown = abilityCooldown
-        self.images = images
+        #self.images = images
         self.parentPlayer = parentPlayer
 
         self.currentState = "NONE" # "NONE" "BASIC" "CHARGED" "ABILITY"
@@ -264,6 +319,41 @@ class Weapon:
 
         self.tempCounter = 0 # TODO - used until attacks have an actual function
         self.attackStart = 0
+
+    def DataToDictionary(self):
+        return {
+            "name": self.name,
+            "description": self.description,
+            "abilityDescription": self.abilityDescription,
+            "damage": self.damage,
+            "chargedDamage": self.chargedDamage,
+            "abilityDamage": self.abilityDamage,
+            "abilityManaCost": self.abilityManaCost,
+            "abilityCooldown": self.abilityCooldown,
+            #"images": self.images if isinstance(self.images, (list, str)) else None,
+            #"parentPlayer": self.parentPlayer.name if self.parentPlayer else None,
+            #"currentState": self.currentState,
+            #"isChargingAttack": self.isChargingAttack,
+            #"chargingStartTime": self.chargingStartTime,
+            #"mostRecentAbilityTime": self.mostRecentAbilityTime,
+            #"tempCounter": self.tempCounter,
+            #"attackStart": self.attackStart
+        }
+
+    @classmethod
+    def DataFromDictionary(cls, data, parentPlayer=None):
+        weapon = cls(name = "Weapon", description = "", abilityDescription = "", damage = 1, chargedDamage = 1, abilityDamage = 1, abilityManaCost = 1, abilityCooldown = 1, parentPlayer = None)        
+        weapon.name = data.get("name", "")
+        weapon.description = data.get("description", "")
+        weapon.abilityDescription = data.get("abilityDescription", "")
+        weapon.damage = data.get("damage", 0)
+        weapon.chargedDamage = data.get("chargedDamage", 0)
+        weapon.abilityDamage = data.get("abilityDamage", 0)
+        weapon.abilityManaCost = data.get("abilityManaCost", 0)
+        weapon.abilityCooldown = data.get("abilityCooldown", 0)
+        #weapon.images = data.get("images", [])
+        weapon.parentPlayer = parentPlayer 
+        return weapon
 
     def Attack(self, endInputTime):
         lengthOfAttackCharge = endInputTime - self.chargingStartTime # how long left click was held
@@ -314,11 +404,12 @@ class Weapon:
         self.tempCounter += 1
 
 class WoodenSword(Weapon):
-    def __init__(self):
-        super.__init__()
+    def __init__(self, name, description, abilityDescription, damage, chargedDamage, abilityDamage, abilityManaCost, abilityCooldown, parentPlayer):
+        super().__init__(name, description, abilityDescription, damage, chargedDamage, abilityDamage, abilityManaCost, abilityCooldown, parentPlayer)
 
         self.basicAttackLength = 2 # seconds
         self.basicAttackSheet = None
+        self.images = None
 
     def BasicAttack(self):
         if self.attackStart <= self.basicAttackLength:
@@ -344,11 +435,15 @@ class Inventory:
         self.inventoryMainMenu = Menus.menuManagement.inventoryButtonGroup
 
     def UpdatePlayerModelScreen(self):
-        Setup.pg.draw.rect(Setup.setup.screen, Setup.setup.BLACK, (0, 0, Setup.setup.WIDTH, Setup.setup.HEIGHT)) # background
-        Setup.setup.screen.blit(self.parentPlayer.currentImage, (0, 0)) # current player image
+        Setup.pg.draw.rect(Setup.setup.screen, Setup.setup.BLACK, (int((Setup.setup.WIDTH - Setup.setup.WIDTH / 1.25) / 2), int((Setup.setup.HEIGHT - Setup.setup.HEIGHT / 1.25) / 2), int(Setup.setup.WIDTH / 1.25), int(Setup.setup.HEIGHT / 1.25))) # background
+        enlargedPlayerImage = Setup.pg.transform.scale(self.parentPlayer.currentImage, (Setup.setup.WIDTH / 4, Setup.setup.WIDTH / 4))
+        Setup.setup.screen.blit(enlargedPlayerImage, (Setup.setup.WIDTH / 4, (Setup.setup.HEIGHT - Setup.setup.WIDTH / 4) / 2)) # current player image
+
+    def Draw(self):
+        self.UpdatePlayerModelScreen()
 
 class Player(Setup.pg.sprite.Sprite):
-    def __init__(self, name, gameHandler):
+    def __init__(self, name="Player", gameHandler=None):
         super().__init__()
         self.gameHandler = gameHandler
 
@@ -370,11 +465,11 @@ class Player(Setup.pg.sprite.Sprite):
 
         self.camera = Camera(self)
         self.miniMap = MiniMap()
-        self.weapon = Weapon("Wooden sword", "weapon", "ability", 100, 200, 300, 20, 5, None, self) # temp
-        self.spell = Spell("Fireball", "fire", 100, 20, self) # temp
+        self.weapon = WoodenSword("Wooden sword", "weapon", "ability", 100, 200, 300, 20, 5, self) # temp
+        self.spell = Fireball("Fireball", "fire", 100, 20, self) # temp
         self.inventory = Inventory(self)
-        self.mapFragments = {1 : True, 2 : True, 3 : True, 4 : False}
-
+        self.mapFragments = {"1" : True, "2" : True, "3" : True, "4" : False} # json converts int keys to strings, which forces a conversion later, it is safer to always use string keys
+     
         self.idleFilePath = Setup.os.path.join("ASSETS", "PLAYER", "PLAYER_IDLE_SHEET")
         self.idleImageSheet = Setup.pg.image.load(self.idleFilePath + ".png").convert_alpha()
         self.idleSheet = Setup.SpriteSheet(self.idleImageSheet, self, self.width * 8)
@@ -399,17 +494,49 @@ class Player(Setup.pg.sprite.Sprite):
 
         self.UpdateCurrentImage(False)
 
+    def DataToDictionary(self):
+        return {"worldX": self.worldX,
+                "worldY": self.worldY,
+                "health": self.health,
+                "maxHealth": self.maxHealth,
+                "mana": self.mana,
+                "maxMana": self.maxMana,
+                "mostRecentWaypointCords": self.mostRecentWaypointCords,
+                "weapon": self.weapon.DataToDictionary() if self.weapon else None,
+                "spell": self.spell.DataToDictionary() if self.spell else None,
+                #"inventory": self.inventory,
+                "mapFragments": self.mapFragments
+        }
+
+    @classmethod
+    def DataFromDictionary(cls, data):
+        player = cls(name = "Player", gameHandler = None)
+        player.worldX = data.get("worldX", 0)
+        player.worldY = data.get("worldY", 0)
+        player.health = data.get("health", 100)
+        player.maxHealth = data.get("maxHealth", 100)
+        player.mana = data.get("mana", 50)
+        player.maxMana = data.get("maxMana", 50)
+        player.weapon = Weapon.DataFromDictionary(data.get("weapon"), parentPlayer=player) if data.get("weapon") else Weapon("Empty", "weapon", "ability", 100, 200, 300, 20, 5, None)
+        player.spell = Spell.DataFromDictionary(data.get("spell"), parentPlayer=player) if data.get("spell") else Spell("Empty", "fire", 100, 20, None)
+        player.mapFragments = data.get("mapFragments", {"1" : True, "2" : True, "3" : True, "4" : False})
+        player.mostRecentWaypointCords = data.get("mostRecentWaypointCords", None)
+        #player.inventory = data.get("inventory", [])
+
+        return player
+
     def UpdateCurrentImage(self, flipImage):
-        self.currentSheet.Update()
-        self.currentImage = self.currentSheet.GetImage(self.currentFrame, self.width, self.height, 1)
-        self.currentImage = Setup.pg.transform.scale(self.currentImage, (self.width, self.height)) 
-        self.currentImage = Setup.pg.transform.flip(self.currentImage, flipImage, False)
+        if self.currentSheet:
+            self.currentSheet.Update()
+            self.currentImage = self.currentSheet.GetImage(self.currentFrame, self.width, self.height, 1)
+            self.currentImage = Setup.pg.transform.scale(self.currentImage, (self.width, self.height)) 
+            self.currentImage = Setup.pg.transform.flip(self.currentImage, flipImage, False)
 
-        self.mask = Setup.pg.mask.from_surface(self.currentImage) 
-        self.rect = self.mask.get_rect()
-        self.rect.topleft = (self.worldX, self.worldY)
+            self.mask = Setup.pg.mask.from_surface(self.currentImage) 
+            self.rect = self.mask.get_rect()
+            self.rect.topleft = (self.worldX, self.worldY)
 
-    def Movement(self, mapBlocks):
+    def Movement(self):
         collisions = {'top': False, 'bottom': False, 'left': False, 'right': False}
 
         # horizontal movement
@@ -472,6 +599,10 @@ class Player(Setup.pg.sprite.Sprite):
             self.JumpHandler(keys)
             self.DashHandler(keys)
             self.CrouchHandler(keys)
+
+    def DisplayInventoryIfOpen(self):
+        if self.inventory.inventoryMainMenu in Menus.menuManagement.gameMenus: # draw 
+            self.inventory.Draw()
 
     def OpenCloseInventory(self):
         if Setup.setup.pressedKey == Setup.pg.K_i:
@@ -563,7 +694,7 @@ class Player(Setup.pg.sprite.Sprite):
             if self.playerYFallingSpeed > 30:
                 self.playerYFallingSpeed = 30 
 
-            collisions = self.Movement(self.gameHandler.blocks)
+            collisions = self.Movement()
 
             if collisions['bottom']:
                 self.currentSheet = self.idleSheet
@@ -599,6 +730,7 @@ class Player(Setup.pg.sprite.Sprite):
             self.spell.Update()
             self.DrawPlayerAndUI()
             self.KillPlayerOnKeyPress()
+            self.DisplayInventoryIfOpen()
         else:
             self.DrawDeathScreen()
 
@@ -808,10 +940,10 @@ class MiniMap(Setup.pg.sprite.Sprite):
         mapWidth = (48 * Setup.setup.BLOCK_WIDTH) / shrinkModifier
         fragmentWidthHeight = mapWidth / 2 # square fragements so widtgh and height are the same
 
-        fragmentLocations = {1 : (startX, startY),
-                              2 : (startX + mapWidth / 2, startY),
-                              3 : (startX, startY + mapWidth / 2),
-                              4 : (startX + mapWidth / 2, startY + mapWidth / 2)}
+        fragmentLocations = {"1" : (startX, startY),
+                              "2" : (startX + mapWidth / 2, startY),
+                              "3" : (startX, startY + mapWidth / 2),
+                              "4" : (startX + mapWidth / 2, startY + mapWidth / 2)}
 
         for fragment, fragmentValue in player.mapFragments.items(): 
             if not fragmentValue:
@@ -1115,6 +1247,14 @@ class Enemy(Setup.pg.sprite.Sprite):
         else:
             self.movementClass = None
 
+    def DisplayHealthBar(self):
+        if not self.player.miniMap.enlarged:
+            drawX = self.worldX - self.player.camera.camera.left
+            drawY = self.worldY - self.player.camera.camera.top - 10 # shift up slightly to draw above enemy
+
+            Setup.pg.draw.rect(Setup.setup.screen, Setup.pg.Color("red4"), (drawX, drawY, self.maxHealth, 10)) # red health bar (background of bar)
+            Setup.pg.draw.rect(Setup.setup.screen, Setup.pg.Color("forestgreen"), (drawX, drawY, self.health, 10)) # green health bar
+
     def UpdateState(self):
         distanceFromPlayer = Setup.math.sqrt((self.worldX - self.player.worldX) ** 2 + (self.worldY - self.player.worldY) ** 2)
 
@@ -1147,6 +1287,8 @@ class Enemy(Setup.pg.sprite.Sprite):
         return Setup.math.sqrt((self.worldX - self.startLocationX) ** 2 + (self.worldY - self.startLocationY))
 
     def PerformAction(self):
+        self.DisplayHealthBar()
+
         if self.movementClass is not None: # stationary enemies cannot move
             self.UpdateState()
 
