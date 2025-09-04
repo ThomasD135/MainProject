@@ -68,29 +68,40 @@ class GameHandler(Setup.pg.sprite.Sprite):
                             }
 
     def DataToDictionary(self):
-        return {
-            "player": self.player.DataToDictionary() if self.player else None,
-            "enemies": [enemy.DataToDictionary() for enemy in self.enemies],
-            "waypoints": [waypoint.DataToDictionary() for waypoint in self.waypoints]
+        objectListsToSave = ["enemies", "waypoints", "treasureChests", "friendlyCharacters"]
+
+        dataToSave = {
+            "player": self.player.DataToDictionary() if self.player else None
         }
+
+        for attributeName in objectListsToSave:
+            attributeList = getattr(self, attributeName)
+            dataToSave[attributeName] = [attribute.DataToDictionary() for attribute in attributeList]
+
+        return dataToSave
 
     def DataFromDictionary(self, data):
         if "player" in data:
             self.player = Player.DataFromDictionary(data["player"])
             self.player.gameHandler = self   
 
-        if "enemies" in data:
-            self.enemies.empty()
+        attributesToUpdate = ["enemies", "waypoints", "treasureChests", "friendlyCharacters"]
 
-            for enemyData in data["enemies"]:
-                enemy = Enemy.DataFromDictionary(enemyData, self)
-                self.enemies.add(enemy)
+        for attribute in attributesToUpdate:  # not creating new waypoints, only updating a small number of variables
+            if attribute in data:
+                newData = data[attribute]
+                attributeSelf = getattr(self, attribute) # self.attribute
 
-        if "waypoints" in data: # not creating new waypoints, only updating the waypointActive bool
-            waypointData = data["waypoints"]
+                if isinstance(attributeSelf, Setup.pg.sprite.Group):
+                    attributeList = list(attributeSelf.sprites())
+                else:
+                    attributeList = attributeSelf
 
-            for index in range(0, min(len(self.waypoints), len(waypointData))):
-                self.waypoints[index].LoadFromDictionary(waypointData[index])
+                for index in range(0, min(len(attributeList), len(newData))):
+                    if attribute == "enemies":
+                        attributeList[index].player = self.player
+
+                    attributeList[index].LoadFromDictionary(newData[index])
 
     def SaveGame(self):
         filePath = Setup.os.path.join("ASSETS", "SAVED_DATA", f"SAVE_FILE_{Setup.setup.SAVE_SLOT}.txt")     
@@ -100,15 +111,13 @@ class GameHandler(Setup.pg.sprite.Sprite):
     def LoadGame(self):
         filePath = Setup.os.path.join("ASSETS", "SAVED_DATA", f"SAVE_FILE_{Setup.setup.SAVE_SLOT}.txt")            
         if Setup.os.path.exists(filePath) and Setup.os.path.getsize(filePath) > 0:
-            self.CreatePlayableMap(False)
+            self.CreatePlayableMap()
             
             with open(filePath, "r") as file:
                 data = Setup.json.load(file)
-                self.DataFromDictionary(data)            
-        else:
-            self.CreatePlayableMap(True)
-
-    def CreatePlayableMap(self, createNewObjects):
+                self.DataFromDictionary(data)   
+                
+    def CreatePlayableMap(self):
         for row in MapCreator.mapDataHandler.mapGrid.blockGrid:
             for block in row:          
                 if block.blockNumber <= 20 or (block.blockNumber >= 43 and block.blockNumber <= 47): # a block and not an entity - friendly characters cannot move so are represented as a block
@@ -138,45 +147,37 @@ class GameHandler(Setup.pg.sprite.Sprite):
                     if block.blockNumber >= 21 and block.blockNumber <= 28:
                         pass
                     elif block.blockNumber >= 29 and block.blockNumber <= 42:
-                        if createNewObjects:
-                            self.enemies.add(self.CreateEnemy(block.blockNumber, block))
+                        self.enemies.add(self.CreateEnemy(block.blockNumber, block))
                     elif block.blockNumber == 48:    
                         self.pathfindingWaypointBlocks.append(block)                
 
         self.PopulateGraph(self.pathfindingWaypointBlocks)
 
-    def CreateEnemy(self, enemyNumber, block=None, worldX=None, worldY=None, health=None):        
+    def CreateEnemy(self, enemyNumber, block):      
         filePath = Setup.os.path.join("ASSETS", "ENEMIES", f"ENEMY{enemyNumber - 28}_IMAGE") # first enemy image is ENEMY1_IMAGE, not ENEMY29_IMAGE so -28
         image = Setup.pg.image.load(filePath + ".png")
         
         enemyClass = self.enemyTypes[enemyNumber]      
 
         if not enemyClass:
-            raise ValueError(f"Enemy class does not exist, number : {enemyNumber}")
+            raise ValueError(f"Enemy number {enemyNumber} does not exist")
           
         width = enemyClass["size"]
         widthDifferenceToNormalBlock = width - Setup.setup.BLOCK_WIDTH 
 
-        if block or (worldX is None or worldY is None):
-            worldX = block.originalLocationX
-            worldY = block.originalLocationY - widthDifferenceToNormalBlock
-
-        if health is None:
-            health = enemyClass["health"]
-
         return enemyClass["class"](
-            worldX = worldX,
-            worldY = worldY,
+            worldX = block.originalLocationX,
+            worldY = block.originalLocationY - widthDifferenceToNormalBlock,
             image = image,
-            health = health,
+            health = enemyClass["health"],
             movementType = enemyClass["movementType"],
             velocity = enemyClass["velocity"],
             size = enemyClass["size"],
             suspicionRange = enemyClass["suspicionRange"],
             detectionRange = enemyClass["detectionRange"],
             enemyType = enemyNumber,
-            player = self.player,
-    )
+            player = None,
+        )
 
     def PopulateGraph(self, blocks):
         self.blockNumberToObject = {}
@@ -895,14 +896,25 @@ class TreaureChest:
     def __init__(self, parentBlock, item):
         self.parent = parentBlock
         self.prompt = Prompt("E_PROMPT_IMAGE", "e")
-        self.openedImage = MapCreator.mapDataHandler.mapGrid.blockSheetHandler.GetCorrectBlockImage(self.parent.blockNumber + 1, Setup.setup.BLOCK_WIDTH, Setup.setup.BLOCK_WIDTH, Setup.setup.BLOCK_WIDTH, Setup.setup.BLOCK_WIDTH, False, 0)
+        self.openedImage = MapCreator.mapDataHandler.mapGrid.blockSheetHandler.GetCorrectBlockImage(self.parent.blockNumber + 1, Setup.setup.BLOCK_WIDTH, Setup.setup.BLOCK_WIDTH, False, 0)
         self.chestOpened = False # TODO - saved data, has the waypoint been interacted with before
         self.reward = item
+
+    def DataToDictionary(self):
+        return {"chestOpened": self.chestOpened,
+        }
+
+    def LoadFromDictionary(self, data): # does not create a new instance
+        self.chestOpened = data.get("chestOpened", False)
 
     def IsPlayerInRange(self, player, camera):
         if not self.chestOpened:
             if self.prompt.IsPlayerInRange(self.parent, player, camera):
                 self.TreasureChestFunction()
+
+        elif self.parent.image != self.openedImage: # change image to correct image when loading
+            self.parent.image = self.openedImage
+            self.reward = None
 
     def TreasureChestFunction(self):
         if self.prompt.PromptInteractedWith():
@@ -923,7 +935,6 @@ class Waypoint:
     def LoadFromDictionary(self, data): # does not create a new instance
         self.waypointActive = data.get("waypointActive", False)
    
-
     def IsPlayerInRange(self, player, camera):
         if self.prompt.IsPlayerInRange(self.parent, player, camera):
             self.MiniMapFunction(player)
@@ -1279,14 +1290,11 @@ class Enemy(Setup.pg.sprite.Sprite):
                 "health": self.health
         }
 
-    @classmethod
-    def DataFromDictionary(cls, data, gameHandler):
-        return gameHandler.CreateEnemy(
-            enemyNumber=data["enemyType"], 
-            worldX=data["worldX"],
-            worldY=data["worldY"],
-            health=data["health"],
-        )
+    def LoadFromDictionary(self, data):
+        self.enemyType = data["enemyType"]
+        self.worldX = data["worldX"]
+        self.worldY = data["worldY"]
+        self.health = data["health"]
 
     def DisplayHealthBar(self):
         if not self.player.miniMap.enlarged:
@@ -1343,7 +1351,7 @@ class Enemy(Setup.pg.sprite.Sprite):
                 case "RETURNING":
                     self.Returning()
 
-            self.rect.topleft = (self.worldX, self.worldY)
+        self.rect.topleft = (self.worldX, self.worldY)
 
     def Detected(self):
         playerX = self.player.worldX # the current location
@@ -1460,7 +1468,6 @@ class FriendlyCharacter:
         self.parent = parentBlock
         self.prompt = Prompt("E_PROMPT_IMAGE", "e")
         self.textNumber = 0
-        self.hasRewardedItem = False
         self.displayActive = False
 
         allItems = {0 : None,
@@ -1480,6 +1487,13 @@ class FriendlyCharacter:
 
         self.text = allText[friendlyCharacterNumber]
         self.item = allItems[friendlyCharacterNumber]
+
+    def DataToDictionary(self):
+        return {"textNumber": self.textNumber,
+        }
+
+    def LoadFromDictionary(self, data): 
+        self.textNumber = data.get("textNumber", 0)
 
     def IsPlayerInRange(self, player, camera):
         if self.prompt.IsPlayerInRange(self.parent, player, camera):

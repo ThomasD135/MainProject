@@ -1,15 +1,12 @@
 {
     "player": {
-        "worldX": 2030,
-        "worldY": 1440,
-        "health": 800,
+        "worldX": 5752,
+        "worldY": 1920,
+        "health": 380,
         "maxHealth": 800,
-        "mana": 400,
+        "mana": 400.0,
         "maxMana": 400,
-        "mostRecentWaypointCords": [
-            2080,
-            800
-        ],
+        "mostRecentWaypointCords": null,
         "weapon": {
             "name": "Wooden sword",
             "description": "weapon",
@@ -38,29 +35,57 @@
     "enemies": [
         {
             "enemyType": 29,
-            "worldX": 2030,
+            "worldX": 3140.0,
             "worldY": 1760,
             "health": 120
         },
         {
             "enemyType": 29,
-            "worldX": 2030,
+            "worldX": 3140.0,
             "worldY": 1760,
             "health": 120
         },
         {
             "enemyType": 29,
-            "worldX": 5640.0,
+            "worldX": 5752,
             "worldY": 1760,
             "health": 120
         }
     ],
     "waypoints": [
         {
-            "waypointActive": true
+            "waypointActive": false
         },
         {
-            "waypointActive": true
+            "waypointActive": false
+        }
+    ],
+    "treasureChests": [
+        {
+            "chestOpened": false
+        },
+        {
+            "chestOpened": false
+        },
+        {
+            "chestOpened": false
+        }
+    ],
+    "friendlyCharacters": [
+        {
+            "textNumber": 0
+        },
+        {
+            "textNumber": 0
+        },
+        {
+            "textNumber": 0
+        },
+        {
+            "textNumber": 0
+        },
+        {
+            "textNumber": 0
         }
     ]
 }
