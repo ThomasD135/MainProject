@@ -18,6 +18,11 @@ class GameHandler(Setup.pg.sprite.Sprite):
         self.bosses = Setup.pg.sprite.Group()
         self.hitBoxes = Setup.pg.sprite.Group()
 
+        self.playableMap = []
+        self.waypoints = []
+        self.treasureChests = []
+        self.friendlyCharacters = []
+
         self.blockAttributeDictionary = {0 : [False, 0, 0], # enemies and bosses all have no collision so no need for attributes
                                      1 : [True, 0, 10],
                                      2 : [True, 0, 10],
@@ -46,37 +51,46 @@ class GameHandler(Setup.pg.sprite.Sprite):
                                      47 : [False, 0, 0], # friendly character end
                                      }# [collision with player, damage if any, knockback when hit (is increased if player takes damage from block]
 
-        self.enemyTypes = {1 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
-                           2 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
-                           3 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},   
-                           4 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 192, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
-                           5 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
-                           6 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 192, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
-                           7 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 192, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
-                           8 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
-                           9 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 224, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
-                           10 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
-                           11 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 192, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
-                           12 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
-                           13 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
-                           14 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+        self.enemyTypes = {29 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           30 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           31 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},   
+                           32 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 192, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           33 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           34 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 192, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           35 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 192, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           36 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           37 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 224, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           38 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           39 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 192, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           40 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           41 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           42 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
                             }
-
-        #self.CreatePlayableMap()
-        #self.LoadGame()
 
     def DataToDictionary(self):
         return {
             "player": self.player.DataToDictionary() if self.player else None,
-            #"enemies" : self.enemies.DataToDictionary(),
-            #"bosses" : self.bosses.DataToDictionary(),
-            #"blocks" : self.blocks.DataToDictionary()
+            "enemies": [enemy.DataToDictionary() for enemy in self.enemies],
+            "waypoints": [waypoint.DataToDictionary() for waypoint in self.waypoints]
         }
 
     def DataFromDictionary(self, data):
         if "player" in data:
             self.player = Player.DataFromDictionary(data["player"])
-            self.player.gameHandler = self           
+            self.player.gameHandler = self   
+
+        if "enemies" in data:
+            self.enemies.empty()
+
+            for enemyData in data["enemies"]:
+                enemy = Enemy.DataFromDictionary(enemyData, self)
+                self.enemies.add(enemy)
+
+        if "waypoints" in data: # not creating new waypoints, only updating the waypointActive bool
+            waypointData = data["waypoints"]
+
+            for index in range(0, min(len(self.waypoints), len(waypointData))):
+                self.waypoints[index].LoadFromDictionary(waypointData[index])
 
     def SaveGame(self):
         filePath = Setup.os.path.join("ASSETS", "SAVED_DATA", f"SAVE_FILE_{Setup.setup.SAVE_SLOT}.txt")     
@@ -86,18 +100,15 @@ class GameHandler(Setup.pg.sprite.Sprite):
     def LoadGame(self):
         filePath = Setup.os.path.join("ASSETS", "SAVED_DATA", f"SAVE_FILE_{Setup.setup.SAVE_SLOT}.txt")            
         if Setup.os.path.exists(filePath) and Setup.os.path.getsize(filePath) > 0:
+            self.CreatePlayableMap(False)
+            
             with open(filePath, "r") as file:
                 data = Setup.json.load(file)
-                self.DataFromDictionary(data)
+                self.DataFromDictionary(data)            
+        else:
+            self.CreatePlayableMap(True)
 
-        self.CreatePlayableMap()
-
-    def CreatePlayableMap(self):
-        self.playableMap = []
-        self.waypoints = []
-        self.treasureChests = []
-        self.friendlyCharacters = []
-
+    def CreatePlayableMap(self, createNewObjects):
         for row in MapCreator.mapDataHandler.mapGrid.blockGrid:
             for block in row:          
                 if block.blockNumber <= 20 or (block.blockNumber >= 43 and block.blockNumber <= 47): # a block and not an entity - friendly characters cannot move so are represented as a block
@@ -127,16 +138,15 @@ class GameHandler(Setup.pg.sprite.Sprite):
                     if block.blockNumber >= 21 and block.blockNumber <= 28:
                         pass
                     elif block.blockNumber >= 29 and block.blockNumber <= 42:
-                        self.enemies.add(self.CreateEnemy(block, block.blockNumber))
+                        if createNewObjects:
+                            self.enemies.add(self.CreateEnemy(block.blockNumber, block))
                     elif block.blockNumber == 48:    
                         self.pathfindingWaypointBlocks.append(block)                
 
         self.PopulateGraph(self.pathfindingWaypointBlocks)
 
-    def CreateEnemy(self, block, enemyNumber):
-        enemyNumber -= 28 # numbers starting at 1 
-        
-        filePath = Setup.os.path.join("ASSETS", "ENEMIES", f"ENEMY{enemyNumber}_IMAGE")
+    def CreateEnemy(self, enemyNumber, block=None, worldX=None, worldY=None, health=None):        
+        filePath = Setup.os.path.join("ASSETS", "ENEMIES", f"ENEMY{enemyNumber - 28}_IMAGE") # first enemy image is ENEMY1_IMAGE, not ENEMY29_IMAGE so -28
         image = Setup.pg.image.load(filePath + ".png")
         
         enemyClass = self.enemyTypes[enemyNumber]      
@@ -147,16 +157,24 @@ class GameHandler(Setup.pg.sprite.Sprite):
         width = enemyClass["size"]
         widthDifferenceToNormalBlock = width - Setup.setup.BLOCK_WIDTH 
 
+        if block or (worldX is None or worldY is None):
+            worldX = block.originalLocationX
+            worldY = block.originalLocationY - widthDifferenceToNormalBlock
+
+        if health is None:
+            health = enemyClass["health"]
+
         return enemyClass["class"](
-            worldX = block.originalLocationX,
-            worldY = block.originalLocationY - widthDifferenceToNormalBlock,
+            worldX = worldX,
+            worldY = worldY,
             image = image,
-            health = enemyClass["health"],
+            health = health,
             movementType = enemyClass["movementType"],
             velocity = enemyClass["velocity"],
             size = enemyClass["size"],
             suspicionRange = enemyClass["suspicionRange"],
             detectionRange = enemyClass["detectionRange"],
+            enemyType = enemyNumber,
             player = self.player,
     )
 
@@ -241,7 +259,7 @@ class MapBlock(Setup.pg.sprite.Sprite):
         self.topFace = directions[self.smallRotation]
 
 class Spell:
-    def __init__(self, name, description, damage, manaCost, parentPlayer):
+    def __init__(self, name, description, damage, manaCost, parentPlayer=None):
         self.name = name
         self.description = description
         self.damage = damage
@@ -257,20 +275,18 @@ class Spell:
             "description": self.description,
             "damage": self.damage,
             "manaCost": self.manaCost,
-            #"parentPlayer": self.parentPlayer.name if self.parentPlayer else None,
             "currentState": self.currentState,
             "tempCounter": self.tempCounter
         }
 
     @classmethod
-    def DataFromDictionary(cls, data, parentPlayer=None):
-        spell = cls(name = "Spell", description = "", damage = 1, manaCost = 1, parentPlayer = None)
-        spell.name = data.get("name", "")
-        spell.description = data.get("description", "")
-        spell.damage = data.get("damage", 0)
-        spell.manaCost = data.get("manaCost", 0)
-        spell.parentPlayer = parentPlayer 
-        return spell
+    def DataFromDictionary(cls, data):
+        return cls(
+            name = data.get("name", ""),
+            description = data.get("description", ""),
+            damage = data.get("damage", 0),
+            manaCost = data.get("manaCost", 0)
+        )
 
     def Attack(self):
         if self.parentPlayer.UseMana(self.manaCost):
@@ -300,7 +316,7 @@ class Fireball(Spell):
             #attack     
 
 class Weapon:
-    def __init__(self, name, description, abilityDescription, damage, chargedDamage, abilityDamage, abilityManaCost, abilityCooldown, parentPlayer): # images is a list of all the different filepaths for the corresponding attacks
+    def __init__(self, name, description, abilityDescription, damage, chargedDamage, abilityDamage, abilityManaCost, abilityCooldown, parentPlayer=None): 
         self.name = name
         self.description = description
         self.abilityDescription = abilityDescription
@@ -309,7 +325,6 @@ class Weapon:
         self.abilityDamage = abilityDamage
         self.abilityManaCost = abilityManaCost
         self.abilityCooldown = abilityCooldown
-        #self.images = images
         self.parentPlayer = parentPlayer
 
         self.currentState = "NONE" # "NONE" "BASIC" "CHARGED" "ABILITY"
@@ -330,30 +345,20 @@ class Weapon:
             "abilityDamage": self.abilityDamage,
             "abilityManaCost": self.abilityManaCost,
             "abilityCooldown": self.abilityCooldown,
-            #"images": self.images if isinstance(self.images, (list, str)) else None,
-            #"parentPlayer": self.parentPlayer.name if self.parentPlayer else None,
-            #"currentState": self.currentState,
-            #"isChargingAttack": self.isChargingAttack,
-            #"chargingStartTime": self.chargingStartTime,
-            #"mostRecentAbilityTime": self.mostRecentAbilityTime,
-            #"tempCounter": self.tempCounter,
-            #"attackStart": self.attackStart
         }
 
     @classmethod
-    def DataFromDictionary(cls, data, parentPlayer=None):
-        weapon = cls(name = "Weapon", description = "", abilityDescription = "", damage = 1, chargedDamage = 1, abilityDamage = 1, abilityManaCost = 1, abilityCooldown = 1, parentPlayer = None)        
-        weapon.name = data.get("name", "")
-        weapon.description = data.get("description", "")
-        weapon.abilityDescription = data.get("abilityDescription", "")
-        weapon.damage = data.get("damage", 0)
-        weapon.chargedDamage = data.get("chargedDamage", 0)
-        weapon.abilityDamage = data.get("abilityDamage", 0)
-        weapon.abilityManaCost = data.get("abilityManaCost", 0)
-        weapon.abilityCooldown = data.get("abilityCooldown", 0)
-        #weapon.images = data.get("images", [])
-        weapon.parentPlayer = parentPlayer 
-        return weapon
+    def DataFromDictionary(cls, data):
+        return cls(
+            name = data.get("name", ""),
+            description = data.get("description", ""),
+            abilityDescription = data.get("abilityDescription", ""),
+            damage = data.get("damage", 0),
+            chargedDamage = data.get("chargedDamage", 0),
+            abilityDamage = data.get("abilityDamage", 0),
+            abilityManaCost = data.get("abilityManaCost", 0),
+            abilityCooldown = data.get("abilityCooldown", 0),
+        )       
 
     def Attack(self, endInputTime):
         lengthOfAttackCharge = endInputTime - self.chargingStartTime # how long left click was held
@@ -409,7 +414,7 @@ class WoodenSword(Weapon):
 
         self.basicAttackLength = 2 # seconds
         self.basicAttackSheet = None
-        self.images = None
+        self.images = None # images is a list of all the different filepaths for the corresponding attacks
 
     def BasicAttack(self):
         if self.attackStart <= self.basicAttackLength:
@@ -443,32 +448,43 @@ class Inventory:
         self.UpdatePlayerModelScreen()
 
 class Player(Setup.pg.sprite.Sprite):
-    def __init__(self, name="Player", gameHandler=None):
+    def __init__(self, name="Player", gameHandler=None, worldX=Setup.setup.WIDTH / 2, worldY=Setup.setup.HEIGHT / 2, health=500, maxHealth=800, mana=300, maxMana=400, mapFragments=None, mostRecentWaypointCords=None, weapon=None, spell=None):
         super().__init__()
+        self.name = name
+        self.gameHandler = gameHandler
+        self.worldX = worldX
+        self.worldY = worldY
+        self.health = health
+        self.maxHealth = maxHealth
+        self.mana = mana
+        self.maxMana = maxMana
+        self.mapFragments = mapFragments if mapFragments is not None else {"1": True, "2": True, "3": True, "4": False} # json converts int keys to strings, which forces a conversion later, it is safer to always use string keys
+        self.mostRecentWaypointCords = mostRecentWaypointCords
+
+        if weapon is None:
+            self.weapon = WoodenSword("Wooden sword", "weapon", "ability", 100, 200, 300, 20, 5, parentPlayer=self)
+        else:
+            self.weapon = weapon
+            self.weapon.parentPlayer = self
+
+        if spell is None:
+            self.spell = Fireball("Fireball", "fire", 100, 20, parentPlayer=self)
+        else:
+            self.spell = spell
+            self.spell.parentPlayer = self
+
         self.gameHandler = gameHandler
 
         self.dead = False
-        self.name = name
         self.width = Setup.setup.BLOCK_WIDTH
         self.height = Setup.setup.BLOCK_WIDTH
-        self.worldX = Setup.setup.WIDTH / 2
-        self.worldY = Setup.setup.HEIGHT / 2
-        self.mostRecentWaypointCords = None
-
-        self.maxHealth = 800 # temp
-        self.maxMana = 400 # temp
-        self.health = 500 # temp
-        self.mana = 300 # temp
         self.manaRegenerationSpeed = 50 / 60 # 50 a second, divided by 60 for each frame
         self.manaRegenerationCooldown = 1 # second
         self.manaRegenDelayTimer = CooldownTimer(self.manaRegenerationCooldown)
 
         self.camera = Camera(self)
         self.miniMap = MiniMap()
-        self.weapon = WoodenSword("Wooden sword", "weapon", "ability", 100, 200, 300, 20, 5, self) # temp
-        self.spell = Fireball("Fireball", "fire", 100, 20, self) # temp
         self.inventory = Inventory(self)
-        self.mapFragments = {"1" : True, "2" : True, "3" : True, "4" : False} # json converts int keys to strings, which forces a conversion later, it is safer to always use string keys
      
         self.idleFilePath = Setup.os.path.join("ASSETS", "PLAYER", "PLAYER_IDLE_SHEET")
         self.idleImageSheet = Setup.pg.image.load(self.idleFilePath + ".png").convert_alpha()
@@ -504,26 +520,23 @@ class Player(Setup.pg.sprite.Sprite):
                 "mostRecentWaypointCords": self.mostRecentWaypointCords,
                 "weapon": self.weapon.DataToDictionary() if self.weapon else None,
                 "spell": self.spell.DataToDictionary() if self.spell else None,
-                #"inventory": self.inventory,
                 "mapFragments": self.mapFragments
         }
 
     @classmethod
     def DataFromDictionary(cls, data):
-        player = cls(name = "Player", gameHandler = None)
-        player.worldX = data.get("worldX", 0)
-        player.worldY = data.get("worldY", 0)
-        player.health = data.get("health", 100)
-        player.maxHealth = data.get("maxHealth", 100)
-        player.mana = data.get("mana", 50)
-        player.maxMana = data.get("maxMana", 50)
-        player.weapon = Weapon.DataFromDictionary(data.get("weapon"), parentPlayer=player) if data.get("weapon") else Weapon("Empty", "weapon", "ability", 100, 200, 300, 20, 5, None)
-        player.spell = Spell.DataFromDictionary(data.get("spell"), parentPlayer=player) if data.get("spell") else Spell("Empty", "fire", 100, 20, None)
-        player.mapFragments = data.get("mapFragments", {"1" : True, "2" : True, "3" : True, "4" : False})
-        player.mostRecentWaypointCords = data.get("mostRecentWaypointCords", None)
-        #player.inventory = data.get("inventory", [])
-
-        return player
+        return cls(
+            worldX = data.get("worldX", 0),
+            worldY = data.get("worldY", 0),
+            health = data.get("health", 100),
+            maxHealth = data.get("maxHealth", 100),
+            mana = data.get("mana", 50),
+            maxMana = data.get("maxMana", 50),
+            mapFragments = data.get("mapFragments", {"1": True, "2": True, "3": True, "4": False}),
+            mostRecentWaypointCords = data.get("mostRecentWaypointCords", None),
+            weapon = Weapon.DataFromDictionary(data.get("weapon")) if data.get("weapon") else Weapon("Empty", "weapon", "ability", 100, 200, 300, 20, 5, None),
+            spell = Spell.DataFromDictionary(data.get("spell")) if data.get("spell") else Spell("Empty", "fire", 100, 20, None),
+        )
 
     def UpdateCurrentImage(self, flipImage):
         if self.currentSheet:
@@ -773,6 +786,9 @@ class Player(Setup.pg.sprite.Sprite):
         self.movementSpeeds[1] = self.playerYFallingSpeed # update speeds early to move the player before speed is reset (collision with the ground)
 
     def PassiveManaRegeneration(self):        
+        if self.mana < self.maxMana and self.manaRegenDelayTimer.startTime is None:
+            self.manaRegenDelayTimer.StartTimer()
+
         if self.manaRegenDelayTimer.CheckFinished():
             if self.mana + self.manaRegenerationSpeed > self.maxMana:
                 self.mana += self.maxMana - self.mana
@@ -895,10 +911,18 @@ class TreaureChest:
             # TODO - reward item, save opened state
 
 class Waypoint:
-    def __init__(self, parentBlock):
+    def __init__(self, parentBlock=None, waypointActive=False):
         self.parent = parentBlock
         self.prompt = Prompt("E_PROMPT_IMAGE", "e")
-        self.waypointActive = False # TODO - saved data, has the waypoint been interacted with before
+        self.waypointActive = waypointActive # TODO - saved data, has the waypoint been interacted with before
+
+    def DataToDictionary(self):
+        return {"waypointActive": self.waypointActive
+        }
+
+    def LoadFromDictionary(self, data): # does not create a new instance
+        self.waypointActive = data.get("waypointActive", False)
+   
 
     def IsPlayerInRange(self, player, camera):
         if self.prompt.IsPlayerInRange(self.parent, player, camera):
@@ -1200,9 +1224,10 @@ class CooldownTimer:
         self.startTime = None
 
 class Enemy(Setup.pg.sprite.Sprite):
-    def __init__(self, worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange, player):
+    def __init__(self, worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange, enemyType, player):
         super().__init__()
         self.player = player
+        self.enemyType = enemyType
 
         self.worldX = worldX
         self.worldY = worldY
@@ -1246,6 +1271,22 @@ class Enemy(Setup.pg.sprite.Sprite):
             self.movementClass = self.movementClasses[movementType]()
         else:
             self.movementClass = None
+
+    def DataToDictionary(self):
+        return {"enemyType": self.enemyType,
+                "worldX": self.worldX,
+                "worldY": self.worldY,
+                "health": self.health
+        }
+
+    @classmethod
+    def DataFromDictionary(cls, data, gameHandler):
+        return gameHandler.CreateEnemy(
+            enemyNumber=data["enemyType"], 
+            worldX=data["worldX"],
+            worldY=data["worldY"],
+            health=data["health"],
+        )
 
     def DisplayHealthBar(self):
         if not self.player.miniMap.enlarged:
@@ -1411,8 +1452,8 @@ class RandomMovement:
             enemy.MoveToPoint(-Setup.sys.maxsize, enemy.slowVelocity, enemy.player) # anywhere to the left
 
 class Enemy1(Enemy):
-    def __init__(self, worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange, player):
-        super().__init__(worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange, player)
+    def __init__(self, worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange, enemyType, player):
+        super().__init__(worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange, enemyType, player)
 
 class FriendlyCharacter:
     def __init__(self, parentBlock, friendlyCharacterNumber):

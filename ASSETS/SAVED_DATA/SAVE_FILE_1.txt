@@ -1,14 +1,14 @@
 {
     "player": {
-        "worldX": 4480,
-        "worldY": 2400,
-        "health": 710,
+        "worldX": 2030,
+        "worldY": 1440,
+        "health": 800,
         "maxHealth": 800,
-        "mana": 163.3333333333307,
+        "mana": 400,
         "maxMana": 400,
         "mostRecentWaypointCords": [
-            1920,
-            1440
+            2080,
+            800
         ],
         "weapon": {
             "name": "Wooden sword",
@@ -25,8 +25,8 @@
             "description": "fire",
             "damage": 100,
             "manaCost": 20,
-            "currentState": "SPELL",
-            "tempCounter": 52
+            "currentState": "NONE",
+            "tempCounter": 0
         },
         "mapFragments": {
             "1": true,
@@ -34,5 +34,33 @@
             "3": true,
             "4": false
         }
-    }
+    },
+    "enemies": [
+        {
+            "enemyType": 29,
+            "worldX": 2030,
+            "worldY": 1760,
+            "health": 120
+        },
+        {
+            "enemyType": 29,
+            "worldX": 2030,
+            "worldY": 1760,
+            "health": 120
+        },
+        {
+            "enemyType": 29,
+            "worldX": 5640.0,
+            "worldY": 1760,
+            "health": 120
+        }
+    ],
+    "waypoints": [
+        {
+            "waypointActive": true
+        },
+        {
+            "waypointActive": true
+        }
+    ]
 }
