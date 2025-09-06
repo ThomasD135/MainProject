@@ -1,0 +1,91 @@
+{
+    "player": {
+        "worldX": 1728.0,
+        "worldY": 800,
+        "health": 500,
+        "maxHealth": 800,
+        "mana": 400.0,
+        "maxMana": 400,
+        "mostRecentWaypointCords": null,
+        "weapon": {
+            "name": "Wooden sword",
+            "description": "weapon",
+            "abilityDescription": "ability",
+            "damage": 100,
+            "chargedDamage": 200,
+            "abilityDamage": 300,
+            "abilityManaCost": 20,
+            "abilityCooldown": 5
+        },
+        "spell": {
+            "name": "Fireball",
+            "description": "fire",
+            "damage": 100,
+            "manaCost": 20,
+            "currentState": "NONE",
+            "tempCounter": 0
+        },
+        "mapFragments": {
+            "1": true,
+            "2": true,
+            "3": true,
+            "4": false
+        }
+    },
+    "enemies": [
+        {
+            "enemyType": 29,
+            "worldX": 675.0,
+            "worldY": 1760,
+            "health": 120
+        },
+        {
+            "enemyType": 29,
+            "worldX": 3142.5,
+            "worldY": 1760,
+            "health": 120
+        },
+        {
+            "enemyType": 29,
+            "worldX": 4320,
+            "worldY": 1760,
+            "health": 120
+        }
+    ],
+    "waypoints": [
+        {
+            "waypointActive": false
+        },
+        {
+            "waypointActive": false
+        }
+    ],
+    "treasureChests": [
+        {
+            "chestOpened": true
+        },
+        {
+            "chestOpened": false
+        },
+        {
+            "chestOpened": false
+        }
+    ],
+    "friendlyCharacters": [
+        {
+            "textNumber": 0
+        },
+        {
+            "textNumber": 0
+        },
+        {
+            "textNumber": 0
+        },
+        {
+            "textNumber": 0
+        },
+        {
+            "textNumber": 0
+        }
+    ]
+}

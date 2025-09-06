@@ -5,8 +5,7 @@ import MapCreator
 
 def main():
     Setup.SoundHandler.PlaySound("MENU_MUSIC")
-    Game.gameHandler.LoadGame()
-
+    
     while Setup.setup.run:
         Setup.setup.update()
         Setup.setup.events()
@@ -21,15 +20,16 @@ def main():
                 Menus.menuManagement.MenuChildActions("MENU")
 
             case "GAME":
+                Game.gameHandler.LoadGame()
                 Game.gameHandler.background.DrawImage()
                 Game.gameHandler.player.Update()
                 Game.gameHandler.UpdateEnemies()
                 Menus.menuManagement.MenuChildActions("GAME")
                 
         Setup.pg.display.update()
+        Game.gameHandler.SaveGame()
 
     MapCreator.mapDataHandler.mapGrid.SaveMapData()
-    Game.gameHandler.SaveGame()
 
 if __name__ == "__main__":
     main()

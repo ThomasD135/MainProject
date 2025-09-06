@@ -1,8 +1,8 @@
 {
     "player": {
-        "worldX": 5752,
-        "worldY": 1920,
-        "health": 380,
+        "worldX": 1268,
+        "worldY": 960,
+        "health": 500,
         "maxHealth": 800,
         "mana": 400.0,
         "maxMana": 400,
@@ -35,19 +35,19 @@
     "enemies": [
         {
             "enemyType": 29,
-            "worldX": 3140.0,
+            "worldX": 1117.5,
             "worldY": 1760,
             "health": 120
         },
         {
             "enemyType": 29,
-            "worldX": 3140.0,
+            "worldX": 1912.5,
             "worldY": 1760,
             "health": 120
         },
         {
             "enemyType": 29,
-            "worldX": 5752,
+            "worldX": 4370.0,
             "worldY": 1760,
             "health": 120
         }
@@ -68,7 +68,7 @@
             "chestOpened": false
         },
         {
-            "chestOpened": false
+            "chestOpened": true
         }
     ],
     "friendlyCharacters": [

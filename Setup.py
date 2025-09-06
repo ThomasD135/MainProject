@@ -43,7 +43,9 @@ class Setup():
 
         #game settings
         self.gainHealthFromBosses = True
-        self.SAVE_SLOT = 1 # default to 1
+        self.changeSlot = (False, -1) # (shouldChange, newSlot)
+        self.saveGame = False
+        self.currentSaveSlot = -1 
 
     def events(self):
         for event in pg.event.get():

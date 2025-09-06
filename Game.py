@@ -104,20 +104,41 @@ class GameHandler(Setup.pg.sprite.Sprite):
                     attributeList[index].LoadFromDictionary(newData[index])
 
     def SaveGame(self):
-        filePath = Setup.os.path.join("ASSETS", "SAVED_DATA", f"SAVE_FILE_{Setup.setup.SAVE_SLOT}.txt")     
-        with open(filePath, "w") as file:
-            Setup.json.dump(self.DataToDictionary(), file, indent=4)
+        if Setup.setup.currentSaveSlot != -1 and Setup.setup.saveGame:
+            Setup.setup.saveGame = False
+
+            filePath = Setup.os.path.join("ASSETS", "SAVED_DATA", f"SAVE_FILE_{Setup.setup.currentSaveSlot}.txt")     
+            with open(filePath, "w") as file:
+                Setup.json.dump(self.DataToDictionary(), file, indent=4)
 
     def LoadGame(self):
-        filePath = Setup.os.path.join("ASSETS", "SAVED_DATA", f"SAVE_FILE_{Setup.setup.SAVE_SLOT}.txt")            
-        if Setup.os.path.exists(filePath) and Setup.os.path.getsize(filePath) > 0:
-            self.CreatePlayableMap()
-            
-            with open(filePath, "r") as file:
-                data = Setup.json.load(file)
-                self.DataFromDictionary(data)   
-                
+        if Setup.setup.changeSlot[0] and Setup.setup.changeSlot[1] != -1:
+            self.ResetData()
+                      
+            Setup.setup.currentSaveSlot = Setup.setup.changeSlot[1]
+            Setup.setup.changeSlot = (False, -1)
+                                             
+            filePath = Setup.os.path.join("ASSETS", "SAVED_DATA", f"SAVE_FILE_{Setup.setup.currentSaveSlot}.txt")            
+            if Setup.os.path.exists(filePath) and Setup.os.path.getsize(filePath) > 0:                            
+                with open(filePath, "r") as file:
+                    data = Setup.json.load(file)
+                    self.DataFromDictionary(data)                  
+
+    def ResetData(self):
+        self.player = Player("Player", self)
+        self.blocks = Setup.pg.sprite.Group() 
+        self.enemies = Setup.pg.sprite.Group()
+        self.bosses = Setup.pg.sprite.Group()
+        self.hitBoxes = Setup.pg.sprite.Group()
+        self.playableMap = []
+        self.waypoints = []
+        self.treasureChests = []
+        self.friendlyCharacters = []
+        self.CreatePlayableMap()
+               
     def CreatePlayableMap(self):
+        Setup.setup.loadedMap = True
+
         for row in MapCreator.mapDataHandler.mapGrid.blockGrid:
             for block in row:          
                 if block.blockNumber <= 20 or (block.blockNumber >= 43 and block.blockNumber <= 47): # a block and not an entity - friendly characters cannot move so are represented as a block
@@ -176,7 +197,7 @@ class GameHandler(Setup.pg.sprite.Sprite):
             suspicionRange = enemyClass["suspicionRange"],
             detectionRange = enemyClass["detectionRange"],
             enemyType = enemyNumber,
-            player = None,
+            player = self.player,
         )
 
     def PopulateGraph(self, blocks):
@@ -863,8 +884,9 @@ class GameBackground:
         self.blockImage = Setup.setup.loadImage(filePath, Setup.setup.BLOCK_WIDTH * Setup.setup.BLOCKS_WIDE, Setup.setup.BLOCK_WIDTH * Setup.setup.BLOCKS_WIDE)
 
     def DrawImage(self):
-        topLeftBlock = self.gameHandler.blocks.sprites()[0]
-        Setup.setup.screen.blit(self.blockImage, (topLeftBlock.rect.left, topLeftBlock.rect.top))
+        if len(self.gameHandler.blocks.sprites()) != 0:
+            topLeftBlock = self.gameHandler.blocks.sprites()[0]
+            Setup.setup.screen.blit(self.blockImage, (topLeftBlock.rect.left, topLeftBlock.rect.top))
 
 class Prompt:
     def __init__(self, promptName, key):
