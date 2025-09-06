@@ -318,6 +318,7 @@ class CreateNewGameMenu(Setup.pg.sprite.Sprite):
         Setup.pg.sprite.Sprite.__init__(self)
 
         self.buttons = Setup.pg.sprite.Group()
+        self.filledSlots = [False, False, False]
 
     def CreateButtons(self):       
         width, height = 320, 320
@@ -328,6 +329,8 @@ class CreateNewGameMenu(Setup.pg.sprite.Sprite):
         newGame2Button = ButtonGroupMethods.CreateButton("NEWGAME2", width, height, xLocation + spacing, yLocation, "NEW_GAME_BUTTON")
         newGame3Button = ButtonGroupMethods.CreateButton("NEWGAME3", width, height, xLocation + (2 * spacing), yLocation, "NEW_GAME_BUTTON")
 
+        
+
         xLocation, yLocation = 150, 1000
         exitButton = ButtonGroupMethods.CreateButton("EXIT", width, height, xLocation, yLocation, "QUIT_BUTTON") 
         
@@ -337,10 +340,24 @@ class CreateNewGameMenu(Setup.pg.sprite.Sprite):
         self.buttons.add(exitButton)    
 
     def UpdateNewGameImages(self):
-        for x in range(1, 4):
-            savedDataFilePath = Setup.os.path.join("ASSETS", "SAVED_DATA", f"SAVE_FILE_{x}.txt")            
+        for x in range(0, 3):
+            savedDataFilePath = Setup.os.path.join("ASSETS", "SAVED_DATA", f"SAVE_FILE_{x + 1}.txt")            
             if Setup.os.path.exists(savedDataFilePath) and Setup.os.path.getsize(savedDataFilePath) > 0: # data exists
-                self.buttons.sprites()[x - 1].ChangeImageClick("SAVED_GAME_BUTTON")
+                if not self.filledSlots[x]:
+                    self.buttons.sprites()[x].ChangeImageClick("SAVED_GAME_BUTTON")
+                    self.filledSlots[x] = True
+
+                    width, height = 320, 320
+                    xLocation, yLocation = 600, Setup.setup.HEIGHT // 2
+                    deleteButton = ButtonGroupMethods.CreateButton(f"DELETE_SLOT_{x + 1}", width, height, xLocation + (x * 1.25 * width), yLocation + (1.25 * height), "DELETE_SLOT_BUTTON")
+                    self.buttons.add(deleteButton)
+
+            elif self.filledSlots[x]:
+                self.buttons.sprites()[x].ChangeImageClick("NEW_GAME_BUTTON")
+                self.filledSlots[x] = False
+
+                if ButtonGroupMethods.GetButton(f"DELETE_SLOT_{x + 1}", self.buttons):
+                    self.buttons.remove(ButtonGroupMethods.GetButton(f"DELETE_SLOT_{x + 1}", self.buttons))
 
     def ChildActions(self):
         ButtonGroupMethods.UpdateChildButton(self.buttons)
@@ -350,31 +367,39 @@ class CreateNewGameMenu(Setup.pg.sprite.Sprite):
 
         match clicked:
             case "NEWGAME1":
-                self.NewGame1Button()
+                self.NewGameHandler(1)
             case "NEWGAME2":
-                self.NewGame2Button()
+                self.NewGameHandler(2)
             case "NEWGAME3":
-                self.NewGame3Button()
+                self.NewGameHandler(3)
+            case "DELETE_SLOT_1":
+                self.DeleteSlotButton(1)
+            case "DELETE_SLOT_2":
+                self.DeleteSlotButton(2)
+            case "DELETE_SLOT_3":
+                self.DeleteSlotButton(3)
             case "EXIT":
                 self.ExitButton()
-
+            
     def NewGameHandler(self, saveSlot):
         Setup.setup.changeSlot = (True, saveSlot)
-        menuManagement.AddMenu(menuManagement.newGameSettingsButtonGroup, "MENU")
+
+        if not self.filledSlots[saveSlot - 1]: # empty slot
+            menuManagement.AddMenu(menuManagement.newGameSettingsButtonGroup, "MENU")
+        else:
+            Setup.setup.gameState = "GAME"
+            Setup.pg.mouse.set_visible(False)
+            
         menuManagement.RemoveMenu(self, "MENU")
 
-    def NewGame1Button(self):
-        self.NewGameHandler(1)
-
-    def NewGame2Button(self):
-        self.NewGameHandler(2)
-    
-    def NewGame3Button(self):
-        self.NewGameHandler(3)
-
+    def DeleteSlotButton(self, buttonNumber):
+        self.buttons.remove(ButtonGroupMethods.GetButton(f"DELETE_SLOT_{buttonNumber}", self.buttons))
+        savedDataFilePath = Setup.os.path.join("ASSETS", "SAVED_DATA", f"SAVE_FILE_{buttonNumber}.txt") 
+        open(savedDataFilePath, "w").close() # wipe the file
+        
     def ExitButton(self):
         menuManagement.AddMenu(menuManagement.menuButtonGroup, "MENU") 
-        menuManagement.RemoveMenu(self, "MENU")
+        menuManagement.RemoveMenu(self, "MENU")    
 
 class NewGameSettings(Setup.pg.sprite.Sprite):
     def __init__(self):
@@ -557,6 +582,7 @@ class ButtonGroupMethods():
             if (returnedValue != None):
                 return returnedValue
 
+    @staticmethod
     def GetButton(name, buttons):
         for button in buttons:
             if button.name == name:

@@ -1,10 +1,10 @@
 {
     "player": {
-        "worldX": 1728.0,
-        "worldY": 800,
+        "worldX": 1600,
+        "worldY": 1760,
         "health": 500,
         "maxHealth": 800,
-        "mana": 400.0,
+        "mana": 397.4999999999978,
         "maxMana": 400,
         "mostRecentWaypointCords": null,
         "weapon": {
@@ -35,19 +35,19 @@
     "enemies": [
         {
             "enemyType": 29,
-            "worldX": 675.0,
+            "worldX": 1600,
             "worldY": 1760,
             "health": 120
         },
         {
             "enemyType": 29,
-            "worldX": 3142.5,
+            "worldX": 3040,
             "worldY": 1760,
             "health": 120
         },
         {
             "enemyType": 29,
-            "worldX": 4320,
+            "worldX": 4640,
             "worldY": 1760,
             "health": 120
         }
@@ -62,7 +62,7 @@
     ],
     "treasureChests": [
         {
-            "chestOpened": true
+            "chestOpened": false
         },
         {
             "chestOpened": false
