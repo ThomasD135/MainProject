@@ -550,7 +550,7 @@ class CreateInventoryMenu(Setup.pg.sprite.Sprite):
         exitButton = ButtonGroupMethods.CreateButton("EXIT", width, height, xLocation, yLocation, "RETURN_MENU_BUTTON")  
         
         width, height = 320, 320
-        xLocation, yLocation = Setup.setup.WIDTH // 1.75, Setup.setup.HEIGHT // 3
+        xLocation, yLocation = Setup.setup.WIDTH // 2.25, Setup.setup.HEIGHT // 3
         spacing = 400
 
         weaponSlotButton = ButtonGroupMethods.CreateButton("WEAPON_SLOT", width, height, xLocation, yLocation, "SOUND_BUTTON") # IMAGE CHANGED IN GAME   
@@ -569,7 +569,10 @@ class CreateInventoryMenu(Setup.pg.sprite.Sprite):
 
         match clicked:
             case "EXIT":
-                menuManagement.RemoveMenu(self, "GAME")
+                self.ExitButton()
+                
+    def ExitButton(self):
+        menuManagement.RemoveMenu(self, "GAME")
 
 class ButtonGroupMethods():
     @staticmethod

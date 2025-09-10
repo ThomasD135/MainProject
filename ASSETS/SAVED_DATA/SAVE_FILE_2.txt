@@ -4,7 +4,7 @@
         "worldY": 960,
         "health": 500,
         "maxHealth": 800,
-        "mana": 305.8333333333332,
+        "mana": 400.0,
         "maxMana": 400,
         "mostRecentWaypointCords": null,
         "weapon": {
@@ -40,19 +40,19 @@
     "enemies": [
         {
             "enemyType": 29,
-            "worldX": 1280,
+            "worldX": 1657.5,
             "worldY": 1760,
             "health": 120
         },
         {
             "enemyType": 29,
-            "worldX": 3040,
+            "worldX": 3360,
             "worldY": 1760,
             "health": 120
         },
         {
             "enemyType": 29,
-            "worldX": 4640,
+            "worldX": 5017.5,
             "worldY": 1760,
             "health": 120
         }

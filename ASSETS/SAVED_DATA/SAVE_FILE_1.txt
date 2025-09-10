@@ -1,8 +1,8 @@
 {
     "player": {
-        "worldX": 2038,
-        "worldY": 1440,
-        "health": 500,
+        "worldX": 5250,
+        "worldY": 2400,
+        "health": 440,
         "maxHealth": 800,
         "mana": 400.0,
         "maxMana": 400,
@@ -40,19 +40,19 @@
     "enemies": [
         {
             "enemyType": 29,
-            "worldX": 2038,
+            "worldX": 3360,
             "worldY": 1760,
             "health": 120
         },
         {
             "enemyType": 29,
-            "worldX": 2038,
+            "worldX": 3360,
             "worldY": 1760,
             "health": 120
         },
         {
             "enemyType": 29,
-            "worldX": 5195.0,
+            "worldX": 5250,
             "worldY": 1760,
             "health": 120
         }

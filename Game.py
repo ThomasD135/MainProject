@@ -299,6 +299,8 @@ class Spell:
         self.tempCounter = 0 # used until spells have an actual function
 
         self.displayImagePath = Spell.displayImages[name]
+        
+        self.statsToDisplay = ["description", "damage", "manaCost"]
 
     def DataToDictionary(self):
         return {
@@ -362,6 +364,8 @@ class Armour:
         self.displayImagePath = Armour.displayImages[name] if name in Armour.armourNames else Armour.displayImages["NONE"]
         self.image = Setup.pg.image.load(Setup.os.path.join("ASSETS", "PLAYER", self.displayImagePath) + ".png")
 
+        self.statsToDisplay = ["description", "resistance"]
+
     def DataToDictionary(self):
         return {
             "name": self.name,
@@ -404,6 +408,8 @@ class Weapon:
         self.attackStart = 0
        
         self.displayImagePath = Weapon.displayImages[name]
+        
+        self.statsToDisplay = ["description", "abilityDescription", "damage", "chargedDamage", "abilityDamage", "abilityManaCost", "abilityCooldown"]
 
     def DataToDictionary(self):
         return {
@@ -514,21 +520,46 @@ class Inventory:
         self.armourSlotButton = Menus.ButtonGroupMethods.GetButton("ARMOUR_SLOT", self.inventoryMainMenu.buttons)
         self.buttons = {self.weaponSlotButton : "weapon", self.spellSlotButton : "spell", self.armourSlotButton : "armour"}
 
+        self.itemTexts = {}
+
     def UpdatePlayerModelScreen(self):
         Setup.pg.draw.rect(Setup.setup.screen, Setup.setup.GREY, (0, 0, Setup.setup.WIDTH, Setup.setup.HEIGHT)) # background
-        enlargedPlayerImage = Setup.pg.transform.scale(self.parentPlayer.unflippedImage, (Setup.setup.WIDTH / 4, Setup.setup.WIDTH / 4))
-        Setup.setup.screen.blit(enlargedPlayerImage, (Setup.setup.WIDTH / 6, (Setup.setup.HEIGHT - Setup.setup.WIDTH / 4) / 2)) # current player image unrotated
+        enlargedPlayerImage = Setup.pg.transform.scale(self.parentPlayer.unflippedIdleImage, (Setup.setup.WIDTH / 4, Setup.setup.WIDTH / 4))
+        enlargedPlayerTorso = Setup.pg.transform.scale(self.parentPlayer.armour.image, (Setup.setup.WIDTH / 4, Setup.setup.WIDTH / 4))
 
+        Setup.setup.screen.blit(enlargedPlayerImage, (Setup.setup.WIDTH / 10, (Setup.setup.HEIGHT - Setup.setup.WIDTH / 4) / 2)) # current player image unrotated
+        Setup.setup.screen.blit(enlargedPlayerTorso, (Setup.setup.WIDTH / 10, (Setup.setup.HEIGHT - Setup.setup.WIDTH / 4) / 2)) 
+
+    def DrawHoveredItemStats(self, item):
+        textToDraw = {}
+
+        for index, attribute in enumerate(item.statsToDisplay):
+            objectAttribute = getattr(item, attribute)
+            uniqueIdentifier = (id(item), attribute)
+
+            if uniqueIdentifier not in self.itemTexts:
+                fontSize = 35
+                spacing = fontSize * index
+                newStatText = Setup.TextMethods.CreateText(item.name, f"{attribute} : {objectAttribute}", Setup.setup.WHITE, Setup.setup.WIDTH - (10 * fontSize), Setup.setup.HEIGHT // 2 + spacing, fontSize)
+                self.itemTexts[uniqueIdentifier] = newStatText
+
+            textToDraw[uniqueIdentifier] = self.itemTexts[uniqueIdentifier]
+
+        Setup.TextMethods.UpdateText(textToDraw.values())
+  
     def UpdateSelectionSlots(self):
         for button in self.buttons:
-            if not button.hover:
-                playerAttribute = getattr(self.parentPlayer, self.buttons[button])
-                button.ChangeImageClick(playerAttribute.displayImagePath)
+            playerAttribute = getattr(self.parentPlayer, self.buttons[button])
 
-    def Draw(self):
+            if not button.hover:                
+                button.ChangeImageClick(playerAttribute.displayImagePath)
+            else:
+                self.DrawHoveredItemStats(playerAttribute)
+
+    def Draw(self):       
         self.UpdatePlayerModelScreen()
         self.UpdateSelectionSlots()
-
+        
 class Player(Setup.pg.sprite.Sprite):
     def __init__(self, name="Player", gameHandler=None, worldX=Setup.setup.WIDTH / 2, worldY=Setup.setup.HEIGHT / 2, health=500, maxHealth=800, mana=300, maxMana=400, mapFragments=None, mostRecentWaypointCords=None, weapon=None, spell=None, armour=None):
         super().__init__()
@@ -577,6 +608,7 @@ class Player(Setup.pg.sprite.Sprite):
         self.idleFilePath = Setup.os.path.join("ASSETS", "PLAYER", "PLAYER_IDLE_SHEET")
         self.idleImageSheet = Setup.pg.image.load(self.idleFilePath + ".png").convert_alpha()
         self.idleSheet = Setup.SpriteSheet(self.idleImageSheet, self, self.width * 8)
+        self.unflippedIdleImage = self.idleSheet.GetImage(0, self.width, self.height, 1)
 
         self.jumpFilePath = Setup.os.path.join("ASSETS", "PLAYER", "PLAYER_JUMP_SHEET")
         self.jumpImageSheet = Setup.pg.image.load(self.jumpFilePath + ".png").convert_alpha()
@@ -628,14 +660,13 @@ class Player(Setup.pg.sprite.Sprite):
             armour = Armour.DataFromDictionary(data.get("armour")) if data.get("armour") else Armour("NONE", "NO ARMOUR", 0, None),
         )
 
-    def UpdateCurrentImage(self, flipImage):
+    def UpdateCurrentImage(self, flipImage):       
         self.torsoImage = Setup.pg.transform.flip(self.armour.image, flipImage, False)
 
         if self.currentSheet:
             self.currentSheet.Update()
             self.currentImage = self.currentSheet.GetImage(self.currentFrame, self.width, self.height, 1)
             self.currentImage = Setup.pg.transform.scale(self.currentImage, (self.width, self.height)) 
-            self.unflippedImage = self.currentImage
             self.currentImage = Setup.pg.transform.flip(self.currentImage, flipImage, False)
 
             self.mask = Setup.pg.mask.from_surface(self.currentImage) 
