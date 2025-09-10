@@ -546,10 +546,21 @@ class CreateInventoryMenu(Setup.pg.sprite.Sprite):
 
     def CreateButtons(self):       
         width, height = 160, 160
-        xLocation, yLocation = 800, 200
-        inventoryButton = ButtonGroupMethods.CreateButton("INVENTORY", width, height, xLocation, yLocation, "INVENTORY_BUTTON") 
+        xLocation, yLocation = Setup.setup.WIDTH - (width // 2), (height // 2)
+        exitButton = ButtonGroupMethods.CreateButton("EXIT", width, height, xLocation, yLocation, "RETURN_MENU_BUTTON")  
         
-        self.buttons.add(inventoryButton)
+        width, height = 320, 320
+        xLocation, yLocation = Setup.setup.WIDTH // 1.75, Setup.setup.HEIGHT // 3
+        spacing = 400
+
+        weaponSlotButton = ButtonGroupMethods.CreateButton("WEAPON_SLOT", width, height, xLocation, yLocation, "SOUND_BUTTON") # IMAGE CHANGED IN GAME   
+        spellSlotButton = ButtonGroupMethods.CreateButton("SPELL_SLOT", width, height, xLocation + spacing, yLocation, "SOUND_BUTTON") # IMAGE CHANGED IN GAME
+        armourSlotButton = ButtonGroupMethods.CreateButton("ARMOUR_SLOT", width, height, xLocation + (spacing // 2), yLocation + spacing, "SOUND_BUTTON") # IMAGE CHANGED IN GAME
+
+        self.buttons.add(exitButton)
+        self.buttons.add(weaponSlotButton)
+        self.buttons.add(spellSlotButton)
+        self.buttons.add(armourSlotButton)
 
     def ChildActions(self):
         ButtonGroupMethods.UpdateChildButton(self.buttons)
@@ -557,8 +568,8 @@ class CreateInventoryMenu(Setup.pg.sprite.Sprite):
         clicked = ButtonGroupMethods.CheckClicks(self.buttons)
 
         match clicked:
-            case "INVENTORY":
-                pass
+            case "EXIT":
+                menuManagement.RemoveMenu(self, "GAME")
 
 class ButtonGroupMethods():
     @staticmethod

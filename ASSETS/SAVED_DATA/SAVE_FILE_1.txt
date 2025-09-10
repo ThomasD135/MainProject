@@ -1,14 +1,14 @@
 {
     "player": {
-        "worldX": 1886,
-        "worldY": 800,
+        "worldX": 2038,
+        "worldY": 1440,
         "health": 500,
         "maxHealth": 800,
         "mana": 400.0,
         "maxMana": 400,
         "mostRecentWaypointCords": null,
         "weapon": {
-            "name": "Wooden sword",
+            "name": "WOODEN_SWORD",
             "description": "weapon",
             "abilityDescription": "ability",
             "damage": 100,
@@ -18,12 +18,17 @@
             "abilityCooldown": 5
         },
         "spell": {
-            "name": "Fireball",
+            "name": "FIREBALL",
             "description": "fire",
             "damage": 100,
             "manaCost": 20,
             "currentState": "NONE",
             "tempCounter": 0
+        },
+        "armour": {
+            "name": "SKIN_OF_THE_WEEPING_MAW",
+            "description": "NO ARMOUR",
+            "resistance": 0
         },
         "mapFragments": {
             "1": true,
@@ -35,19 +40,19 @@
     "enemies": [
         {
             "enemyType": 29,
-            "worldX": 1117.5,
+            "worldX": 2038,
             "worldY": 1760,
             "health": 120
         },
         {
             "enemyType": 29,
-            "worldX": 1912.5,
+            "worldX": 2038,
             "worldY": 1760,
             "health": 120
         },
         {
             "enemyType": 29,
-            "worldX": 4370.0,
+            "worldX": 5195.0,
             "worldY": 1760,
             "health": 120
         }
@@ -68,7 +73,7 @@
             "chestOpened": false
         },
         {
-            "chestOpened": true
+            "chestOpened": false
         }
     ],
     "friendlyCharacters": [
