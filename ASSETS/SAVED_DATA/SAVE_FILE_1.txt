@@ -1,14 +1,14 @@
 {
     "player": {
-        "worldX": 5250,
-        "worldY": 2400,
-        "health": 440,
+        "worldX": 1020.0,
+        "worldY": 960,
+        "health": 500,
         "maxHealth": 800,
-        "mana": 400.0,
+        "mana": 300,
         "maxMana": 400,
         "mostRecentWaypointCords": null,
         "weapon": {
-            "name": "WOODEN_SWORD",
+            "name": "WoodenSword",
             "description": "weapon",
             "abilityDescription": "ability",
             "damage": 100,
@@ -18,7 +18,7 @@
             "abilityCooldown": 5
         },
         "spell": {
-            "name": "FIREBALL",
+            "name": "Fireball",
             "description": "fire",
             "damage": 100,
             "manaCost": 20,
@@ -26,9 +26,86 @@
             "tempCounter": 0
         },
         "armour": {
-            "name": "SKIN_OF_THE_WEEPING_MAW",
-            "description": "NO ARMOUR",
+            "name": "DefaultArmour",
+            "description": "no armour",
             "resistance": 0
+        },
+        "inventory": {
+            "weapons": [
+                {
+                    "name": "WoodenSword",
+                    "description": "weapon",
+                    "abilityDescription": "ability",
+                    "damage": 100,
+                    "chargedDamage": 200,
+                    "abilityDamage": 300,
+                    "abilityManaCost": 20,
+                    "abilityCooldown": 5
+                },
+                {
+                    "name": "WoodenSword",
+                    "description": "weapon",
+                    "abilityDescription": "ability",
+                    "damage": 100,
+                    "chargedDamage": 200,
+                    "abilityDamage": 300,
+                    "abilityManaCost": 20,
+                    "abilityCooldown": 5
+                },
+                {
+                    "name": "WoodenSword",
+                    "description": "weapon",
+                    "abilityDescription": "ability",
+                    "damage": 100,
+                    "chargedDamage": 200,
+                    "abilityDamage": 300,
+                    "abilityManaCost": 20,
+                    "abilityCooldown": 5
+                }
+            ],
+            "spells": [
+                {
+                    "name": "Fireball",
+                    "description": "fire",
+                    "damage": 100,
+                    "manaCost": 20,
+                    "currentState": "NONE",
+                    "tempCounter": 0
+                },
+                {
+                    "name": "Fireball",
+                    "description": "fire",
+                    "damage": 100,
+                    "manaCost": 20,
+                    "currentState": "NONE",
+                    "tempCounter": 0
+                },
+                {
+                    "name": "Fireball",
+                    "description": "fire",
+                    "damage": 100,
+                    "manaCost": 20,
+                    "currentState": "NONE",
+                    "tempCounter": 0
+                }
+            ],
+            "armour": [
+                {
+                    "name": "DefaultArmour",
+                    "description": "no armour",
+                    "resistance": 0
+                },
+                {
+                    "name": "DefaultArmour",
+                    "description": "no armour",
+                    "resistance": 0
+                },
+                {
+                    "name": "DefaultArmour",
+                    "description": "no armour",
+                    "resistance": 0
+                }
+            ]
         },
         "mapFragments": {
             "1": true,
@@ -40,19 +117,19 @@
     "enemies": [
         {
             "enemyType": 29,
-            "worldX": 3360,
+            "worldX": 1280,
             "worldY": 1760,
             "health": 120
         },
         {
             "enemyType": 29,
-            "worldX": 3360,
+            "worldX": 3040,
             "worldY": 1760,
             "health": 120
         },
         {
             "enemyType": 29,
-            "worldX": 5250,
+            "worldX": 4640,
             "worldY": 1760,
             "health": 120
         }

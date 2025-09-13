@@ -7,7 +7,7 @@ import Dijkstra
 class GameHandler(Setup.pg.sprite.Sprite):
     def __init__(self):
         Setup.pg.sprite.Sprite.__init__(self)
-        self.player = Player("Player", self)
+        self.player = None
         self.background = GameBackground(self)      
                                         
         self.weightedAdjacencyList = Dijkstra.AdjacencyList()
@@ -84,7 +84,7 @@ class GameHandler(Setup.pg.sprite.Sprite):
     def DataFromDictionary(self, data):
         if "player" in data:
             self.player = Player.DataFromDictionary(data["player"])
-            self.player.gameHandler = self   
+            self.player.gameHandler = self      
 
         attributesToUpdate = ["enemies", "waypoints", "treasureChests", "friendlyCharacters"]
 
@@ -113,7 +113,7 @@ class GameHandler(Setup.pg.sprite.Sprite):
                 Setup.json.dump(self.DataToDictionary(), file, indent=4)
 
     def LoadGame(self):
-        if Setup.setup.changeSlot[0] and Setup.setup.changeSlot[1] != -1:
+        if Setup.setup.changeSlot[0] and Setup.setup.changeSlot[1] != -1 and Setup.setup.currentSaveSlot != Setup.setup.changeSlot[1]:
             self.ResetData()
                       
             Setup.setup.currentSaveSlot = Setup.setup.changeSlot[1]
@@ -123,7 +123,7 @@ class GameHandler(Setup.pg.sprite.Sprite):
             if Setup.os.path.exists(filePath) and Setup.os.path.getsize(filePath) > 0:                            
                 with open(filePath, "r") as file:
                     data = Setup.json.load(file)
-                    self.DataFromDictionary(data)                  
+                    self.DataFromDictionary(data)       
 
     def ResetData(self):
         self.player = Player("Player", self)
@@ -158,7 +158,7 @@ class GameHandler(Setup.pg.sprite.Sprite):
                             self.waypoints.append(Waypoint(mapBlock))
 
                         if block.blockNumber == 19: # treasure chests
-                            self.treasureChests.append(TreaureChest(mapBlock, "wooden sword")) # temp reward
+                            self.treasureChests.append(TreasureChest(mapBlock, len(self.treasureChests)))
 
                         if block.blockNumber >= 43 and block.blockNumber <= 47: # friendly characters
                             self.friendlyCharacters.append(FriendlyCharacter(mapBlock, block.blockNumber - 43)) # between 0 and 4
@@ -239,9 +239,6 @@ class GameHandler(Setup.pg.sprite.Sprite):
 
                         self.weightedAdjacencyList.PopulateGraph(block, blockNeighboursObjects, blockNodeNumber, blockNeighbours)   
 
-        #for keyValuePair in self.weightedAdjacencyList.weightedGraph.items():
-        #    print("\n", keyValuePair)
-
         self.dijkstraGraph = Dijkstra.DijkstraImplementation(self.weightedAdjacencyList.weightedGraph)
 
     def UpdateEnemies(self):
@@ -289,6 +286,7 @@ class Spell:
         displayImages.update({spellNames[x] : f"SPELL{x + 1}_IMAGE"})
 
     def __init__(self, name, description, damage, manaCost, parentPlayer=None):
+
         self.name = name
         self.description = description
         self.damage = damage
@@ -298,7 +296,7 @@ class Spell:
         self.currentState = "NONE" # "NONE" "SPELL"
         self.tempCounter = 0 # used until spells have an actual function
 
-        self.displayImagePath = Spell.displayImages[name]
+        self.displayImagePath = Spell.displayImages[name] if name in Spell.spellNames else Spell.displayImages["FIREBALL"]
         
         self.statsToDisplay = ["description", "damage", "manaCost"]
 
@@ -388,7 +386,7 @@ class Weapon:
     for x in range(0, len(weaponNames)):
         displayImages.update({weaponNames[x] : f"WEAPON{x + 1}_IMAGE"})
 
-    def __init__(self, name, description, abilityDescription, damage, chargedDamage, abilityDamage, abilityManaCost, abilityCooldown, parentPlayer=None): 
+    def __init__(self, name, description, abilityDescription, damage, chargedDamage, abilityDamage, abilityManaCost, abilityCooldown, parentPlayer=None):        
         self.name = name
         self.description = description
         self.abilityDescription = abilityDescription
@@ -407,7 +405,7 @@ class Weapon:
         self.tempCounter = 0 # TODO - used until attacks have an actual function
         self.attackStart = 0
        
-        self.displayImagePath = Weapon.displayImages[name]
+        self.displayImagePath = Weapon.displayImages[name] if name in Weapon.weaponNames else Weapon.displayImages["WOODEN_SWORD"]
         
         self.statsToDisplay = ["description", "abilityDescription", "damage", "chargedDamage", "abilityDamage", "abilityManaCost", "abilityCooldown"]
 
@@ -496,6 +494,18 @@ class WoodenSword(Weapon):
             pass
             #attack     
 
+class LongSword(Weapon):
+    def __init__(self, name, description, abilityDescription, damage, chargedDamage, abilityDamage, abilityManaCost, abilityCooldown, parentPlayer):
+        super().__init__(name, description, abilityDescription, damage, chargedDamage, abilityDamage, abilityManaCost, abilityCooldown, parentPlayer)
+
+        self.basicAttackLength = 3 # seconds
+        self.basicAttackSheet = None       
+
+    def BasicAttack(self):
+        if self.attackStart <= self.basicAttackLength:
+            pass
+            #attack    
+
 class HitBox(Setup.pg.sprite.Sprite): # USE SPRITE FUNCTIONALITY FOR COLLISION - THIS WILL MOST LIKELY NOT BE IN THIS CLASS
     def __init__(self, worldX, worldY, width, height, parentObject):
         super().__init__()
@@ -510,7 +520,17 @@ class HitBox(Setup.pg.sprite.Sprite): # USE SPRITE FUNCTIONALITY FOR COLLISION -
         self.rect.topleft = (self.worldX, self.worldY)
 
 class Inventory:
-    def __init__(self, player):
+    allItems = {"DefaultArmour" : Armour,
+                "DefaultWeapon" : Weapon,
+                "DefaultSpell" : Spell,
+                "WoodenSword" : WoodenSword, 
+                "Fireball" : Fireball}
+
+    def __init__(self, player, weapons=[], spells=[], armour=[]):
+        self.weapons = weapons
+        self.spells = spells
+        self.armour = armour
+
         self.parentPlayer = player
         self.inventoryMainMenu = Menus.menuManagement.inventoryButtonGroup
         self.open = False
@@ -521,6 +541,39 @@ class Inventory:
         self.buttons = {self.weaponSlotButton : "weapon", self.spellSlotButton : "spell", self.armourSlotButton : "armour"}
 
         self.itemTexts = {}
+
+    def DataToDictionary(self):
+        return {"weapons": [weapon.DataToDictionary() for weapon in self.weapons],
+                "spells": [spell.DataToDictionary() for spell in self.spells],
+                "armour": [armour.DataToDictionary() for armour in self.armour]
+        }
+
+    @classmethod
+    def DataFromDictionary(cls, data):       
+        itemData = {"weapons" : [], 
+                    "spells" : [], 
+                    "armour" : []}
+
+        for attributeList in itemData.items():
+            for data in data.get(attributeList[0], []):
+                if data["name"] in Inventory.allItems:
+                    itemClass = Inventory.allItems[data["name"]]
+                    attributeList[1].append(itemClass().DataFromDictionary(data))
+
+        return cls(weapons=itemData["weapons"], spells=itemData["spells"], armour=itemData["armour"])
+
+    def AddItem(self, itemToAdd):
+        classToList = {Weapon : self.weapons,
+                       Spell : self.spells,
+                       Armour : self.armour}
+
+        for checkClass, listToAdd in classToList.items():
+            if isinstance(itemToAdd, checkClass):
+                if itemToAdd not in listToAdd:
+                    itemToAdd.parentPlayer = self.parentPlayer
+                    listToAdd.append(itemToAdd)
+
+                break
 
     def UpdatePlayerModelScreen(self):
         Setup.pg.draw.rect(Setup.setup.screen, Setup.setup.GREY, (0, 0, Setup.setup.WIDTH, Setup.setup.HEIGHT)) # background
@@ -561,7 +614,7 @@ class Inventory:
         self.UpdateSelectionSlots()
         
 class Player(Setup.pg.sprite.Sprite):
-    def __init__(self, name="Player", gameHandler=None, worldX=Setup.setup.WIDTH / 2, worldY=Setup.setup.HEIGHT / 2, health=500, maxHealth=800, mana=300, maxMana=400, mapFragments=None, mostRecentWaypointCords=None, weapon=None, spell=None, armour=None):
+    def __init__(self, name="Player", gameHandler=None, worldX=Setup.setup.WIDTH / 2, worldY=Setup.setup.HEIGHT / 2, health=500, maxHealth=800, mana=300, maxMana=400, mapFragments=None, mostRecentWaypointCords=None, weapon=None, spell=None, armour=None, inventory=None):
         super().__init__()
         self.name = name
         self.gameHandler = gameHandler
@@ -574,23 +627,22 @@ class Player(Setup.pg.sprite.Sprite):
         self.mapFragments = mapFragments if mapFragments is not None else {"1": True, "2": True, "3": True, "4": False} # json converts int keys to strings, which forces a conversion later, it is safer to always use string keys
         self.mostRecentWaypointCords = mostRecentWaypointCords
 
-        if weapon is None:
-            self.weapon = WoodenSword("WOODEN_SWORD", "weapon", "ability", 100, 200, 300, 20, 5, parentPlayer=self)
-        else:
-            self.weapon = weapon
-            self.weapon.parentPlayer = self
+        attributesAndDefault = {"weapon" : WoodenSword("WoodenSword", "weapon", "ability", 100, 200, 300, 20, 5, parentPlayer=self), 
+                                "spell" : Fireball("Fireball", "fire", 100, 20, parentPlayer=self), 
+                                "armour" : Armour("DefaultArmour", "no armour", 0, parentPlayer=self), 
+                                "inventory" : Inventory(self)}
+        
+        for attributeName, default in attributesAndDefault.items():
+            attributeValue = locals()[attributeName] # gets the variable passed in as an argument e.g. weapon
 
-        if spell is None:
-            self.spell = Fireball("FIREBALL", "fire", 100, 20, parentPlayer=self)
-        else:
-            self.spell = spell
-            self.spell.parentPlayer = self
+            if attributeValue is None:
+                setattr(self, attributeName, default) # setattr creates a new self. variable with the given name and data
+            else:
+                attributeValue.parentPlayer = self
+                setattr(self, attributeName, attributeValue)
 
-        if armour is None:
-            self.armour = Armour("NONE", "NO ARMOUR", 0, parentPlayer=self)
-        else:
-            self.armour = armour
-            self.armour.parentPlayer = self
+        for equipped in [self.weapon, self.spell, self.armour]:
+            self.inventory.AddItem(equipped)
 
         self.gameHandler = gameHandler
 
@@ -602,8 +654,7 @@ class Player(Setup.pg.sprite.Sprite):
         self.manaRegenDelayTimer = CooldownTimer(self.manaRegenerationCooldown)
 
         self.camera = Camera(self)
-        self.miniMap = MiniMap()
-        self.inventory = Inventory(self)
+        self.miniMap = MiniMap()     
      
         self.idleFilePath = Setup.os.path.join("ASSETS", "PLAYER", "PLAYER_IDLE_SHEET")
         self.idleImageSheet = Setup.pg.image.load(self.idleFilePath + ".png").convert_alpha()
@@ -641,7 +692,8 @@ class Player(Setup.pg.sprite.Sprite):
                 "weapon": self.weapon.DataToDictionary() if self.weapon else None,
                 "spell": self.spell.DataToDictionary() if self.spell else None,
                 "armour": self.armour.DataToDictionary() if self.armour else None,
-                "mapFragments": self.mapFragments
+                "inventory": self.inventory.DataToDictionary() if self.inventory else None,
+                "mapFragments": self.mapFragments               
         }
 
     @classmethod
@@ -655,9 +707,10 @@ class Player(Setup.pg.sprite.Sprite):
             maxMana = data.get("maxMana", 50),
             mapFragments = data.get("mapFragments", {"1": True, "2": True, "3": True, "4": False}),
             mostRecentWaypointCords = data.get("mostRecentWaypointCords", None),
-            weapon = Weapon.DataFromDictionary(data.get("weapon")) if data.get("weapon") else Weapon("Empty", "weapon", "ability", 100, 200, 300, 20, 5, None),
-            spell = Spell.DataFromDictionary(data.get("spell")) if data.get("spell") else Spell("Empty", "fire", 100, 20, None),
-            armour = Armour.DataFromDictionary(data.get("armour")) if data.get("armour") else Armour("NONE", "NO ARMOUR", 0, None),
+            weapon = Weapon.DataFromDictionary(data.get("weapon")) if data.get("weapon") else None,
+            spell = Spell.DataFromDictionary(data.get("spell")) if data.get("spell") else None,
+            armour = Armour.DataFromDictionary(data.get("armour")) if data.get("armour") else None,
+            inventory = Inventory.DataFromDictionary(data.get("items")) if data.get("items") else None,
         )
 
     def UpdateCurrentImage(self, flipImage):       
@@ -1020,13 +1073,21 @@ class Prompt:
             
         self.active = False
 
-class TreaureChest:
-    def __init__(self, parentBlock, item):
+class TreasureChest:
+    allRewards = {0 : LongSword("LONG_SWORD", "A long iron sword", "A powerful overhead slash", 40, 55, 75, 100, 5, None),
+                    1 : None,
+                    2 : None,
+                    3 : None,
+                    4 : None
+    } 
+
+    def __init__(self, parentBlock, chestNumber):
         self.parent = parentBlock
         self.prompt = Prompt("E_PROMPT_IMAGE", "e")
         self.openedImage = MapCreator.mapDataHandler.mapGrid.blockSheetHandler.GetCorrectBlockImage(self.parent.blockNumber + 1, Setup.setup.BLOCK_WIDTH, Setup.setup.BLOCK_WIDTH, False, 0)
-        self.chestOpened = False # TODO - saved data, has the waypoint been interacted with before
-        self.reward = item
+        self.chestOpened = False 
+        
+        self.reward = TreasureChest.allRewards[chestNumber]
 
     def DataToDictionary(self):
         return {"chestOpened": self.chestOpened,
@@ -1038,23 +1099,24 @@ class TreaureChest:
     def IsPlayerInRange(self, player, camera):
         if not self.chestOpened:
             if self.prompt.IsPlayerInRange(self.parent, player, camera):
-                self.TreasureChestFunction()
+                self.TreasureChestFunction(player)
 
         elif self.parent.image != self.openedImage: # change image to correct image when loading
             self.parent.image = self.openedImage
             self.reward = None
 
-    def TreasureChestFunction(self):
+    def TreasureChestFunction(self, player):
         if self.prompt.PromptInteractedWith():
             self.parent.image = self.openedImage
             self.chestOpened = True
-            # TODO - reward item, save opened state
+            player.inventory.AddItem(self.reward)
+            self.reward = None
 
 class Waypoint:
     def __init__(self, parentBlock=None, waypointActive=False):
         self.parent = parentBlock
         self.prompt = Prompt("E_PROMPT_IMAGE", "e")
-        self.waypointActive = waypointActive # TODO - saved data, has the waypoint been interacted with before
+        self.waypointActive = waypointActive
 
     def DataToDictionary(self):
         return {"waypointActive": self.waypointActive
@@ -1592,19 +1654,13 @@ class Enemy1(Enemy):
         super().__init__(worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange, enemyType, player)
 
 class FriendlyCharacter:
-    def __init__(self, parentBlock, friendlyCharacterNumber):
-        self.parent = parentBlock
-        self.prompt = Prompt("E_PROMPT_IMAGE", "e")
-        self.textNumber = 0
-        self.displayActive = False
-
-        allItems = {0 : None,
+    allItems = {0 : None,
                     1 : None,
                     2 : None,
                     3 : None,
                     4 : None}
 
-        allText = {0 : ["Hi this is the first text, i will help you throughout the game", 
+    allText = {0 : ["Hi this is the first text, i will help you throughout the game", 
                         "Hi this is the second text", 
                         "Hi this is the third text",
                         "Hi this is the summary text"],
@@ -1613,8 +1669,14 @@ class FriendlyCharacter:
                     3 : ["Hi this is the first text, i will help you throughout the game"],
                     4 : ["Hi this is the first text, i will help you throughout the game"]}
 
-        self.text = allText[friendlyCharacterNumber]
-        self.item = allItems[friendlyCharacterNumber]
+    def __init__(self, parentBlock, friendlyCharacterNumber):
+        self.parent = parentBlock
+        self.prompt = Prompt("E_PROMPT_IMAGE", "e")
+        self.textNumber = 0
+        self.displayActive = False
+
+        self.text = FriendlyCharacter.allText[friendlyCharacterNumber]
+        self.item = FriendlyCharacter.allItems[friendlyCharacterNumber]
 
     def DataToDictionary(self):
         return {"textNumber": self.textNumber,
@@ -1641,6 +1703,7 @@ class FriendlyCharacter:
                     self.textNumber += 1
                 else:
                     self.displayActive = False
-                    # REWARD ITEM - use player parameter
+                    player.inventory.AddItem(self.item)
+                    self.item = None
 
 gameHandler = GameHandler()

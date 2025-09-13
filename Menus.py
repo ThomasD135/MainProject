@@ -393,7 +393,11 @@ class CreateNewGameMenu(Setup.pg.sprite.Sprite):
         menuManagement.RemoveMenu(self, "MENU")
 
     def DeleteSlotButton(self, buttonNumber):
+        if buttonNumber == Setup.setup.currentSaveSlot:
+            Setup.setup.currentSaveSlot = -1
+        
         self.buttons.remove(ButtonGroupMethods.GetButton(f"DELETE_SLOT_{buttonNumber}", self.buttons))
+        
         savedDataFilePath = Setup.os.path.join("ASSETS", "SAVED_DATA", f"SAVE_FILE_{buttonNumber}.txt") 
         open(savedDataFilePath, "w").close() # wipe the file
         
