@@ -279,13 +279,13 @@ class MapBlock(Setup.pg.sprite.Sprite):
         self.topFace = directions[self.smallRotation]
 
 class Spell:
-    spellNames = ["FIREBALL"]
+    spellNames = ["Fireball"]
     displayImages = {}
 
     for x in range(0, len(spellNames)):
         displayImages.update({spellNames[x] : f"SPELL{x + 1}_IMAGE"})
 
-    def __init__(self, name, description, damage, manaCost, parentPlayer=None):
+    def __init__(self, name=None, description=None, damage=None, manaCost=None, parentPlayer=None):
 
         self.name = name
         self.description = description
@@ -296,7 +296,7 @@ class Spell:
         self.currentState = "NONE" # "NONE" "SPELL"
         self.tempCounter = 0 # used until spells have an actual function
 
-        self.displayImagePath = Spell.displayImages[name] if name in Spell.spellNames else Spell.displayImages["FIREBALL"]
+        self.displayImagePath = Spell.displayImages[name] if name in Spell.spellNames else Spell.displayImages["Fireball"]
         
         self.statsToDisplay = ["description", "damage", "manaCost"]
 
@@ -336,7 +336,7 @@ class Spell:
         self.tempCounter += 1
 
 class Fireball(Spell):
-    def __init__(self, name, description, damage, manaCost, parentPlayer):
+    def __init__(self, name=None, description=None, damage=None, manaCost=None, parentPlayer=None):
         super().__init__(name, description, damage, manaCost, parentPlayer)
 
         self.images = None
@@ -347,19 +347,19 @@ class Fireball(Spell):
             #attack     
 
 class Armour:
-    armourNames = ["NONE", "SKIN_OF_THE_WEEPING_MAW"]
+    armourNames = ["DefaultArmour", "SkinOfTheWeepingMaw"]
     displayImages = {}
 
     for x in range(0, len(armourNames)):
         displayImages.update({armourNames[x] : f"PLAYER{x + 1}_IMAGE"})
 
-    def __init__(self, name, description, resistance, parentPlayer = None):
+    def __init__(self, name=None, description=None, resistance=None, parentPlayer = None):
         self.name = name
         self.description = description
         self.resistance = resistance
         self.parentPlayer = parentPlayer
 
-        self.displayImagePath = Armour.displayImages[name] if name in Armour.armourNames else Armour.displayImages["NONE"]
+        self.displayImagePath = Armour.displayImages[name] if name in Armour.armourNames else Armour.displayImages["DefaultArmour"]
         self.image = Setup.pg.image.load(Setup.os.path.join("ASSETS", "PLAYER", self.displayImagePath) + ".png")
 
         self.statsToDisplay = ["description", "resistance"]
@@ -380,13 +380,13 @@ class Armour:
         )    
 
 class Weapon:
-    weaponNames = ["WOODEN_SWORD"]
+    weaponNames = ["WoodenSword"]
     displayImages = {}
 
     for x in range(0, len(weaponNames)):
         displayImages.update({weaponNames[x] : f"WEAPON{x + 1}_IMAGE"})
 
-    def __init__(self, name, description, abilityDescription, damage, chargedDamage, abilityDamage, abilityManaCost, abilityCooldown, parentPlayer=None):        
+    def __init__(self, name=None, description=None, abilityDescription=None, damage=None, chargedDamage=None, abilityDamage=None, abilityManaCost=None, abilityCooldown=None, parentPlayer=None):        
         self.name = name
         self.description = description
         self.abilityDescription = abilityDescription
@@ -405,7 +405,7 @@ class Weapon:
         self.tempCounter = 0 # TODO - used until attacks have an actual function
         self.attackStart = 0
        
-        self.displayImagePath = Weapon.displayImages[name] if name in Weapon.weaponNames else Weapon.displayImages["WOODEN_SWORD"]
+        self.displayImagePath = Weapon.displayImages[name] if name in Weapon.weaponNames else Weapon.displayImages["WoodenSword"]
         
         self.statsToDisplay = ["description", "abilityDescription", "damage", "chargedDamage", "abilityDamage", "abilityManaCost", "abilityCooldown"]
 
@@ -483,7 +483,7 @@ class Weapon:
         self.tempCounter += 1
 
 class WoodenSword(Weapon):
-    def __init__(self, name, description, abilityDescription, damage, chargedDamage, abilityDamage, abilityManaCost, abilityCooldown, parentPlayer):
+    def __init__(self, name=None, description=None, abilityDescription=None, damage=None, chargedDamage=None, abilityDamage=None, abilityManaCost=None, abilityCooldown=None, parentPlayer=None):
         super().__init__(name, description, abilityDescription, damage, chargedDamage, abilityDamage, abilityManaCost, abilityCooldown, parentPlayer)
 
         self.basicAttackLength = 2 # seconds
@@ -494,8 +494,8 @@ class WoodenSword(Weapon):
             pass
             #attack     
 
-class LongSword(Weapon):
-    def __init__(self, name, description, abilityDescription, damage, chargedDamage, abilityDamage, abilityManaCost, abilityCooldown, parentPlayer):
+class Longsword(Weapon):
+    def __init__(self, name=None, description=None, abilityDescription=None, damage=None, chargedDamage=None, abilityDamage=None, abilityManaCost=None, abilityCooldown=None, parentPlayer=None):
         super().__init__(name, description, abilityDescription, damage, chargedDamage, abilityDamage, abilityManaCost, abilityCooldown, parentPlayer)
 
         self.basicAttackLength = 3 # seconds
@@ -524,12 +524,15 @@ class Inventory:
                 "DefaultWeapon" : Weapon,
                 "DefaultSpell" : Spell,
                 "WoodenSword" : WoodenSword, 
-                "Fireball" : Fireball}
+                "Longsword" : Longsword,
+                "Fireball" : Fireball
+    }
 
-    def __init__(self, player, weapons=[], spells=[], armour=[]):
-        self.weapons = weapons
-        self.spells = spells
-        self.armour = armour
+    def __init__(self, player=None, weapons=None, spells=None, armour=None, itemNames=None):
+        self.weapons = weapons if weapons is not None else []
+        self.spells = spells if spells is not None else []
+        self.armour = armour if armour is not None else []
+        self.itemNames = itemNames if itemNames is not None else [] # used to only allow for one type of item e.g. only one fireball
 
         self.parentPlayer = player
         self.inventoryMainMenu = Menus.menuManagement.inventoryButtonGroup
@@ -543,24 +546,25 @@ class Inventory:
         self.itemTexts = {}
 
     def DataToDictionary(self):
-        return {"weapons": [weapon.DataToDictionary() for weapon in self.weapons],
+        return {"itemNames": self.itemNames,
+                "weapons": [weapon.DataToDictionary() for weapon in self.weapons],
                 "spells": [spell.DataToDictionary() for spell in self.spells],
-                "armour": [armour.DataToDictionary() for armour in self.armour]
+                "armour": [armour.DataToDictionary() for armour in self.armour]          
         }
 
     @classmethod
     def DataFromDictionary(cls, data):       
-        itemData = {"weapons" : [], 
+        itemNameToObjects = {"weapons" : [], 
                     "spells" : [], 
                     "armour" : []}
 
-        for attributeList in itemData.items():
-            for data in data.get(attributeList[0], []):
-                if data["name"] in Inventory.allItems:
-                    itemClass = Inventory.allItems[data["name"]]
-                    attributeList[1].append(itemClass().DataFromDictionary(data))
+        for category, itemList in itemNameToObjects.items():
+            for itemData in data.get(category, []):
+                if itemData["name"] in Inventory.allItems:
+                    itemClass = Inventory.allItems[itemData["name"]]
+                    itemList.append(itemClass().DataFromDictionary(itemData))
 
-        return cls(weapons=itemData["weapons"], spells=itemData["spells"], armour=itemData["armour"])
+        return cls(weapons=itemNameToObjects["weapons"], spells=itemNameToObjects["spells"], armour=itemNameToObjects["armour"], itemNames=data["itemNames"])
 
     def AddItem(self, itemToAdd):
         classToList = {Weapon : self.weapons,
@@ -569,9 +573,10 @@ class Inventory:
 
         for checkClass, listToAdd in classToList.items():
             if isinstance(itemToAdd, checkClass):
-                if itemToAdd not in listToAdd:
+                if itemToAdd.name not in self.itemNames:
                     itemToAdd.parentPlayer = self.parentPlayer
                     listToAdd.append(itemToAdd)
+                    self.itemNames.append(itemToAdd.name)
 
                 break
 
@@ -636,7 +641,7 @@ class Player(Setup.pg.sprite.Sprite):
             attributeValue = locals()[attributeName] # gets the variable passed in as an argument e.g. weapon
 
             if attributeValue is None:
-                setattr(self, attributeName, default) # setattr creates a new self. variable with the given name and data
+                setattr(self, attributeName, default) # setattr creates a new self.variable with the given name and data
             else:
                 attributeValue.parentPlayer = self
                 setattr(self, attributeName, attributeValue)
@@ -710,7 +715,7 @@ class Player(Setup.pg.sprite.Sprite):
             weapon = Weapon.DataFromDictionary(data.get("weapon")) if data.get("weapon") else None,
             spell = Spell.DataFromDictionary(data.get("spell")) if data.get("spell") else None,
             armour = Armour.DataFromDictionary(data.get("armour")) if data.get("armour") else None,
-            inventory = Inventory.DataFromDictionary(data.get("items")) if data.get("items") else None,
+            inventory = Inventory.DataFromDictionary(data.get("inventory")) if data.get("inventory") else None,
         )
 
     def UpdateCurrentImage(self, flipImage):       
@@ -1074,11 +1079,11 @@ class Prompt:
         self.active = False
 
 class TreasureChest:
-    allRewards = {0 : LongSword("LONG_SWORD", "A long iron sword", "A powerful overhead slash", 40, 55, 75, 100, 5, None),
-                    1 : None,
-                    2 : None,
-                    3 : None,
-                    4 : None
+    allRewards = {0 : Longsword("Longsword", "A long iron sword", "A powerful overhead slash", 40, 55, 75, 100, 5, None),
+                    1 : Longsword("Longsword", "A long iron sword", "A powerful overhead slash", 40, 55, 75, 100, 5, None),
+                    2 : Longsword("Longsword", "A long iron sword", "A powerful overhead slash", 40, 55, 75, 100, 5, None),
+                    3 : Longsword("Longsword", "A long iron sword", "A powerful overhead slash", 40, 55, 75, 100, 5, None),
+                    4 : Longsword("Longsword", "A long iron sword", "A powerful overhead slash", 40, 55, 75, 100, 5, None)
     } 
 
     def __init__(self, parentBlock, chestNumber):
@@ -1109,8 +1114,10 @@ class TreasureChest:
         if self.prompt.PromptInteractedWith():
             self.parent.image = self.openedImage
             self.chestOpened = True
-            player.inventory.AddItem(self.reward)
-            self.reward = None
+
+            if self.reward:
+                player.inventory.AddItem(self.reward)
+                self.reward = None
 
 class Waypoint:
     def __init__(self, parentBlock=None, waypointActive=False):

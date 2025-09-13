@@ -1,10 +1,10 @@
 {
     "player": {
-        "worldX": 1020.0,
-        "worldY": 960,
+        "worldX": 2321.0,
+        "worldY": 800,
         "health": 500,
         "maxHealth": 800,
-        "mana": 300,
+        "mana": 400.0,
         "maxMana": 400,
         "mostRecentWaypointCords": null,
         "weapon": {
@@ -31,6 +31,12 @@
             "resistance": 0
         },
         "inventory": {
+            "itemNames": [
+                "WoodenSword",
+                "Fireball",
+                "DefaultArmour",
+                "Longsword"
+            ],
             "weapons": [
                 {
                     "name": "WoodenSword",
@@ -43,23 +49,13 @@
                     "abilityCooldown": 5
                 },
                 {
-                    "name": "WoodenSword",
-                    "description": "weapon",
-                    "abilityDescription": "ability",
-                    "damage": 100,
-                    "chargedDamage": 200,
-                    "abilityDamage": 300,
-                    "abilityManaCost": 20,
-                    "abilityCooldown": 5
-                },
-                {
-                    "name": "WoodenSword",
-                    "description": "weapon",
-                    "abilityDescription": "ability",
-                    "damage": 100,
-                    "chargedDamage": 200,
-                    "abilityDamage": 300,
-                    "abilityManaCost": 20,
+                    "name": "Longsword",
+                    "description": "A long iron sword",
+                    "abilityDescription": "A powerful overhead slash",
+                    "damage": 40,
+                    "chargedDamage": 55,
+                    "abilityDamage": 75,
+                    "abilityManaCost": 100,
                     "abilityCooldown": 5
                 }
             ],
@@ -71,35 +67,9 @@
                     "manaCost": 20,
                     "currentState": "NONE",
                     "tempCounter": 0
-                },
-                {
-                    "name": "Fireball",
-                    "description": "fire",
-                    "damage": 100,
-                    "manaCost": 20,
-                    "currentState": "NONE",
-                    "tempCounter": 0
-                },
-                {
-                    "name": "Fireball",
-                    "description": "fire",
-                    "damage": 100,
-                    "manaCost": 20,
-                    "currentState": "NONE",
-                    "tempCounter": 0
                 }
             ],
             "armour": [
-                {
-                    "name": "DefaultArmour",
-                    "description": "no armour",
-                    "resistance": 0
-                },
-                {
-                    "name": "DefaultArmour",
-                    "description": "no armour",
-                    "resistance": 0
-                },
                 {
                     "name": "DefaultArmour",
                     "description": "no armour",
@@ -117,19 +87,19 @@
     "enemies": [
         {
             "enemyType": 29,
-            "worldX": 1280,
+            "worldX": 1940.0,
             "worldY": 1760,
             "health": 120
         },
         {
             "enemyType": 29,
-            "worldX": 3040,
+            "worldX": 3192.5,
             "worldY": 1760,
             "health": 120
         },
         {
             "enemyType": 29,
-            "worldX": 4640,
+            "worldX": 4610.0,
             "worldY": 1760,
             "health": 120
         }
@@ -144,13 +114,13 @@
     ],
     "treasureChests": [
         {
-            "chestOpened": false
+            "chestOpened": true
         },
         {
             "chestOpened": false
         },
         {
-            "chestOpened": false
+            "chestOpened": true
         }
     ],
     "friendlyCharacters": [
