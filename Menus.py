@@ -509,11 +509,9 @@ class CreateInGameMenu(Setup.pg.sprite.Sprite):
         xLocation, yLocation = 80, 200
         spacing = height - 5
         inventoryButton = ButtonGroupMethods.CreateButton("INVENTORY", width, height, xLocation, yLocation, "INVENTORY_BUTTON") 
-        saveButton = ButtonGroupMethods.CreateButton("SAVE", width, height, 80, yLocation + spacing, "SAVE_BUTTON") # -5 to overlap images slightly
-        exitButton = ButtonGroupMethods.CreateButton("EXIT", width, height, 80, yLocation + (2 * spacing), "RETURN_MENU_BUTTON") 
+        exitButton = ButtonGroupMethods.CreateButton("EXIT", width, height, 80, yLocation + spacing, "RETURN_MENU_BUTTON") 
         
         self.buttons.add(inventoryButton)
-        self.buttons.add(saveButton) 
         self.buttons.add(exitButton)
 
     def ChildActions(self):
@@ -524,17 +522,12 @@ class CreateInGameMenu(Setup.pg.sprite.Sprite):
         match clicked:
             case "INVENTORY":
                 self.InventoryButton()
-            case "SAVE":
-                self.SaveButton()
             case "EXIT":
                 self.ExitButton()
 
     def InventoryButton(self):
         menuManagement.AddMenu(menuManagement.inventoryButtonGroup, "GAME")
         menuManagement.RemoveMenu(self, "GAME")
-
-    def SaveButton(self):
-        pass
 
     def ExitButton(self):
         Setup.setup.gameState = "MENU"
@@ -571,12 +564,53 @@ class CreateInventoryMenu(Setup.pg.sprite.Sprite):
 
         clicked = ButtonGroupMethods.CheckClicks(self.buttons)
 
-        match clicked:
+        match clicked:           
+            case "WEAPON_SLOT":
+                self.SlotButton("weapons")
+            case "SPELL_SLOT":
+                self.SlotButton("spells")
+            case "ARMOUR_SLOT":
+                self.SlotButton("armour")
             case "EXIT":
                 self.ExitButton()
                 
+    def SlotButton(self, slotType):
+        menuManagement.RemoveMenu(self, "GAME")
+        menuManagement.AddMenu(menuManagement.inventoryEquipDisplayButtonGroup, "GAME")
+        menuManagement.inventoryEquipDisplayButtonGroup.displayType = slotType
+
     def ExitButton(self):
         menuManagement.RemoveMenu(self, "GAME")
+        Setup.pg.mouse.set_visible(False)
+
+class CreateInventoryEquipDisplay(Setup.pg.sprite.Sprite):
+    def __init__(self):
+        Setup.pg.sprite.Sprite.__init__(self)
+
+        self.buttons = Setup.pg.sprite.Group()
+        self.displayType = None # "weapons", "spells", "armour"
+
+    def CreateButtons(self):       
+        width, height = 160, 160
+        xLocation, yLocation = Setup.setup.WIDTH - (width // 2), Setup.setup.HEIGHT - (height // 2)
+        exitButton = ButtonGroupMethods.CreateButton("EXIT", width, height, xLocation, yLocation, "RETURN_MENU_BUTTON")  
+
+        self.buttons.add(exitButton)
+
+    def ChildActions(self):
+        ButtonGroupMethods.UpdateChildButton(self.buttons)
+
+        clicked = ButtonGroupMethods.CheckClicks(self.buttons)
+
+        match clicked:           
+            case "EXIT":
+                self.ExitButton()              
+
+    def ExitButton(self):
+        menuManagement.RemoveMenu(self, "GAME")
+        menuManagement.AddMenu(menuManagement.inventoryButtonGroup, "GAME")
+        self.buttons.empty()
+        self.CreateButtons()
 
 class ButtonGroupMethods():
     @staticmethod
@@ -635,6 +669,9 @@ class MenuManagement(Setup.pg.sprite.Sprite):
 
         self.inventoryButtonGroup = CreateInventoryMenu()
         self.inventoryButtonGroup.CreateButtons()
+
+        self.inventoryEquipDisplayButtonGroup = CreateInventoryEquipDisplay()
+        self.inventoryEquipDisplayButtonGroup.CreateButtons()
 
         self.background = Background("BACKGROUND_SHEET_FULL")
 

@@ -1,7 +1,7 @@
 {
     "player": {
-        "worldX": 2321.0,
-        "worldY": 800,
+        "worldX": 1470.0,
+        "worldY": 960,
         "health": 500,
         "maxHealth": 800,
         "mana": 400.0,
@@ -9,8 +9,8 @@
         "mostRecentWaypointCords": null,
         "weapon": {
             "name": "WoodenSword",
-            "description": "weapon",
-            "abilityDescription": "ability",
+            "description": "A weak wooden sword",
+            "abilityDescription": "A quick thrust",
             "damage": 100,
             "chargedDamage": 200,
             "abilityDamage": 300,
@@ -19,7 +19,7 @@
         },
         "spell": {
             "name": "Fireball",
-            "description": "fire",
+            "description": "A burning fireball",
             "damage": 100,
             "manaCost": 20,
             "currentState": "NONE",
@@ -27,7 +27,7 @@
         },
         "armour": {
             "name": "DefaultArmour",
-            "description": "no armour",
+            "description": "No armour",
             "resistance": 0
         },
         "inventory": {
@@ -40,8 +40,8 @@
             "weapons": [
                 {
                     "name": "WoodenSword",
-                    "description": "weapon",
-                    "abilityDescription": "ability",
+                    "description": "A weak wooden sword",
+                    "abilityDescription": "A quick thrust",
                     "damage": 100,
                     "chargedDamage": 200,
                     "abilityDamage": 300,
@@ -62,7 +62,7 @@
             "spells": [
                 {
                     "name": "Fireball",
-                    "description": "fire",
+                    "description": "A burning fireball",
                     "damage": 100,
                     "manaCost": 20,
                     "currentState": "NONE",
@@ -72,7 +72,7 @@
             "armour": [
                 {
                     "name": "DefaultArmour",
-                    "description": "no armour",
+                    "description": "No armour",
                     "resistance": 0
                 }
             ]
@@ -87,19 +87,19 @@
     "enemies": [
         {
             "enemyType": 29,
-            "worldX": 1940.0,
+            "worldX": 1000.0,
             "worldY": 1760,
             "health": 120
         },
         {
             "enemyType": 29,
-            "worldX": 3192.5,
+            "worldX": 1900.0,
             "worldY": 1760,
             "health": 120
         },
         {
             "enemyType": 29,
-            "worldX": 4610.0,
+            "worldX": 5225.0,
             "worldY": 1760,
             "health": 120
         }
@@ -114,10 +114,10 @@
     ],
     "treasureChests": [
         {
-            "chestOpened": true
+            "chestOpened": false
         },
         {
-            "chestOpened": false
+            "chestOpened": true
         },
         {
             "chestOpened": true

@@ -380,7 +380,7 @@ class Armour:
         )    
 
 class Weapon:
-    weaponNames = ["WoodenSword"]
+    weaponNames = ["WoodenSword", "Longsword"]
     displayImages = {}
 
     for x in range(0, len(weaponNames)):
@@ -536,7 +536,9 @@ class Inventory:
 
         self.parentPlayer = player
         self.inventoryMainMenu = Menus.menuManagement.inventoryButtonGroup
-        self.open = False
+        self.inventoryEquipDisplayMenu = Menus.menuManagement.inventoryEquipDisplayButtonGroup
+        self.mainMenuOpen = False
+        self.equipMenuOpen = False
 
         self.weaponSlotButton = Menus.ButtonGroupMethods.GetButton("WEAPON_SLOT", self.inventoryMainMenu.buttons)
         self.spellSlotButton = Menus.ButtonGroupMethods.GetButton("SPELL_SLOT", self.inventoryMainMenu.buttons)
@@ -580,8 +582,10 @@ class Inventory:
 
                 break
 
-    def UpdatePlayerModelScreen(self):
-        Setup.pg.draw.rect(Setup.setup.screen, Setup.setup.GREY, (0, 0, Setup.setup.WIDTH, Setup.setup.HEIGHT)) # background
+    def DrawBackground(self):
+        Setup.pg.draw.rect(Setup.setup.screen, Setup.setup.GREY, (0, 0, Setup.setup.WIDTH, Setup.setup.HEIGHT))
+    
+    def UpdatePlayerModelScreen(self):       
         enlargedPlayerImage = Setup.pg.transform.scale(self.parentPlayer.unflippedIdleImage, (Setup.setup.WIDTH / 4, Setup.setup.WIDTH / 4))
         enlargedPlayerTorso = Setup.pg.transform.scale(self.parentPlayer.armour.image, (Setup.setup.WIDTH / 4, Setup.setup.WIDTH / 4))
 
@@ -598,7 +602,7 @@ class Inventory:
             if uniqueIdentifier not in self.itemTexts:
                 fontSize = 35
                 spacing = fontSize * index
-                newStatText = Setup.TextMethods.CreateText(item.name, f"{attribute} : {objectAttribute}", Setup.setup.WHITE, Setup.setup.WIDTH - (10 * fontSize), Setup.setup.HEIGHT // 2 + spacing, fontSize)
+                newStatText = Setup.TextMethods.CreateText(item.name, f"{attribute} : {objectAttribute}", Setup.setup.WHITE, Setup.setup.WIDTH - (15 * fontSize), Setup.setup.HEIGHT // 2 + spacing, fontSize)
                 self.itemTexts[uniqueIdentifier] = newStatText
 
             textToDraw[uniqueIdentifier] = self.itemTexts[uniqueIdentifier]
@@ -614,7 +618,44 @@ class Inventory:
             else:
                 self.DrawHoveredItemStats(playerAttribute)
 
-    def Draw(self):       
+    def UpdateEquipSlots(self):
+        itemList = getattr(self, Menus.menuManagement.inventoryEquipDisplayButtonGroup.displayType)
+
+        #clicked = Menus.ButtonGroupMethods.CheckClicks(Menus.menuManagement.inventoryEquipDisplayButtonGroup.buttons)
+
+        for button in Menus.menuManagement.inventoryEquipDisplayButtonGroup.buttons:           
+            for item in itemList:
+                #if clicked == item.name:
+                #    self.parentPlayer.weapon = item
+
+                if button.name == item.name and button.hover:
+                    self.DrawHoveredItemStats(item)
+
+                    break
+
+    def DrawItemEquipSlots(self): # in menu to equip items
+        if len(Menus.menuManagement.inventoryEquipDisplayButtonGroup.buttons) <= 1: # check for buttons other than exit button
+            menuType = getattr(self, Menus.menuManagement.inventoryEquipDisplayButtonGroup.displayType)
+            width, height = 320, 320
+            xLocation, yLocation = width, height
+            maxNumberOfItemsWidth = (Setup.setup.WIDTH - (width * 2)) // width
+            row = 0
+
+            for index, item in enumerate(menuType):
+                if index > maxNumberOfItemsWidth:
+                    index /= maxNumberOfItemsWidth
+                    row += 1
+
+                itemButton = Menus.ButtonGroupMethods.CreateButton(item.name, width, height, xLocation + (width * index), yLocation + (height * row), item.displayImagePath)  
+                self.inventoryEquipDisplayMenu.buttons.add(itemButton)
+                
+    def DrawEquipMenu(self):
+        self.DrawBackground()
+        self.DrawItemEquipSlots()
+        self.UpdateEquipSlots()
+                
+    def DrawMainMenu(self):      
+        self.DrawBackground()
         self.UpdatePlayerModelScreen()
         self.UpdateSelectionSlots()
         
@@ -632,9 +673,9 @@ class Player(Setup.pg.sprite.Sprite):
         self.mapFragments = mapFragments if mapFragments is not None else {"1": True, "2": True, "3": True, "4": False} # json converts int keys to strings, which forces a conversion later, it is safer to always use string keys
         self.mostRecentWaypointCords = mostRecentWaypointCords
 
-        attributesAndDefault = {"weapon" : WoodenSword("WoodenSword", "weapon", "ability", 100, 200, 300, 20, 5, parentPlayer=self), 
-                                "spell" : Fireball("Fireball", "fire", 100, 20, parentPlayer=self), 
-                                "armour" : Armour("DefaultArmour", "no armour", 0, parentPlayer=self), 
+        attributesAndDefault = {"weapon" : WoodenSword("WoodenSword", "A weak wooden sword", "A quick thrust", 100, 200, 300, 20, 5, parentPlayer=self), 
+                                "spell" : Fireball("Fireball", "A burning fireball", 100, 20, parentPlayer=self), 
+                                "armour" : Armour("DefaultArmour", "No armour", 0, parentPlayer=self), 
                                 "inventory" : Inventory(self)}
         
         for attributeName, default in attributesAndDefault.items():
@@ -788,29 +829,28 @@ class Player(Setup.pg.sprite.Sprite):
         if self.miniMap.enlarged and self.miniMap.seeWaypoints: # cannot move when currently at a waypoint - can move when viewing mini map normally
             self.movementSpeeds, self.playerXCarriedMovingSpeed = [0, 0], 0
         else:           
-            self.OpenCloseInventory()
             self.OpenCloseInGameMenu()
             self.MovementKeyHandler(keys)
             self.JumpHandler(keys)
             self.DashHandler(keys)
             self.CrouchHandler(keys)
 
-    def DisplayInventoryIfOpen(self):
-        if self.inventory.inventoryMainMenu in Menus.menuManagement.gameMenus: # draw 
-            self.inventory.Draw()
-            self.inventory.open = True
+    def DisplayInventoryIfOpen(self):       
+        if self.inventory.inventoryEquipDisplayMenu in Menus.menuManagement.gameMenus: # equip menu 
+            self.inventory.DrawEquipMenu()
+            self.inventory.equipMenuOpen = True
+            self.inventory.mainMenuOpen = False
         else:
-            self.inventory.open = False
+            self.inventory.equipMenuOpen = False
 
-    def OpenCloseInventory(self):
-        if Setup.setup.pressedKey == Setup.pg.K_i:
-            Menus.menuManagement.ChangeStateOfMenu(self.inventory.inventoryMainMenu, "GAME", cursor=True)
-
-            if Menus.menuManagement.inGameMenuButtonGroup in Menus.menuManagement.gameMenus:
-                Menus.menuManagement.RemoveMenu(Menus.menuManagement.inGameMenuButtonGroup, "GAME")
+            if self.inventory.inventoryMainMenu in Menus.menuManagement.gameMenus: # draw main menu if open and equip menu not open 
+                self.inventory.DrawMainMenu()
+                self.inventory.mainMenuOpen = True
+            else:
+                self.inventory.mainMenuOpen = False
 
     def OpenCloseInGameMenu(self):
-        if Setup.setup.pressedKey == Setup.pg.K_TAB and self.inventory.inventoryMainMenu not in Menus.menuManagement.gameMenus:
+        if Setup.setup.pressedKey == Setup.pg.K_TAB and not (self.inventory.mainMenuOpen or self.inventory.equipMenuOpen):
             Menus.menuManagement.ChangeStateOfMenu(Menus.menuManagement.inGameMenuButtonGroup, "GAME", cursor=True)
 
     def MovementKeyHandler(self, keys):
@@ -1494,7 +1534,7 @@ class Enemy(Setup.pg.sprite.Sprite):
         self.health = data["health"]
 
     def DisplayHealthBar(self):
-        if not self.player.miniMap.enlarged and not self.player.inventory.open:
+        if not self.player.miniMap.enlarged and not (self.player.inventory.mainMenuOpen or self.player.inventory.equipMenuOpen):
             drawX = self.worldX - self.player.camera.camera.left
             drawY = self.worldY - self.player.camera.camera.top - 10 # shift up slightly to draw above enemy
 
@@ -1694,11 +1734,11 @@ class FriendlyCharacter:
 
     def IsPlayerInRange(self, player, camera):
         if self.prompt.IsPlayerInRange(self.parent, player, camera):
-            self.FriendlyCharacterChestFunction(player) 
+            self.FriendlyCharacterFunction(player) 
         else:
             self.displayActive = False
 
-    def FriendlyCharacterChestFunction(self, player):
+    def FriendlyCharacterFunction(self, player):
         if self.prompt.PromptInteractedWith() or self.displayActive:
             self.displayActive = True
             Setup.pg.draw.rect(Setup.setup.screen, Setup.setup.BLACK, (500, Setup.setup.HEIGHT * (4 / 5), 920, Setup.setup.HEIGHT // 5))
