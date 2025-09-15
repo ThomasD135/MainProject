@@ -1,4 +1,3 @@
-from pygame.display import flip
 import Setup
 import MapCreator
 import Menus
@@ -1382,11 +1381,16 @@ class PathGuide:
             if len(self.path) == 1: # draw from player to last waypoint
                 playerCordsMini = (player.rect.centerx // shrinkModifier + startX, player.rect.centery // shrinkModifier + startY)
                 blockCordsMini = ((self.pathBlockObjects[0].originalLocationX + Setup.setup.BLOCK_WIDTH // 2) // shrinkModifier + startX, (self.pathBlockObjects[0].originalLocationY + Setup.setup.BLOCK_WIDTH // 2) // shrinkModifier + startY)
-                Setup.pg.draw.line(Setup.setup.screen, Setup.setup.RED, playerCordsMini, blockCordsMini, 80 // shrinkModifier) 
+                
+                if Setup.math.sqrt((playerCordsMini[0] - blockCordsMini[0]) ** 2 + (playerCordsMini[1] - blockCordsMini[1]) ** 2) > 100 // shrinkModifier:
+                    Setup.pg.draw.line(Setup.setup.screen, Setup.setup.RED, playerCordsMini, blockCordsMini, 80 // shrinkModifier) 
+                else:
+                    self.active = False
 
-                if not player.miniMap.enlarged:
+                if not player.miniMap.enlarged and self.active:
                     playerCordsScreen = (player.rect.centerx - camera.left, player.rect.centery - camera.top)
                     blockCordsScreen = ((self.pathBlockObjects[0].originalLocationX + Setup.setup.BLOCK_WIDTH // 2) - camera.left, (self.pathBlockObjects[0].originalLocationY + Setup.setup.BLOCK_WIDTH // 2 - camera.top))
+                    
                     Setup.pg.draw.line(Setup.setup.screen, Setup.setup.RED, playerCordsScreen, blockCordsScreen, 20)
                     Setup.pg.draw.circle(Setup.setup.screen, Setup.setup.RED, blockCordsScreen, 40)
 

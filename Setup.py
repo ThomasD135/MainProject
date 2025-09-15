@@ -26,7 +26,7 @@ class Setup():
 
         self.WIDTH = self.screen.get_size()[0]
         self.HEIGHT = self.screen.get_size()[1]
-        self.BLOCK_WIDTH = 160
+        self.BLOCK_WIDTH = self.WIDTH // 12
         self.BLOCKS_WIDE = 48
         self.NUM_OF_UNIQUE_BLOCKS_INDEX = 48
 

@@ -73,7 +73,7 @@ class MapDataHandling():
     def LoadData(self):
         file = open(self.filePath + ".txt")
 
-        blockWidth = 160
+        blockWidth = Setup.setup.BLOCK_WIDTH
 
         row = []
         grid = []
@@ -121,7 +121,7 @@ class MapGrid():
         self.blockGrid = [] # will become [[]] as a 2D list for rows and columns
         self.blockObjectsInView = Setup.pg.sprite.Group() 
 
-        self.blockWidth = 160 
+        self.blockWidth = Setup.setup.BLOCK_WIDTH 
         self.originalBlockWidth = self.blockWidth
         self.zoomFactor = 1
         self.changedZoom = True

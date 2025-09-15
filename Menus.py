@@ -155,7 +155,7 @@ class Background():
 
         self.width = 1920
         self.height = 1080
-        self.totalWidth = 1920 * 12
+        self.totalWidth = self.width * 12
 
         self.sheet = Setup.SpriteSheet(self.image, self, self.totalWidth)
         self.currentFrame = 0
@@ -175,7 +175,7 @@ class CreateMainMenu(Setup.pg.sprite.Sprite):
         self.buttons = Setup.pg.sprite.Group()
 
     def CreateButtons(self):
-        width, height = 320, 320
+        width, height = Setup.setup.BLOCK_WIDTH * 2, Setup.setup.BLOCK_WIDTH * 2
         xLocation, yLocation = Setup.setup.WIDTH // 2, 300
         spacing = 150
         playButton = ButtonGroupMethods.CreateButton("PLAY", width, height, xLocation, yLocation, "PLAY_BUTTON")
@@ -230,14 +230,14 @@ class CreateSettingsMenu(Setup.pg.sprite.Sprite):
         self.textList = [] # any text that must be drawn onto the screen (not images)
 
     def CreateButtons(self):      
-        width, height = 320, 320
+        width, height = Setup.setup.BLOCK_WIDTH * 2, Setup.setup.BLOCK_WIDTH * 2
         xLocation, yLocation = 150, 1000
         exitButton = ButtonGroupMethods.CreateButton("EXIT", width, height, xLocation, yLocation, "QUIT_BUTTON")   
         
         xLocation, yLocation = Setup.setup.WIDTH // 2, 300
         toggleCrouchButton = ButtonGroupMethods.CreateButton("CROUCH", width, height, xLocation, yLocation, "CROUCH_BUTTON")
 
-        width, height = 160, 160
+        width, height = Setup.setup.BLOCK_WIDTH, Setup.setup.BLOCK_WIDTH
         xLocation, yLocation = Setup.setup.WIDTH // 2 - 450, 500
         muteButton = ButtonGroupMethods.CreateButton("MUTE", width, height, xLocation, yLocation, "UNMUTE_BUTTON")
 
@@ -321,7 +321,7 @@ class CreateNewGameMenu(Setup.pg.sprite.Sprite):
         self.filledSlots = [False, False, False]
 
     def CreateButtons(self):       
-        width, height = 320, 320
+        width, height = Setup.setup.BLOCK_WIDTH * 2, Setup.setup.BLOCK_WIDTH * 2
         xLocation, yLocation = 600, Setup.setup.HEIGHT // 2
         spacing = 400
 
@@ -347,7 +347,7 @@ class CreateNewGameMenu(Setup.pg.sprite.Sprite):
                     self.buttons.sprites()[x].ChangeImageClick("SAVED_GAME_BUTTON")
                     self.filledSlots[x] = True
 
-                    width, height = 320, 320
+                    width, height = Setup.setup.BLOCK_WIDTH * 2, Setup.setup.BLOCK_WIDTH * 2
                     xLocation, yLocation = 600, Setup.setup.HEIGHT // 2
                     deleteButton = ButtonGroupMethods.CreateButton(f"DELETE_SLOT_{x + 1}", width, height, xLocation + (x * 1.25 * width), yLocation + (1.25 * height), "DELETE_SLOT_BUTTON")
                     self.buttons.add(deleteButton)
@@ -412,7 +412,7 @@ class NewGameSettings(Setup.pg.sprite.Sprite):
         self.buttons = Setup.pg.sprite.Group()
 
     def CreateButtons(self):
-        width, height = 320, 320
+        width, height = Setup.setup.BLOCK_WIDTH * 2, Setup.setup.BLOCK_WIDTH * 2
         xLocation, yLocation = Setup.setup.WIDTH // 2, 300
         spacing = 400
 
@@ -460,11 +460,11 @@ class CreateMapMenu(Setup.pg.sprite.Sprite):
         self.buttons = Setup.pg.sprite.Group()
 
     def CreateButtons(self):       
-        width, height = 320, 320
+        width, height = Setup.setup.BLOCK_WIDTH * 2, Setup.setup.BLOCK_WIDTH * 2
         xLocation, yLocation = 150, 1000
         exitButton = ButtonGroupMethods.CreateButton("EXIT", width, height, xLocation, yLocation, "QUIT_BUTTON") 
         
-        width, height = 160, 160
+        width, height = Setup.setup.BLOCK_WIDTH, Setup.setup.BLOCK_WIDTH
         xLocation, yLocation = 1750, 1000
         deleteButton = ButtonGroupMethods.CreateButton("DELETE", width, height, xLocation, yLocation, "DELETE_OFF_BUTTON")       
          
@@ -505,7 +505,7 @@ class CreateInGameMenu(Setup.pg.sprite.Sprite):
         self.buttons = Setup.pg.sprite.Group()
 
     def CreateButtons(self):       
-        width, height = 160, 160
+        width, height = Setup.setup.BLOCK_WIDTH, Setup.setup.BLOCK_WIDTH
         xLocation, yLocation = 80, 200
         spacing = height - 5
         inventoryButton = ButtonGroupMethods.CreateButton("INVENTORY", width, height, xLocation, yLocation, "INVENTORY_BUTTON") 
@@ -542,11 +542,11 @@ class CreateInventoryMenu(Setup.pg.sprite.Sprite):
         self.buttons = Setup.pg.sprite.Group()
 
     def CreateButtons(self):       
-        width, height = 160, 160
+        width, height = Setup.setup.BLOCK_WIDTH, Setup.setup.BLOCK_WIDTH
         xLocation, yLocation = Setup.setup.WIDTH - (width // 2), (height // 2)
         exitButton = ButtonGroupMethods.CreateButton("EXIT", width, height, xLocation, yLocation, "RETURN_MENU_BUTTON")  
         
-        width, height = 320, 320
+        width, height = Setup.setup.BLOCK_WIDTH * 2, Setup.setup.BLOCK_WIDTH * 2
         xLocation, yLocation = Setup.setup.WIDTH // 2.25, Setup.setup.HEIGHT // 3
         spacing = 400
 
@@ -591,7 +591,7 @@ class CreateInventoryEquipDisplay(Setup.pg.sprite.Sprite):
         self.displayType = None # "weapons", "spells", "armour"
 
     def CreateButtons(self):       
-        width, height = 160, 160
+        width, height = Setup.setup.BLOCK_WIDTH, Setup.setup.BLOCK_WIDTH
         xLocation, yLocation = Setup.setup.WIDTH - (width // 2), Setup.setup.HEIGHT - (height // 2)
         exitButton = ButtonGroupMethods.CreateButton("EXIT", width, height, xLocation, yLocation, "RETURN_MENU_BUTTON")  
 
