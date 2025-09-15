@@ -604,7 +604,9 @@ class CreateInventoryEquipDisplay(Setup.pg.sprite.Sprite):
 
         match clicked:           
             case "EXIT":
-                self.ExitButton()              
+                self.ExitButton()    
+                
+        return clicked
 
     def ExitButton(self):
         menuManagement.RemoveMenu(self, "GAME")

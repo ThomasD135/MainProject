@@ -1,20 +1,20 @@
 {
     "player": {
-        "worldX": 2020,
-        "worldY": 1440,
-        "health": 800,
+        "worldX": 5280,
+        "worldY": 2400,
+        "health": 710,
         "maxHealth": 800,
         "mana": 400,
         "maxMana": 400,
         "mostRecentWaypointCords": null,
         "weapon": {
-            "name": "WoodenSword",
-            "description": "A weak wooden sword",
-            "abilityDescription": "A quick thrust",
-            "damage": 100,
-            "chargedDamage": 200,
-            "abilityDamage": 300,
-            "abilityManaCost": 20,
+            "name": "Longsword",
+            "description": "A long iron sword",
+            "abilityDescription": "A powerful overhead slash",
+            "damage": 40,
+            "chargedDamage": 55,
+            "abilityDamage": 75,
+            "abilityManaCost": 100,
             "abilityCooldown": 5
         },
         "spell": {
@@ -26,16 +26,17 @@
             "tempCounter": 0
         },
         "armour": {
-            "name": "DefaultArmour",
-            "description": "No armour",
-            "resistance": 0
+            "name": "SkinOfTheWeepingMaw",
+            "description": "The skin of the weeping maw",
+            "resistance": 20
         },
         "inventory": {
             "itemNames": [
                 "WoodenSword",
                 "Fireball",
                 "DefaultArmour",
-                "Longsword"
+                "Longsword",
+                "SkinOfTheWeepingMaw"
             ],
             "weapons": [
                 {
@@ -87,19 +88,19 @@
     "enemies": [
         {
             "enemyType": 29,
-            "worldX": 2020,
+            "worldX": 1087.5,
             "worldY": 1760,
             "health": 120
         },
         {
             "enemyType": 29,
-            "worldX": 2020,
+            "worldX": 2593.0,
             "worldY": 1760,
             "health": 120
         },
         {
             "enemyType": 29,
-            "worldX": 4432.5,
+            "worldX": 5115,
             "worldY": 1760,
             "health": 120
         }
@@ -115,9 +116,6 @@
     "treasureChests": [
         {
             "chestOpened": false
-        },
-        {
-            "chestOpened": true
         },
         {
             "chestOpened": true

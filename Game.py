@@ -1,3 +1,4 @@
+from pygame import display
 import Setup
 import MapCreator
 import Menus
@@ -611,25 +612,30 @@ class Inventory:
     def UpdateSelectionSlots(self):
         for button in self.buttons:
             playerAttribute = getattr(self.parentPlayer, self.buttons[button])
-
-            if not button.hover:                
-                button.ChangeImageClick(playerAttribute.displayImagePath)
-            else:
+            
+            if button.hover:                
                 self.DrawHoveredItemStats(playerAttribute)
+            else:
+                button.ChangeImageClick(playerAttribute.displayImagePath)
 
     def UpdateEquipSlots(self):
         itemList = getattr(self, Menus.menuManagement.inventoryEquipDisplayButtonGroup.displayType)
+        displayTypeToAttribute = {"weapons" : "weapon",
+                                  "spells" : "spell",
+                                  "armour" : "armour"
+                                  }
 
-        #clicked = Menus.ButtonGroupMethods.CheckClicks(Menus.menuManagement.inventoryEquipDisplayButtonGroup.buttons)
+        clicked = Menus.menuManagement.inventoryEquipDisplayButtonGroup.ChildActions()
 
         for button in Menus.menuManagement.inventoryEquipDisplayButtonGroup.buttons:           
             for item in itemList:
-                #if clicked == item.name:
-                #    self.parentPlayer.weapon = item
+                if clicked == item.name:
+                    setattr(self.parentPlayer, displayTypeToAttribute[Menus.menuManagement.inventoryEquipDisplayButtonGroup.displayType], item)
+                    Menus.menuManagement.inventoryEquipDisplayButtonGroup.ExitButton()
+                    break
 
                 if button.name == item.name and button.hover:
                     self.DrawHoveredItemStats(item)
-
                     break
 
     def DrawItemEquipSlots(self): # in menu to equip items
@@ -1538,7 +1544,7 @@ class Enemy(Setup.pg.sprite.Sprite):
         self.health = data["health"]
 
     def DisplayHealthBar(self):
-        if not self.player.miniMap.enlarged and not (self.player.inventory.mainMenuOpen or self.player.inventory.equipMenuOpen):
+        if not self.player.dead and not self.player.miniMap.enlarged and not (self.player.inventory.mainMenuOpen or self.player.inventory.equipMenuOpen):
             drawX = self.worldX - self.player.camera.camera.left
             drawY = self.worldY - self.player.camera.camera.top - 10 # shift up slightly to draw above enemy
 
@@ -1619,28 +1625,44 @@ class Enemy(Setup.pg.sprite.Sprite):
         if self.MoveToPoint(self.startLocationX, self.slowVelocity, self.player):
             self.state = "NORMAL"
 
+    def CheckCollisionWithGround(self):
+        hasCollision = True
+
+        self.worldY += 1
+        self.rect.topleft = (self.worldX, self.worldY)
+
+        if len(self.player.gameHandler.CollideWithObjects(self)) == 0:
+            hasCollision = False
+
+        self.worldY -= 1
+        self.rect.topleft = (self.worldX, self.worldY)
+
+        return hasCollision
+
     def MoveToPoint(self, endLocation, velocity, player):
-        if self.worldX == endLocation: 
-            return True
-
         direction = None
+        changeInLocationX = 0
+        distanceToEndLocation = abs(endLocation - self.worldX)
 
+        if distanceToEndLocation < self.velocity:
+            return True
+                     
         if self.worldX > endLocation: 
-            if self.worldX - velocity < endLocation:
-                self.worldX = endLocation
-            else:
-                self.worldX -= velocity
-
+            changeInLocationX = -velocity - self.width 
             direction = "LEFT"
         else:
-            if self.worldX + velocity > endLocation:
-                self.worldX = endLocation
-            else:
-                self.worldX += velocity
-
+            changeInLocationX = velocity + self.width 
             direction = "RIGHT"
 
+        self.worldX += changeInLocationX # +/- self.width checks if any part of the enemy has no contact with the ground 
         self.rect.topleft = (self.worldX, self.worldY)
+
+        if not self.CheckCollisionWithGround():
+            self.worldX -= changeInLocationX      
+        elif direction == "RIGHT":
+            self.worldX -= self.width
+        elif direction == "LEFT":
+            self.worldX += self.width
 
         for block in player.gameHandler.CollideWithObjects(self):
             if direction == "RIGHT":
@@ -1649,7 +1671,7 @@ class Enemy(Setup.pg.sprite.Sprite):
             elif direction == "LEFT": 
                 self.worldX = block.worldX + block.rect.width            
 
-            self.rect.topleft = (self.worldX, self.worldY)     
+        self.rect.topleft = (self.worldX, self.worldY)     
 
     def PerformMovement(self):
         self.movementClass.Movement(self)
@@ -1705,11 +1727,11 @@ class Enemy1(Enemy):
         super().__init__(worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange, enemyType, player)
 
 class FriendlyCharacter:
-    allItems = {0 : None,
-                    1 : None,
-                    2 : None,
-                    3 : None,
-                    4 : None}
+    allItems = {0 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", 20),
+                    1 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", 20),
+                    2 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", 20),
+                    3 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", 20),
+                    4 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", 20)}
 
     allText = {0 : ["Hi this is the first text, i will help you throughout the game", 
                         "Hi this is the second text", 
