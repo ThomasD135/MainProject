@@ -17,7 +17,7 @@ class GameHandler(Setup.pg.sprite.Sprite):
         self.blocks = Setup.pg.sprite.Group() 
         self.enemies = Setup.pg.sprite.Group()
         self.bosses = Setup.pg.sprite.Group()
-        self.hitBoxes = Setup.pg.sprite.Group()
+        self.hitboxes = Setup.pg.sprite.Group()
 
         self.playableMap = []
         self.waypoints = []
@@ -130,7 +130,7 @@ class GameHandler(Setup.pg.sprite.Sprite):
         self.blocks = Setup.pg.sprite.Group() 
         self.enemies = Setup.pg.sprite.Group()
         self.bosses = Setup.pg.sprite.Group()
-        self.hitBoxes = Setup.pg.sprite.Group()
+        self.hitboxes = Setup.pg.sprite.Group()
         self.playableMap = []
         self.waypoints = []
         self.treasureChests = []
@@ -241,17 +241,29 @@ class GameHandler(Setup.pg.sprite.Sprite):
 
         self.dijkstraGraph = Dijkstra.DijkstraImplementation(self.weightedAdjacencyList.weightedGraph)
 
-    def UpdateEnemies(self):
+    def UpdateSprites(self):
         for enemy in self.enemies:
             enemy.PerformAction()
 
-    def CollideWithObjects(self, mainObject):
+        for hitbox in self.hitboxes:
+            hitbox.update()
+            
+            for enemy in self.CollideWithObjects(hitbox, self.enemies):
+                if enemy.TakeDamage(hitbox.damage):
+                    self.enemies.remove(enemy)
+
+                self.hitboxes.remove(hitbox)
+
+    def CollideWithObjects(self, mainObject, listOfObjects):
         collided = []
         mainObject.rect.topleft = (mainObject.worldX, mainObject.worldY)
 
-        for collidedBlock in Setup.pg.sprite.spritecollide(mainObject, self.blocks, False):
-            if collidedBlock.collision:
-                collided.append(collidedBlock)
+        for collidedObject in Setup.pg.sprite.spritecollide(mainObject, listOfObjects, False):
+            if hasattr(collidedObject, "collision"):
+                if collidedObject.collision:
+                    collided.append(collidedObject)
+            else:
+                collided.append(collidedObject)
 
         return collided
 
@@ -404,6 +416,7 @@ class Weapon:
 
         self.tempCounter = 0 # TODO - used until attacks have an actual function
         self.attackStart = 0
+        self.attackToHitBox = {} # attack type e.g. basic to corresponding hitbox
        
         self.displayImagePath = Weapon.displayImages[name] if name in Weapon.weaponNames else Weapon.displayImages["WoodenSword"]
         
@@ -482,17 +495,54 @@ class Weapon:
 
         self.tempCounter += 1
 
+    def AttackStartAndEndHandler(self, timer, attackType, hitboxDimentions, damage):
+        direction = self.parentPlayer.mostRecentDirection
+
+        if timer.startTime is None:
+            timer.StartTimer()
+            if direction == "LEFT":
+                attackHitBox = Hitbox(self.parentPlayer.worldX - hitboxDimentions[0], self.parentPlayer.worldY, hitboxDimentions[0], hitboxDimentions[1], damage, self.parentPlayer)
+            else:
+                attackHitBox = Hitbox(self.parentPlayer.worldX + hitboxDimentions[0], self.parentPlayer.worldY, hitboxDimentions[0], hitboxDimentions[1], damage, self.parentPlayer)
+
+            self.parentPlayer.gameHandler.hitboxes.add(attackHitBox)
+            self.attackToHitBox.update({attackType : attackHitBox})
+
+            return True # attack start
+
+        if timer.CheckFinished():
+            self.parentPlayer.gameHandler.hitboxes.remove(self.attackToHitBox[attackType])           
+            self.currentState = "NONE"
+            timer.Reset()
+
 class WoodenSword(Weapon):
     def __init__(self, name=None, description=None, abilityDescription=None, damage=None, chargedDamage=None, abilityDamage=None, abilityManaCost=None, abilityCooldown=None, parentPlayer=None):
         super().__init__(name, description, abilityDescription, damage, chargedDamage, abilityDamage, abilityManaCost, abilityCooldown, parentPlayer)
 
-        self.basicAttackLength = 2 # seconds
-        self.basicAttackSheet = None       
+        self.basicAttackTimer = CooldownTimer(1) # seconds
+        self.basicAttackSheet = None
+        self.basicAttackDimentions = (160, 160)
 
-    def BasicAttack(self):
-        if self.attackStart <= self.basicAttackLength:
-            pass
-            #attack     
+        self.chargedAttackTimer = CooldownTimer(1)
+        self.chargedAttackSheet = None
+        self.chargedAttackDimentions = (160, 160)
+
+        self.abilityAttackTimer = CooldownTimer(2)
+        self.abilityAttackSheet = None
+        self.abilityAttackDimentions = (160, 160)
+
+    def BasicAttack(self): # player stands still and slashes
+        self.AttackStartAndEndHandler(self.basicAttackTimer, "BASIC", self.basicAttackDimentions, self.damage)
+
+    def ChargedAttack(self): # player stands still and slashes heavily 
+        self.AttackStartAndEndHandler(self.chargedAttackTimer, "CHARGED", self.chargedAttackDimentions, self.chargedDamage)
+
+    def PerformAbility(self): # player thrusts with the sword
+        if self.AttackStartAndEndHandler(self.abilityAttackTimer, "CHARGED", self.abilityAttackDimentions, self.abilityDamage):
+            if self.parentPlayer.mostRecentDirection == "LEFT":
+                self.parentPlayer.playerXCarriedMovingSpeed = -20
+            else:
+                self.parentPlayer.playerXCarriedMovingSpeed = 20
 
 class Longsword(Weapon):
     def __init__(self, name=None, description=None, abilityDescription=None, damage=None, chargedDamage=None, abilityDamage=None, abilityManaCost=None, abilityCooldown=None, parentPlayer=None):
@@ -502,22 +552,25 @@ class Longsword(Weapon):
         self.basicAttackSheet = None       
 
     def BasicAttack(self):
-        if self.attackStart <= self.basicAttackLength:
-            pass
-            #attack    
+        if self.tempCounter >= 120:
+            self.currentState = "NONE" # after the attack is finished
+            self.tempCounter = 0
 
-class HitBox(Setup.pg.sprite.Sprite): # USE SPRITE FUNCTIONALITY FOR COLLISION - THIS WILL MOST LIKELY NOT BE IN THIS CLASS
-    def __init__(self, worldX, worldY, width, height, parentObject):
+        self.tempCounter += 1   
+
+class Hitbox(Setup.pg.sprite.Sprite):
+    def __init__(self, worldX, worldY, width, height, damage, parentObject):
         super().__init__()
         self.parent = parentObject
         self.worldX = worldX
         self.worldY = worldY
         self.width = width
         self.height = height
+        self.damage = damage
         self.rect = Setup.pg.Rect(self.worldX, self.worldY, self.width, self.height)
 
     def update(self):
-        self.rect.topleft = (self.worldX, self.worldY)
+        self.rect.topleft = (self.parent.worldX, self.parent.worldY)
 
 class Inventory:
     allItems = {"DefaultArmour" : Armour,
@@ -525,7 +578,8 @@ class Inventory:
                 "DefaultSpell" : Spell,
                 "WoodenSword" : WoodenSword, 
                 "Longsword" : Longsword,
-                "Fireball" : Fireball
+                "Fireball" : Fireball,
+                "SkinOfTheWeepingMaw" : Armour,
     }
 
     def __init__(self, player=None, weapons=None, spells=None, armour=None, itemNames=None):
@@ -564,7 +618,9 @@ class Inventory:
             for itemData in data.get(category, []):
                 if itemData["name"] in Inventory.allItems:
                     itemClass = Inventory.allItems[itemData["name"]]
-                    itemList.append(itemClass().DataFromDictionary(itemData))
+                    createdItem = itemClass().DataFromDictionary(itemData)
+                    createdItem.parentPlayer = gameHandler.player
+                    itemList.append(createdItem)
 
         return cls(weapons=itemNameToObjects["weapons"], spells=itemNameToObjects["spells"], armour=itemNameToObjects["armour"], itemNames=data["itemNames"])
 
@@ -639,8 +695,9 @@ class Inventory:
                     break
 
     def DrawItemEquipSlots(self): # in menu to equip items
-        if len(Menus.menuManagement.inventoryEquipDisplayButtonGroup.buttons) <= 1: # check for buttons other than exit button
-            menuType = getattr(self, Menus.menuManagement.inventoryEquipDisplayButtonGroup.displayType)
+        menuType = getattr(self, Menus.menuManagement.inventoryEquipDisplayButtonGroup.displayType)
+
+        if len(Menus.menuManagement.inventoryEquipDisplayButtonGroup.buttons) != len(menuType) + 1: # check for buttons + exit button      
             width, height = 320, 320
             xLocation, yLocation = width, height
             maxNumberOfItemsWidth = (Setup.setup.WIDTH - (width * 2)) // width
@@ -758,9 +815,9 @@ class Player(Setup.pg.sprite.Sprite):
             maxMana = data.get("maxMana", 50),
             mapFragments = data.get("mapFragments", {"1": True, "2": True, "3": True, "4": False}),
             mostRecentWaypointCords = data.get("mostRecentWaypointCords", None),
-            weapon = Weapon.DataFromDictionary(data.get("weapon")) if data.get("weapon") else None,
-            spell = Spell.DataFromDictionary(data.get("spell")) if data.get("spell") else None,
-            armour = Armour.DataFromDictionary(data.get("armour")) if data.get("armour") else None,
+            weapon = Inventory.allItems[data.get("weapon")["name"]].DataFromDictionary(data.get("weapon")) if data.get("weapon") else None,
+            spell = Inventory.allItems[data.get("spell")["name"]].DataFromDictionary(data.get("spell")) if data.get("spell") else None,
+            armour = Inventory.allItems[data.get("armour")["name"]].DataFromDictionary(data.get("armour")) if data.get("armour") else None,
             inventory = Inventory.DataFromDictionary(data.get("inventory")) if data.get("inventory") else None,
         )
 
@@ -784,7 +841,7 @@ class Player(Setup.pg.sprite.Sprite):
         self.worldX += self.movementSpeeds[0]
         self.rect.topleft = (self.worldX, self.worldY)
 
-        for block in self.gameHandler.CollideWithObjects(self):
+        for block in self.gameHandler.CollideWithObjects(self, self.gameHandler.blocks):
             if self.movementSpeeds[0] > 0: # moving right so colliding with the left side of the block (right side of the player)
                 self.worldX = block.worldX - self.rect.width # always snap the player to outside the block
                 
@@ -807,7 +864,7 @@ class Player(Setup.pg.sprite.Sprite):
         self.worldY += self.movementSpeeds[1]
         self.rect.topleft = (self.worldX, self.worldY)
 
-        for block in self.gameHandler.CollideWithObjects(self):
+        for block in self.gameHandler.CollideWithObjects(self, self.gameHandler.blocks):
             if self.movementSpeeds[1] > 0: # moving down so colliding with the top of the block (bottom of the player)
                 self.worldY = block.worldY - self.rect.height
                 
@@ -1075,7 +1132,7 @@ class Player(Setup.pg.sprite.Sprite):
             self.weapon.isChargingAttack = False
             self.weapon.Attack(currentTime)
 
-    def AbilitySpell(self):
+    def AbilitySpell(self):    
         keys = Setup.pg.key.get_pressed()
 
         if keys[Setup.pg.K_e]:
@@ -1543,6 +1600,12 @@ class Enemy(Setup.pg.sprite.Sprite):
         self.worldY = data["worldY"]
         self.health = data["health"]
 
+    def TakeDamage(self, damage):
+        self.health -= damage
+        
+        if self.health <= 0:
+            return True
+
     def DisplayHealthBar(self):
         if not self.player.dead and not self.player.miniMap.enlarged and not (self.player.inventory.mainMenuOpen or self.player.inventory.equipMenuOpen):
             drawX = self.worldX - self.player.camera.camera.left
@@ -1631,7 +1694,7 @@ class Enemy(Setup.pg.sprite.Sprite):
         self.worldY += 1
         self.rect.topleft = (self.worldX, self.worldY)
 
-        if len(self.player.gameHandler.CollideWithObjects(self)) == 0:
+        if len(self.player.gameHandler.CollideWithObjects(self, self.player.gameHandler.blocks)) == 0:
             hasCollision = False
 
         self.worldY -= 1
@@ -1664,7 +1727,7 @@ class Enemy(Setup.pg.sprite.Sprite):
         elif direction == "LEFT":
             self.worldX += self.width
 
-        for block in player.gameHandler.CollideWithObjects(self):
+        for block in player.gameHandler.CollideWithObjects(self, self.player.gameHandler.blocks):
             if direction == "RIGHT":
                 self.worldX = block.worldX - self.rect.width 
 

@@ -23,7 +23,7 @@ def main():
                 Game.gameHandler.LoadGame()
                 Game.gameHandler.background.DrawImage()
                 Game.gameHandler.player.Update()
-                Game.gameHandler.UpdateEnemies()
+                Game.gameHandler.UpdateSprites()
                 Menus.menuManagement.MenuChildActions("GAME")
                 
         Setup.pg.display.update()
