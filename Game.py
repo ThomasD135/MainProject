@@ -1,4 +1,3 @@
-from pygame import display
 import Setup
 import MapCreator
 import Menus
@@ -99,9 +98,6 @@ class GameHandler(Setup.pg.sprite.Sprite):
                     attributeList = attributeSelf
 
                 for index in range(0, min(len(attributeList), len(newData))):
-                    if attribute == "enemies":
-                        attributeList[index].player = self.player
-
                     attributeList[index].LoadFromDictionary(newData[index])
 
     def SaveGame(self):
@@ -198,7 +194,7 @@ class GameHandler(Setup.pg.sprite.Sprite):
             suspicionRange = enemyClass["suspicionRange"],
             detectionRange = enemyClass["detectionRange"],
             enemyType = enemyNumber,
-            player = self.player,
+            gameHandler = self,
         )
 
     def PopulateGraph(self, blocks):
@@ -354,9 +350,11 @@ class Fireball(Spell):
         self.images = None
 
     def UseSpell(self):
-        if self.attackStart <= self.basicAttackLength:
-            pass
-            #attack     
+        if self.tempCounter >= 120:
+            self.currentState = "NONE" # after the spell is finished
+            self.tempCounter = 0 
+
+        self.tempCounter += 1    
 
 class Armour:
     armourNames = ["DefaultArmour", "SkinOfTheWeepingMaw"]
@@ -495,15 +493,19 @@ class Weapon:
 
         self.tempCounter += 1
 
-    def AttackStartAndEndHandler(self, timer, attackType, hitboxDimentions, damage):
+    def AttackStartAndEndHandler(self, timer, attackType, hitboxDimentions, damage, lockMovement):
+        if lockMovement:
+            self.parentPlayer.movementLocked = lockMovement
+            self.parentPlayer.movementSpeeds = [0, 0]
+
         direction = self.parentPlayer.mostRecentDirection
 
         if timer.startTime is None:
             timer.StartTimer()
             if direction == "LEFT":
-                attackHitBox = Hitbox(self.parentPlayer.worldX - hitboxDimentions[0], self.parentPlayer.worldY, hitboxDimentions[0], hitboxDimentions[1], damage, self.parentPlayer)
+                attackHitBox = Hitbox(-hitboxDimentions[0], 0, hitboxDimentions[0], hitboxDimentions[1], damage, self.parentPlayer)
             else:
-                attackHitBox = Hitbox(self.parentPlayer.worldX + hitboxDimentions[0], self.parentPlayer.worldY, hitboxDimentions[0], hitboxDimentions[1], damage, self.parentPlayer)
+                attackHitBox = Hitbox(hitboxDimentions[0], 0, hitboxDimentions[0], hitboxDimentions[1], damage, self.parentPlayer)
 
             self.parentPlayer.gameHandler.hitboxes.add(attackHitBox)
             self.attackToHitBox.update({attackType : attackHitBox})
@@ -513,33 +515,34 @@ class Weapon:
         if timer.CheckFinished():
             self.parentPlayer.gameHandler.hitboxes.remove(self.attackToHitBox[attackType])           
             self.currentState = "NONE"
+            self.parentPlayer.movementLocked = False
             timer.Reset()
 
 class WoodenSword(Weapon):
     def __init__(self, name=None, description=None, abilityDescription=None, damage=None, chargedDamage=None, abilityDamage=None, abilityManaCost=None, abilityCooldown=None, parentPlayer=None):
         super().__init__(name, description, abilityDescription, damage, chargedDamage, abilityDamage, abilityManaCost, abilityCooldown, parentPlayer)
 
-        self.basicAttackTimer = CooldownTimer(1) # seconds
+        self.basicAttackLengthTimer = CooldownTimer(0.75) # seconds
         self.basicAttackSheet = None
         self.basicAttackDimentions = (160, 160)
 
-        self.chargedAttackTimer = CooldownTimer(1)
+        self.chargedAttackLengthTimer = CooldownTimer(1.25)
         self.chargedAttackSheet = None
         self.chargedAttackDimentions = (160, 160)
 
-        self.abilityAttackTimer = CooldownTimer(2)
+        self.abilityAttackLengthTimer = CooldownTimer(1)
         self.abilityAttackSheet = None
         self.abilityAttackDimentions = (160, 160)
 
     def BasicAttack(self): # player stands still and slashes
-        self.AttackStartAndEndHandler(self.basicAttackTimer, "BASIC", self.basicAttackDimentions, self.damage)
+        self.AttackStartAndEndHandler(self.basicAttackLengthTimer, "BASIC", self.basicAttackDimentions, self.damage, True)
 
     def ChargedAttack(self): # player stands still and slashes heavily 
-        self.AttackStartAndEndHandler(self.chargedAttackTimer, "CHARGED", self.chargedAttackDimentions, self.chargedDamage)
+        self.AttackStartAndEndHandler(self.chargedAttackLengthTimer, "CHARGED", self.chargedAttackDimentions, self.chargedDamage, True)
 
     def PerformAbility(self): # player thrusts with the sword
-        if self.AttackStartAndEndHandler(self.abilityAttackTimer, "CHARGED", self.abilityAttackDimentions, self.abilityDamage):
-            if self.parentPlayer.mostRecentDirection == "LEFT":
+        if self.AttackStartAndEndHandler(self.abilityAttackLengthTimer, "CHARGED", self.abilityAttackDimentions, self.abilityDamage, True):
+            if self.parentPlayer.mostRecentDirection == "LEFT": # movement inputs are restricted but player can carry speed
                 self.parentPlayer.playerXCarriedMovingSpeed = -20
             else:
                 self.parentPlayer.playerXCarriedMovingSpeed = 20
@@ -559,11 +562,13 @@ class Longsword(Weapon):
         self.tempCounter += 1   
 
 class Hitbox(Setup.pg.sprite.Sprite):
-    def __init__(self, worldX, worldY, width, height, damage, parentObject):
+    def __init__(self, offsetX, offsetY, width, height, damage, parentObject):
         super().__init__()
-        self.parent = parentObject
-        self.worldX = worldX
-        self.worldY = worldY
+        self.parent = parentObject # normally player
+        self.worldX = 0
+        self.worldY = 0
+        self.offsetX = offsetX
+        self.offsetY = offsetY
         self.width = width
         self.height = height
         self.damage = damage
@@ -571,6 +576,12 @@ class Hitbox(Setup.pg.sprite.Sprite):
 
     def update(self):
         self.rect.topleft = (self.parent.worldX, self.parent.worldY)
+        self.worldX, self.worldY = self.rect.left + self.offsetX, self.rect.top + self.offsetY
+
+        # visualise
+        drawX = self.worldX - self.parent.camera.camera.left
+        drawY = self.worldY - self.parent.camera.camera.top
+        Setup.pg.draw.rect(Setup.setup.screen, Setup.setup.RED, (drawX, drawY, self.width, self.height))
 
 class Inventory:
     allItems = {"DefaultArmour" : Armour,
@@ -780,6 +791,7 @@ class Player(Setup.pg.sprite.Sprite):
         self.isCrouched = False
 
         # movement
+        self.movementLocked = False
         self.movementSpeeds = [0, 0]
         self.keyPressVelocity = 6
         self.mostRecentDirection = None
@@ -892,10 +904,12 @@ class Player(Setup.pg.sprite.Sprite):
             self.movementSpeeds, self.playerXCarriedMovingSpeed = [0, 0], 0
         else:           
             self.OpenCloseInGameMenu()
-            self.MovementKeyHandler(keys)
-            self.JumpHandler(keys)
-            self.DashHandler(keys)
-            self.CrouchHandler(keys)
+
+            if not self.movementLocked:
+                self.MovementKeyHandler(keys)
+                self.JumpHandler(keys)
+                self.DashHandler(keys)
+                self.CrouchHandler(keys)
 
     def DisplayInventoryIfOpen(self):       
         if self.inventory.inventoryEquipDisplayMenu in Menus.menuManagement.gameMenus: # equip menu 
@@ -1539,9 +1553,9 @@ class CooldownTimer:
         self.startTime = None
 
 class Enemy(Setup.pg.sprite.Sprite):
-    def __init__(self, worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange, enemyType, player):
+    def __init__(self, worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange, enemyType, gameHandler):
         super().__init__()
-        self.player = player
+        self.gameHandler = gameHandler
         self.enemyType = enemyType
 
         self.worldX = worldX
@@ -1607,15 +1621,15 @@ class Enemy(Setup.pg.sprite.Sprite):
             return True
 
     def DisplayHealthBar(self):
-        if not self.player.dead and not self.player.miniMap.enlarged and not (self.player.inventory.mainMenuOpen or self.player.inventory.equipMenuOpen):
-            drawX = self.worldX - self.player.camera.camera.left
-            drawY = self.worldY - self.player.camera.camera.top - 10 # shift up slightly to draw above enemy
+        if not self.gameHandler.player.dead and not self.gameHandler.player.miniMap.enlarged and not (self.gameHandler.player.inventory.mainMenuOpen or self.gameHandler.player.inventory.equipMenuOpen):
+            drawX = self.worldX - self.gameHandler.player.camera.camera.left
+            drawY = self.worldY - self.gameHandler.player.camera.camera.top - 10 # shift up slightly to draw above enemy
 
             Setup.pg.draw.rect(Setup.setup.screen, Setup.pg.Color("red4"), (drawX, drawY, self.maxHealth, 10)) # red health bar (background of bar)
             Setup.pg.draw.rect(Setup.setup.screen, Setup.pg.Color("forestgreen"), (drawX, drawY, self.health, 10)) # green health bar
 
     def UpdateState(self):
-        distanceFromPlayer = Setup.math.sqrt((self.worldX - self.player.worldX) ** 2 + (self.worldY - self.player.worldY) ** 2)
+        distanceFromPlayer = Setup.math.sqrt((self.worldX - self.gameHandler.player.worldX) ** 2 + (self.worldY - self.gameHandler.player.worldY) ** 2)
 
         if distanceFromPlayer <= self.detectionRange:
             self.state = "DETECTED"
@@ -1624,7 +1638,7 @@ class Enemy(Setup.pg.sprite.Sprite):
         elif distanceFromPlayer <= self.suspicionRange:
             if self.state != "DETECTED" and self.state != "RETURNING": # must be within detection range to detect player while returning
                 self.state = "SUSPICIOUS"
-                self.detectedPlayerLocation = (self.player.worldX, self.player.worldY)
+                self.detectedPlayerLocation = (self.gameHandler.player.worldX, self.gameHandler.player.worldY)
 
         elif distanceFromPlayer > self.suspicionRange and self.state == "DETECTED":
             self.TransitionFromDetectedToSuspicion()
@@ -1637,7 +1651,7 @@ class Enemy(Setup.pg.sprite.Sprite):
                 self.state = "SUSPICIOUS"                   
                 self.outsideSuspicionRangeWhenDetected.Reset()
 
-                if self.player.worldX < self.worldX:
+                if self.gameHandler.player.worldX < self.worldX:
                     self.detectedPlayerLocation = (self.worldX - self.suspicionRange, self.worldY)
                 else:
                     self.detectedPlayerLocation = (self.worldX + self.suspicionRange, self.worldY)
@@ -1664,9 +1678,9 @@ class Enemy(Setup.pg.sprite.Sprite):
         self.rect.topleft = (self.worldX, self.worldY)
 
     def Detected(self):
-        playerX = self.player.worldX # the current location
+        playerX = self.gameHandler.player.worldX # the current location
 
-        self.MoveToPoint(playerX, self.velocity, self.player)
+        self.MoveToPoint(playerX, self.velocity, self.gameHandler.player)
 
     def Suspicious(self):
         playerX = self.detectedPlayerLocation[0] # enemies move left and right
@@ -1674,7 +1688,7 @@ class Enemy(Setup.pg.sprite.Sprite):
         if self.suspicionTimer.startTime is None:
             self.suspicionTimer.StartTimer()
 
-        if self.MoveToPoint(playerX, self.slowVelocity, self.player) or self.suspicionTimer.CheckFinished():
+        if self.MoveToPoint(playerX, self.slowVelocity, self.gameHandler.player) or self.suspicionTimer.CheckFinished():
             self.suspicionTimer.Reset()
 
             if self.suspicionWaitTimer.startTime is None:
@@ -1685,7 +1699,7 @@ class Enemy(Setup.pg.sprite.Sprite):
             self.suspicionWaitTimer.Reset()
 
     def Returning(self):    
-        if self.MoveToPoint(self.startLocationX, self.slowVelocity, self.player):
+        if self.MoveToPoint(self.startLocationX, self.slowVelocity, self.gameHandler.player):
             self.state = "NORMAL"
 
     def CheckCollisionWithGround(self):
@@ -1694,7 +1708,7 @@ class Enemy(Setup.pg.sprite.Sprite):
         self.worldY += 1
         self.rect.topleft = (self.worldX, self.worldY)
 
-        if len(self.player.gameHandler.CollideWithObjects(self, self.player.gameHandler.blocks)) == 0:
+        if len(self.gameHandler.CollideWithObjects(self, self.gameHandler.blocks)) == 0:
             hasCollision = False
 
         self.worldY -= 1
@@ -1727,7 +1741,7 @@ class Enemy(Setup.pg.sprite.Sprite):
         elif direction == "LEFT":
             self.worldX += self.width
 
-        for block in player.gameHandler.CollideWithObjects(self, self.player.gameHandler.blocks):
+        for block in self.gameHandler.CollideWithObjects(self, self.gameHandler.blocks):
             if direction == "RIGHT":
                 self.worldX = block.worldX - self.rect.width 
 
@@ -1779,15 +1793,15 @@ class RandomMovement:
             self.randomMovementTimer.Reset()
 
         if self.direction == "RETURN":
-            enemy.MoveToPoint(enemy.startLocationX, enemy.slowVelocity, enemy.player) # return to start
+            enemy.MoveToPoint(enemy.startLocationX, enemy.slowVelocity, enemy.gameHandler.player) # return to start
         if self.direction == "RIGHT":
-            enemy.MoveToPoint(Setup.sys.maxsize, enemy.slowVelocity, enemy.player) # anywhere to the right
+            enemy.MoveToPoint(Setup.sys.maxsize, enemy.slowVelocity, enemy.gameHandler.player) # anywhere to the right
         elif self.direction == "LEFT":
-            enemy.MoveToPoint(-Setup.sys.maxsize, enemy.slowVelocity, enemy.player) # anywhere to the left
+            enemy.MoveToPoint(-Setup.sys.maxsize, enemy.slowVelocity, enemy.gameHandler.player) # anywhere to the left
 
 class Enemy1(Enemy):
-    def __init__(self, worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange, enemyType, player):
-        super().__init__(worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange, enemyType, player)
+    def __init__(self, worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange, enemyType, gameHandler):
+        super().__init__(worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange, enemyType, gameHandler)
 
 class FriendlyCharacter:
     allItems = {0 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", 20),

@@ -1,0 +1,110 @@
+{
+    "player": {
+        "worldX": 4403,
+        "worldY": 1600,
+        "health": 500,
+        "maxHealth": 800,
+        "mana": 400.0,
+        "maxMana": 400,
+        "mostRecentWaypointCords": null,
+        "weapon": {
+            "name": "WoodenSword",
+            "description": "A weak wooden sword",
+            "abilityDescription": "A quick thrust",
+            "damage": 100,
+            "chargedDamage": 200,
+            "abilityDamage": 300,
+            "abilityManaCost": 20,
+            "abilityCooldown": 5
+        },
+        "spell": {
+            "name": "Fireball",
+            "description": "A burning fireball",
+            "damage": 100,
+            "manaCost": 20,
+            "currentState": "NONE",
+            "tempCounter": 0
+        },
+        "armour": {
+            "name": "DefaultArmour",
+            "description": "No armour",
+            "resistance": 0
+        },
+        "inventory": {
+            "itemNames": [
+                "WoodenSword",
+                "Fireball",
+                "DefaultArmour"
+            ],
+            "weapons": [
+                {
+                    "name": "WoodenSword",
+                    "description": "A weak wooden sword",
+                    "abilityDescription": "A quick thrust",
+                    "damage": 100,
+                    "chargedDamage": 200,
+                    "abilityDamage": 300,
+                    "abilityManaCost": 20,
+                    "abilityCooldown": 5
+                }
+            ],
+            "spells": [
+                {
+                    "name": "Fireball",
+                    "description": "A burning fireball",
+                    "damage": 100,
+                    "manaCost": 20,
+                    "currentState": "NONE",
+                    "tempCounter": 0
+                }
+            ],
+            "armour": [
+                {
+                    "name": "DefaultArmour",
+                    "description": "No armour",
+                    "resistance": 0
+                }
+            ]
+        },
+        "mapFragments": {
+            "1": true,
+            "2": true,
+            "3": true,
+            "4": false
+        }
+    },
+    "enemies": [],
+    "waypoints": [
+        {
+            "waypointActive": false
+        },
+        {
+            "waypointActive": false
+        }
+    ],
+    "treasureChests": [
+        {
+            "chestOpened": false
+        },
+        {
+            "chestOpened": false
+        }
+    ],
+    "friendlyCharacters": [
+        {
+            "textNumber": 0
+        },
+        {
+            "textNumber": 0
+        },
+        {
+            "textNumber": 0
+        },
+        {
+            "textNumber": 0
+        },
+        {
+            "textNumber": 0
+        }
+    ]
+}

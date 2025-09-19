@@ -1,7 +1,7 @@
 {
     "player": {
-        "worldX": 4430,
-        "worldY": 1600,
+        "worldX": 2748,
+        "worldY": 1760,
         "health": 800,
         "maxHealth": 800,
         "mana": 400.0,
@@ -26,17 +26,15 @@
             "tempCounter": 0
         },
         "armour": {
-            "name": "SkinOfTheWeepingMaw",
-            "description": "The skin of the weeping maw",
-            "resistance": 20
+            "name": "DefaultArmour",
+            "description": "No armour",
+            "resistance": 0
         },
         "inventory": {
             "itemNames": [
                 "WoodenSword",
                 "Fireball",
-                "DefaultArmour",
-                "Longsword",
-                "SkinOfTheWeepingMaw"
+                "DefaultArmour"
             ],
             "weapons": [
                 {
@@ -47,16 +45,6 @@
                     "chargedDamage": 200,
                     "abilityDamage": 300,
                     "abilityManaCost": 20,
-                    "abilityCooldown": 5
-                },
-                {
-                    "name": "Longsword",
-                    "description": "A long iron sword",
-                    "abilityDescription": "A powerful overhead slash",
-                    "damage": 40,
-                    "chargedDamage": 55,
-                    "abilityDamage": 75,
-                    "abilityManaCost": 100,
                     "abilityCooldown": 5
                 }
             ],
@@ -75,11 +63,6 @@
                     "name": "DefaultArmour",
                     "description": "No armour",
                     "resistance": 0
-                },
-                {
-                    "name": "SkinOfTheWeepingMaw",
-                    "description": "The skin of the weeping maw",
-                    "resistance": 20
                 }
             ]
         },
@@ -90,7 +73,26 @@
             "4": false
         }
     },
-    "enemies": [],
+    "enemies": [
+        {
+            "enemyType": 29,
+            "worldX": 1597.5,
+            "worldY": 1760,
+            "health": 120
+        },
+        {
+            "enemyType": 29,
+            "worldX": 4640,
+            "worldY": 1760,
+            "health": 120
+        },
+        {
+            "enemyType": 29,
+            "worldX": 4640,
+            "worldY": 1760,
+            "health": 120
+        }
+    ],
     "waypoints": [
         {
             "waypointActive": false
@@ -104,12 +106,12 @@
             "chestOpened": false
         },
         {
-            "chestOpened": true
+            "chestOpened": false
         }
     ],
     "friendlyCharacters": [
         {
-            "textNumber": 3
+            "textNumber": 0
         },
         {
             "textNumber": 0
