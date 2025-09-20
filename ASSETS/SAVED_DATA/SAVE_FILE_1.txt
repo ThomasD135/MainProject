@@ -1,12 +1,15 @@
 {
     "player": {
-        "worldX": 2748,
-        "worldY": 1760,
+        "worldX": 2014,
+        "worldY": 1440,
         "health": 800,
         "maxHealth": 800,
-        "mana": 400.0,
+        "mana": 400,
         "maxMana": 400,
-        "mostRecentWaypointCords": null,
+        "mostRecentWaypointCords": [
+            1920,
+            1440
+        ],
         "weapon": {
             "name": "WoodenSword",
             "description": "A weak wooden sword",
@@ -76,21 +79,24 @@
     "enemies": [
         {
             "enemyType": 29,
-            "worldX": 1597.5,
+            "worldX": 640,
             "worldY": 1760,
-            "health": 120
+            "health": 200,
+            "dead": false
         },
         {
             "enemyType": 29,
-            "worldX": 4640,
+            "worldX": 2015.0,
             "worldY": 1760,
-            "health": 120
+            "health": 200,
+            "dead": false
         },
         {
             "enemyType": 29,
-            "worldX": 4640,
+            "worldX": 5117.5,
             "worldY": 1760,
-            "health": 120
+            "health": 200,
+            "dead": false
         }
     ],
     "waypoints": [
@@ -98,7 +104,7 @@
             "waypointActive": false
         },
         {
-            "waypointActive": false
+            "waypointActive": true
         }
     ],
     "treasureChests": [

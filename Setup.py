@@ -9,7 +9,7 @@ import json
 pg.mixer.init()
 pg.font.init()
 
-class Setup():
+class Setup:
     def __init__(self):
         self.FPS = 60 
         self.run = True
@@ -75,7 +75,7 @@ class Setup():
         image = pg.transform.scale(image, (width, height))
         return image
 
-class InputBox():
+class InputBox:
     def __init__(self, parent, name, maxLength, existingText=""):
         self.parent = parent
         self.name = name
@@ -108,7 +108,7 @@ class InputBox():
                         self.text += event.unicode
                         self.parent.ChangeText(self.name, self.text)
 
-class FontHandler():
+class FontHandler:
     def __init__(self, name, text, colour, locationX, locationY, size):
         self.name = name
         self.text = text
@@ -130,7 +130,7 @@ class FontHandler():
             self.surface = self.font.render(self.text, True, self.colour)
             self.rect = self.surface.get_rect(center=(self.locationX, self.locationY))
 
-class SpriteSheet():
+class SpriteSheet:
     def __init__(self, image, sheetObject, totalWidth):
         self.sheet = image
         self.sheetObject = sheetObject
@@ -157,7 +157,7 @@ class SpriteSheet():
 
         return image
 
-class SoundHandler():
+class SoundHandler:
     @staticmethod
     def FindChannel(sound):
         channel = 0
@@ -201,7 +201,7 @@ class SoundHandler():
     def GetVolume():
         return pg.mixer.Channel(0).get_volume()
 
-class TextMethods():
+class TextMethods:
     @staticmethod
     def CreateText(name, text, colour, locationX, locationY, size):
         return FontHandler(name, text, colour, locationX, locationY, size)

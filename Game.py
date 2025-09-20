@@ -51,20 +51,20 @@ class GameHandler(Setup.pg.sprite.Sprite):
                                      47 : [False, 0, 0], # friendly character end
                                      }# [collision with player, damage if any, knockback when hit (is increased if player takes damage from block]
 
-        self.enemyTypes = {29 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
-                           30 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
-                           31 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},   
-                           32 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 192, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
-                           33 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
-                           34 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 192, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
-                           35 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 192, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
-                           36 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
-                           37 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 224, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
-                           38 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
-                           39 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 192, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
-                           40 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
-                           41 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
-                           42 : {"class": Enemy1, "health": 120, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+        self.enemyTypes = {29 : {"class": Enemy1, "health": 200, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           30 : {"class": Enemy1, "health": 200, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           31 : {"class": Enemy1, "health": 200, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},   
+                           32 : {"class": Enemy1, "health": 200, "movementType": "RANDOM", "velocity": 5, "size": 192, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           33 : {"class": Enemy1, "health": 200, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           34 : {"class": Enemy1, "health": 200, "movementType": "RANDOM", "velocity": 5, "size": 192, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           35 : {"class": Enemy1, "health": 200, "movementType": "RANDOM", "velocity": 5, "size": 192, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           36 : {"class": Enemy1, "health": 200, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           37 : {"class": Enemy1, "health": 200, "movementType": "RANDOM", "velocity": 5, "size": 224, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           38 : {"class": Enemy1, "health": 200, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           39 : {"class": Enemy1, "health": 200, "movementType": "RANDOM", "velocity": 5, "size": 192, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           40 : {"class": Enemy1, "health": 200, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           41 : {"class": Enemy1, "health": 200, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           42 : {"class": Enemy1, "health": 200, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
                             }
 
     def DataToDictionary(self):
@@ -239,16 +239,27 @@ class GameHandler(Setup.pg.sprite.Sprite):
 
     def UpdateSprites(self):
         for enemy in self.enemies:
-            enemy.PerformAction()
+            if not enemy.dead:
+                enemy.PerformAction()
 
         for hitbox in self.hitboxes:
             hitbox.update()
             
             for enemy in self.CollideWithObjects(hitbox, self.enemies):
-                if enemy.TakeDamage(hitbox.damage):
-                    self.enemies.remove(enemy)
+                if not enemy.dead:
+                    enemy.TakeDamage(hitbox.damage)
+                    self.hitboxes.remove(hitbox)
 
-                self.hitboxes.remove(hitbox)
+    def ResetDeadEnemies(self):
+        for enemy in self.enemies:
+            if enemy.dead:
+                enemy.dead = False
+                enemy.health = enemy.maxHealth
+                enemy.worldX = enemy.startLocationX
+                enemy.worldY = enemy.startLocationY
+                enemy.state = "NORMAL"
+                enemy.carriedMovementX = 0
+                enemy.detectedPlayerLocation = 0
 
     def CollideWithObjects(self, mainObject, listOfObjects):
         collided = []
@@ -347,9 +358,12 @@ class Fireball(Spell):
     def __init__(self, name=None, description=None, damage=None, manaCost=None, parentPlayer=None):
         super().__init__(name, description, damage, manaCost, parentPlayer)
 
-        self.images = None
+        self.spellAttackLength = CooldownTimer(3)
+        self.spellSheet = None
 
     def UseSpell(self):
+
+        
         if self.tempCounter >= 120:
             self.currentState = "NONE" # after the spell is finished
             self.tempCounter = 0 
@@ -493,31 +507,6 @@ class Weapon:
 
         self.tempCounter += 1
 
-    def AttackStartAndEndHandler(self, timer, attackType, hitboxDimentions, damage, lockMovement):
-        if lockMovement:
-            self.parentPlayer.movementLocked = lockMovement
-            self.parentPlayer.movementSpeeds = [0, 0]
-
-        direction = self.parentPlayer.mostRecentDirection
-
-        if timer.startTime is None:
-            timer.StartTimer()
-            if direction == "LEFT":
-                attackHitBox = Hitbox(-hitboxDimentions[0], 0, hitboxDimentions[0], hitboxDimentions[1], damage, self.parentPlayer)
-            else:
-                attackHitBox = Hitbox(hitboxDimentions[0], 0, hitboxDimentions[0], hitboxDimentions[1], damage, self.parentPlayer)
-
-            self.parentPlayer.gameHandler.hitboxes.add(attackHitBox)
-            self.attackToHitBox.update({attackType : attackHitBox})
-
-            return True # attack start
-
-        if timer.CheckFinished():
-            self.parentPlayer.gameHandler.hitboxes.remove(self.attackToHitBox[attackType])           
-            self.currentState = "NONE"
-            self.parentPlayer.movementLocked = False
-            timer.Reset()
-
 class WoodenSword(Weapon):
     def __init__(self, name=None, description=None, abilityDescription=None, damage=None, chargedDamage=None, abilityDamage=None, abilityManaCost=None, abilityCooldown=None, parentPlayer=None):
         super().__init__(name, description, abilityDescription, damage, chargedDamage, abilityDamage, abilityManaCost, abilityCooldown, parentPlayer)
@@ -535,13 +524,13 @@ class WoodenSword(Weapon):
         self.abilityAttackDimentions = (160, 160)
 
     def BasicAttack(self): # player stands still and slashes
-        self.AttackStartAndEndHandler(self.basicAttackLengthTimer, "BASIC", self.basicAttackDimentions, self.damage, True)
+        AttackHitboxHandler.AttackStartAndEndHandler(self, self.basicAttackLengthTimer, "BASIC", self.basicAttackDimentions, self.damage, velocityX=0, velocityY=0, lockMovement=True, followPlayer=True)
 
     def ChargedAttack(self): # player stands still and slashes heavily 
-        self.AttackStartAndEndHandler(self.chargedAttackLengthTimer, "CHARGED", self.chargedAttackDimentions, self.chargedDamage, True)
+        AttackHitboxHandler.AttackStartAndEndHandler(self, self.chargedAttackLengthTimer, "CHARGED", self.chargedAttackDimentions, self.chargedDamage, velocityX=0, velocityY=0, lockMovement=True, followPlayer=True)
 
     def PerformAbility(self): # player thrusts with the sword
-        if self.AttackStartAndEndHandler(self.abilityAttackLengthTimer, "CHARGED", self.abilityAttackDimentions, self.abilityDamage, True):
+        if AttackHitboxHandler.AttackStartAndEndHandler(self, self.abilityAttackLengthTimer, "ABILITY", self.abilityAttackDimentions, self.abilityDamage, velocityX=0, velocityY=0, lockMovement=True, followPlayer=True):
             if self.parentPlayer.mostRecentDirection == "LEFT": # movement inputs are restricted but player can carry speed
                 self.parentPlayer.playerXCarriedMovingSpeed = -20
             else:
@@ -561,22 +550,67 @@ class Longsword(Weapon):
 
         self.tempCounter += 1   
 
+class AttackHitboxHandler:
+    @staticmethod
+    def AttackStartAndEndHandler(parentObject, timer, attackType, hitboxDimentions, damage, velocityX, velocityY, lockMovement, followPlayer):
+        direction = parentObject.parentPlayer.mostRecentDirectionAll
+
+        if direction and attackType not in parentObject.attackToHitBox:       
+            if lockMovement and direction in ("LEFT", "RIGHT"): # not attack up or down
+                parentObject.parentPlayer.movementLocked = lockMovement
+                parentObject.parentPlayer.movementSpeeds = [0, 0]
+        
+            if timer.startTime is None:
+                timer.StartTimer()
+                match direction:
+                    case "LEFT":
+                        attackHitBox = Hitbox(-hitboxDimentions[0], 0, hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, followPlayer, parentObject.parentPlayer)
+                    case "RIGHT":
+                        attackHitBox = Hitbox(hitboxDimentions[0], 0, hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, followPlayer, parentObject.parentPlayer)
+                    case "UP":
+                        attackHitBox = Hitbox(0, -hitboxDimentions[1], hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, followPlayer, parentObject.parentPlayer)
+                    case "DOWN":
+                        attackHitBox = Hitbox(0, hitboxDimentions[1], hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, followPlayer, parentObject.parentPlayer)
+
+                parentObject.parentPlayer.gameHandler.hitboxes.add(attackHitBox)
+                parentObject.attackToHitBox.update({attackType : attackHitBox})
+
+                return True # attack start
+
+        if timer.CheckFinished():
+            parentObject.parentPlayer.gameHandler.hitboxes.remove(parentObject.attackToHitBox[attackType])           
+            parentObject.attackToHitBox.pop(attackType, None)
+            parentObject.currentState = "NONE"
+            parentObject.parentPlayer.movementLocked = False
+            timer.Reset()
+
 class Hitbox(Setup.pg.sprite.Sprite):
-    def __init__(self, offsetX, offsetY, width, height, damage, parentObject):
+    def __init__(self, offsetX, offsetY, width, height, damage, velocityX, velocityY, followPlayer, parentObject):
         super().__init__()
         self.parent = parentObject # normally player
+        self.followPlayer = followPlayer      
+
         self.worldX = 0
         self.worldY = 0
         self.offsetX = offsetX
         self.offsetY = offsetY
         self.width = width
         self.height = height
+        self.velocityX = velocityX
+        self.velocityY = velocityY
+
         self.damage = damage
         self.rect = Setup.pg.Rect(self.worldX, self.worldY, self.width, self.height)
 
     def update(self):
-        self.rect.topleft = (self.parent.worldX, self.parent.worldY)
-        self.worldX, self.worldY = self.rect.left + self.offsetX, self.rect.top + self.offsetY
+        if self.followPlayer:
+            self.worldX = self.parent.worldX + self.offsetX
+            self.worldY = self.parent.worldY + self.offsetY
+        else:
+            self.worldX += self.velocityX
+            self.worldY += self.velocityY
+            
+        self.rect.topleft = (self.worldX, self.worldY)
 
         # visualise
         drawX = self.worldX - self.parent.camera.camera.left
@@ -794,7 +828,8 @@ class Player(Setup.pg.sprite.Sprite):
         self.movementLocked = False
         self.movementSpeeds = [0, 0]
         self.keyPressVelocity = 6
-        self.mostRecentDirection = None
+        self.mostRecentDirection = None # LEFT AND RIGHT
+        self.mostRecentDirectionAll = None # LEFT, RIGHT, UP AND DOWN
         self.playerYFallingSpeed = 0
         self.playerXCarriedMovingSpeed = 0 # dashing etc
         self.gravity = Setup.setup.GRAVITY 
@@ -937,6 +972,7 @@ class Player(Setup.pg.sprite.Sprite):
                 self.playerXCarriedMovingSpeed = 0
 
             self.mostRecentDirection = "RIGHT"
+            self.mostRecentDirectionAll = "RIGHT"
 
         elif keys[Setup.pg.K_a] or keys[Setup.pg.K_LEFT]: # a key or left arrow key
             self.movementSpeeds[0] = -self.keyPressVelocity
@@ -945,8 +981,14 @@ class Player(Setup.pg.sprite.Sprite):
                 self.playerXCarriedMovingSpeed = 0
 
             self.mostRecentDirection = "LEFT"
+            self.mostRecentDirectionAll = "LEFT"
         else:
             self.movementSpeeds[0] = 0
+
+        if keys[Setup.pg.K_w] or keys[Setup.pg.K_UP]:
+            self.mostRecentDirectionAll = "UP"
+        elif keys[Setup.pg.K_s] or keys[Setup.pg.K_DOWN]:
+            self.mostRecentDirectionAll = "DOWN"
         
     def JumpHandler(self, keys):
         if keys[Setup.pg.K_SPACE]:
@@ -1256,6 +1298,7 @@ class Waypoint:
         if self.prompt.PromptInteractedWith():
             self.waypointActive = True
             player.ResetHealthAndMana()
+            player.gameHandler.ResetDeadEnemies()
             player.mostRecentWaypointCords = (self.parent.worldX, self.parent.worldY)
             player.miniMap.enlarged = not player.miniMap.enlarged
             player.miniMap.seeWaypoints = True
@@ -1315,9 +1358,10 @@ class MiniMap(Setup.pg.sprite.Sprite):
             Setup.setup.screen.blit(newImage, (startX + newX, startY + newY))
 
         for enemy in enemies:
-            newImage = Setup.pg.transform.scale(enemy.image, (enemy.width / shrinkModifier, enemy.height / shrinkModifier))
-            newX, newY = enemy.worldX / shrinkModifier, enemy.worldY / shrinkModifier
-            Setup.setup.screen.blit(newImage, (startX + newX, startY + newY))
+            if not enemy.dead:
+                newImage = Setup.pg.transform.scale(enemy.image, (enemy.width / shrinkModifier, enemy.height / shrinkModifier))
+                newX, newY = enemy.worldX / shrinkModifier, enemy.worldY / shrinkModifier
+                Setup.setup.screen.blit(newImage, (startX + newX, startY + newY))
         
         newPlayerX, newPlayerY = player.worldX / shrinkModifier, player.worldY / shrinkModifier
         
@@ -1514,6 +1558,9 @@ class Camera:
         drawWithCameraLocation = blocks + enemies + bosses     
 
         for drawObject in drawWithCameraLocation:
+            if getattr(drawObject, "dead", False): # if enemy is dead then do not draw it
+                continue
+            
             drawX = drawObject.worldX - self.camera.left
             drawY = drawObject.worldY - self.camera.top
             tempRect = Setup.pg.Rect(drawX, drawY, drawObject.width, drawObject.height)
@@ -1557,6 +1604,7 @@ class Enemy(Setup.pg.sprite.Sprite):
         super().__init__()
         self.gameHandler = gameHandler
         self.enemyType = enemyType
+        self.dead = False
 
         self.worldX = worldX
         self.worldY = worldY
@@ -1575,6 +1623,8 @@ class Enemy(Setup.pg.sprite.Sprite):
         self.maxHealth = health
         self.velocity = velocity
         self.slowVelocity = velocity / 2
+        self.carriedVelocityX = 0
+        self.movementSpeeds = [0, 0]
 
         # detection
         self.suspicionRange = suspicionRange
@@ -1605,7 +1655,8 @@ class Enemy(Setup.pg.sprite.Sprite):
         return {"enemyType": self.enemyType,
                 "worldX": self.worldX,
                 "worldY": self.worldY,
-                "health": self.health
+                "health": self.health,
+                "dead": self.dead
         }
 
     def LoadFromDictionary(self, data):
@@ -1613,12 +1664,18 @@ class Enemy(Setup.pg.sprite.Sprite):
         self.worldX = data["worldX"]
         self.worldY = data["worldY"]
         self.health = data["health"]
+        self.dead = data["dead"]
 
     def TakeDamage(self, damage):
         self.health -= damage
+
+        if self.gameHandler.player.worldX < self.worldX: # if the player is on the left, knock the enemy right
+            self.carriedVelocityX = 20 # fixed knockback
+        else:
+            self.carriedVelocityX = -20
         
         if self.health <= 0:
-            return True
+            self.dead = True
 
     def DisplayHealthBar(self):
         if not self.gameHandler.player.dead and not self.gameHandler.player.miniMap.enlarged and not (self.gameHandler.player.inventory.mainMenuOpen or self.gameHandler.player.inventory.equipMenuOpen):
@@ -1661,6 +1718,13 @@ class Enemy(Setup.pg.sprite.Sprite):
 
     def PerformAction(self):
         self.DisplayHealthBar()
+
+        self.worldX += self.carriedVelocityX
+
+        if self.carriedVelocityX < 0:
+            self.carriedVelocityX += 1
+        elif self.carriedVelocityX > 0:
+            self.carriedVelocityX -= 1
 
         if self.movementClass is not None: # stationary enemies cannot move
             self.UpdateState()
