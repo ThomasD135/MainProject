@@ -1,10 +1,10 @@
 {
     "player": {
-        "worldX": 2014,
-        "worldY": 1440,
+        "worldX": 2521,
+        "worldY": 1760,
         "health": 800,
         "maxHealth": 800,
-        "mana": 400,
+        "mana": 376.6666666666663,
         "maxMana": 400,
         "mostRecentWaypointCords": [
             1920,
@@ -24,9 +24,7 @@
             "name": "Fireball",
             "description": "A burning fireball",
             "damage": 100,
-            "manaCost": 20,
-            "currentState": "NONE",
-            "tempCounter": 0
+            "manaCost": 20
         },
         "armour": {
             "name": "DefaultArmour",
@@ -56,9 +54,7 @@
                     "name": "Fireball",
                     "description": "A burning fireball",
                     "damage": 100,
-                    "manaCost": 20,
-                    "currentState": "NONE",
-                    "tempCounter": 0
+                    "manaCost": 20
                 }
             ],
             "armour": [
@@ -79,24 +75,24 @@
     "enemies": [
         {
             "enemyType": 29,
-            "worldX": 640,
+            "worldX": 1930.0,
             "worldY": 1760,
-            "health": 200,
-            "dead": false
+            "health": 0,
+            "dead": true
         },
         {
             "enemyType": 29,
-            "worldX": 2015.0,
+            "worldX": 3105.0,
             "worldY": 1760,
-            "health": 200,
-            "dead": false
+            "health": 0,
+            "dead": true
         },
         {
             "enemyType": 29,
-            "worldX": 5117.5,
+            "worldX": 4955.0,
             "worldY": 1760,
-            "health": 200,
-            "dead": false
+            "health": 0,
+            "dead": true
         }
     ],
     "waypoints": [
