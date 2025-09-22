@@ -247,11 +247,20 @@ class GameHandler(Setup.pg.sprite.Sprite):
 
         for hitbox in self.hitboxes:
             hitbox.update()
-            
-            for enemy in self.CollideWithObjects(hitbox, self.enemies):
-                if not enemy.dead:
-                    enemy.TakeDamage(hitbox.damage)
-                    self.hitboxes.remove(hitbox)
+
+            if len(self.CollideWithObjects(hitbox, self.blocks)) > 0:
+                if "SPELL" not in hitbox.name:
+                    if hitbox.direction == "RIGHT":
+                        self.player.ApplyKnockback(20, "LEFT")
+                    else:
+                        self.player.ApplyKnockback(20, "RIGHT")
+
+                self.hitboxes.remove(hitbox)
+            else:           
+                for enemy in self.CollideWithObjects(hitbox, self.enemies):
+                    if not enemy.dead:
+                        enemy.TakeDamage(hitbox.damage, hitbox.direction)
+                        self.hitboxes.remove(hitbox)
 
     def ResetDeadEnemies(self):
         for enemy in self.enemies:
@@ -535,13 +544,13 @@ class WoodenSword(Weapon):
         self.abilityAttackDimentions = (160, 160)
 
     def BasicAttack(self): # player stands still and slashes
-        AttackHitboxHandler.AttackStartAndEndHandler(self, self.basicAttackLengthTimer, "BASIC", self.basicAttackDimentions, self.damage)
+        AttackHitboxHandler.AttackStartAndEndHandler(self, self.basicAttackLengthTimer, "BASIC_WOODENSWORD", self.basicAttackDimentions, self.damage)
 
     def ChargedAttack(self): # player stands still and slashes heavily 
-        AttackHitboxHandler.AttackStartAndEndHandler(self, self.chargedAttackLengthTimer, "CHARGED", self.chargedAttackDimentions, self.chargedDamage)
+        AttackHitboxHandler.AttackStartAndEndHandler(self, self.chargedAttackLengthTimer, "CHARGED_WOODENSWORD", self.chargedAttackDimentions, self.chargedDamage)
 
     def PerformAbility(self): # player thrusts with the sword
-        if AttackHitboxHandler.AttackStartAndEndHandler(self, self.abilityAttackLengthTimer, "ABILITY", self.abilityAttackDimentions, self.abilityDamage, groundOnlyAttack=False):
+        if AttackHitboxHandler.AttackStartAndEndHandler(self, self.abilityAttackLengthTimer, "ABILITY_WOODENSWORD", self.abilityAttackDimentions, self.abilityDamage, groundOnlyAttack=False):
             if self.parentPlayer.mostRecentDirection == "LEFT": # movement inputs are restricted but player can carry speed
                 self.parentPlayer.carriedSpeedX = -20
             else:
@@ -551,15 +560,26 @@ class Longsword(Weapon):
     def __init__(self, name="Longsword", description="A long iron sword", abilityDescription="A powerful overhead swing", damage=None, chargedDamage=None, abilityDamage=None, abilityManaCost=None, abilityCooldown=None, parentPlayer=None):
         super().__init__(name, description, abilityDescription, damage, chargedDamage, abilityDamage, abilityManaCost, abilityCooldown, parentPlayer)
 
-        self.basicAttackLength = 3 # seconds
-        self.basicAttackSheet = None       
+        self.basicAttackLengthTimer = CooldownTimer(1) # seconds
+        self.basicAttackSheet = None
+        self.basicAttackDimentions = (160, 160)
 
-    def BasicAttack(self):
-        if self.tempCounter >= 120:
-            self.currentState = "NONE" # after the attack is finished
-            self.tempCounter = 0
+        self.chargedAttackLengthTimer = CooldownTimer(1.5)
+        self.chargedAttackSheet = None
+        self.chargedAttackDimentions = (160, 160)
 
-        self.tempCounter += 1   
+        self.abilityAttackLengthTimer = CooldownTimer(1.25)
+        self.abilityAttackSheet = None
+        self.abilityAttackDimentions = (160, 160)
+
+    def BasicAttack(self): # player stands still and slashes
+        AttackHitboxHandler.AttackStartAndEndHandler(self, self.basicAttackLengthTimer, "BASIC_LONGSWORD", self.basicAttackDimentions, self.damage)
+
+    def ChargedAttack(self): # player stands still and slashes heavily 
+        AttackHitboxHandler.AttackStartAndEndHandler(self, self.chargedAttackLengthTimer, "CHARGED_LONGSWORD", self.chargedAttackDimentions, self.chargedDamage)
+
+    def PerformAbility(self): # player does an overhead swing
+        AttackHitboxHandler.AttackStartAndEndHandler(self, self.abilityAttackLengthTimer, "ABILITY_LONGSWORD", self.abilityAttackDimentions, self.abilityDamage)
 
 class AttackHitboxHandler:
     @staticmethod
@@ -582,13 +602,13 @@ class AttackHitboxHandler:
 
             match direction:
                 case "LEFT":
-                    attackHitBox = Hitbox(-hitboxDimentions[0], 0, hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, followPlayer, parentObject.parentPlayer)
+                    attackHitBox = Hitbox(attackType, "LEFT", -hitboxDimentions[0], 0, hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, followPlayer, parentObject.parentPlayer)
                 case "RIGHT":
-                    attackHitBox = Hitbox(hitboxDimentions[0], 0, hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, followPlayer, parentObject.parentPlayer)
+                    attackHitBox = Hitbox(attackType,"RIGHT", hitboxDimentions[0], 0, hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, followPlayer, parentObject.parentPlayer)
                 case "UP":
-                    attackHitBox = Hitbox(0, -hitboxDimentions[1], hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, followPlayer, parentObject.parentPlayer)
+                    attackHitBox = Hitbox(attackType, "UP", 0, -hitboxDimentions[1], hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, followPlayer, parentObject.parentPlayer)
                 case "DOWN":
-                    attackHitBox = Hitbox(0, hitboxDimentions[1], hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, followPlayer, parentObject.parentPlayer)
+                    attackHitBox = Hitbox(attackType, "DOWN", 0, hitboxDimentions[1], hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, followPlayer, parentObject.parentPlayer)
 
             parentObject.parentPlayer.gameHandler.hitboxes.add(attackHitBox)
             parentObject.attackToHitBox.update({attackType : attackHitBox})
@@ -609,11 +629,13 @@ class AttackHitboxHandler:
         parentObject.parentPlayer.movementLocked = False
 
 class Hitbox(Setup.pg.sprite.Sprite):
-    def __init__(self, offsetX, offsetY, width, height, damage, velocityX, velocityY, followPlayer, parentObject):
+    def __init__(self, hitboxType, direction, offsetX, offsetY, width, height, damage, velocityX, velocityY, followPlayer, parentObject):
         super().__init__()
         self.parent = parentObject # normally player
         self.followPlayer = followPlayer      
+        self.name = hitboxType
 
+        self.direction = direction
         self.worldX = self.parent.worldX + offsetX
         self.worldY = self.parent.worldY + offsetY
         self.offsetX = offsetX
@@ -852,8 +874,8 @@ class Player(Setup.pg.sprite.Sprite):
         self.movementLocked = False
         self.movementSpeeds = [0, 0]
         self.keyPressVelocity = 6
-        self.mostRecentDirection = None # LEFT AND RIGHT
-        self.mostRecentDirectionAll = None # LEFT, RIGHT, UP AND DOWN
+        self.mostRecentDirection = "RIGHT" # LEFT AND RIGHT
+        self.mostRecentDirectionAll = "RIGHT" # LEFT, RIGHT, UP AND DOWN
         self.playerYFallingSpeed = 0
         self.carriedSpeedX = 0 # dashing etc
         self.gravity = Setup.setup.GRAVITY 
@@ -964,7 +986,7 @@ class Player(Setup.pg.sprite.Sprite):
         else:           
             self.OpenCloseInGameMenu()
 
-            if not self.movementLocked:
+            if not self.movementLocked and not self.inventory.mainMenuOpen and not self.inventory.equipMenuOpen:
                 self.MovementKeyHandler(keys)
                 self.JumpHandler(keys)
                 self.DashHandler(keys)
@@ -1217,22 +1239,24 @@ class Player(Setup.pg.sprite.Sprite):
         self.health = self.maxHealth
 
     def Attack(self):
-        if Setup.pg.mouse.get_pressed()[0] and not self.weapon.isChargingAttack:
-            self.weapon.isChargingAttack = True
-            self.weapon.chargingStartTime = Setup.time.time()
+        if not self.inventory.mainMenuOpen and not self.inventory.equipMenuOpen:
+            if Setup.pg.mouse.get_pressed()[0] and not self.weapon.isChargingAttack:
+                self.weapon.isChargingAttack = True
+                self.weapon.chargingStartTime = Setup.time.time()
 
-        if not Setup.pg.mouse.get_pressed()[0] and self.weapon.isChargingAttack:
-            currentTime = Setup.time.time()
-            self.weapon.isChargingAttack = False
-            self.weapon.Attack(currentTime)
+            if not Setup.pg.mouse.get_pressed()[0] and self.weapon.isChargingAttack:
+                currentTime = Setup.time.time()
+                self.weapon.isChargingAttack = False
+                self.weapon.Attack(currentTime)
 
     def AbilitySpell(self):    
-        if Setup.setup.pressedKey == Setup.pg.K_e: # has cooldown
-            currentTime = Setup.time.time()
-            self.weapon.Ability(currentTime)
+        if not self.inventory.mainMenuOpen and not self.inventory.equipMenuOpen:
+            if Setup.setup.pressedKey == Setup.pg.K_e: # has cooldown
+                currentTime = Setup.time.time()
+                self.weapon.Ability(currentTime)
 
-        if Setup.setup.pressedKey == Setup.pg.K_f: # no cooldown
-            self.spell.Attack()
+            if Setup.setup.pressedKey == Setup.pg.K_f: # no cooldown
+                self.spell.Attack()
 
 class GameBackground:
     def __init__(self, gameHandler):  
@@ -1273,11 +1297,11 @@ class Prompt:
         self.active = False
 
 class TreasureChest:
-    allRewards = {0 : Longsword(damage=40,  chargedDamage=55, abilityDamage=75, abilityManaCost=100, abilityCooldown=5, parentPlayer=None),
-                    1 : Longsword(damage=40,  chargedDamage=55, abilityDamage=75, abilityManaCost=100, abilityCooldown=5, parentPlayer=None),
-                    2 : Longsword(damage=40,  chargedDamage=55, abilityDamage=75, abilityManaCost=100, abilityCooldown=5, parentPlayer=None),
-                    3 : Longsword(damage=40,  chargedDamage=55, abilityDamage=75, abilityManaCost=100, abilityCooldown=5, parentPlayer=None),
-                    4 : Longsword(damage=40,  chargedDamage=55, abilityDamage=75, abilityManaCost=100, abilityCooldown=5, parentPlayer=None)
+    allRewards = {0 : None,#Longsword(damage=40,  chargedDamage=55, abilityDamage=75, abilityManaCost=100, abilityCooldown=5, parentPlayer=None),
+                    1 : None,#Longsword(damage=40,  chargedDamage=55, abilityDamage=75, abilityManaCost=100, abilityCooldown=5, parentPlayer=None),
+                    2 : None,#Longsword(damage=40,  chargedDamage=55, abilityDamage=75, abilityManaCost=100, abilityCooldown=5, parentPlayer=None),
+                    3 : None,#Longsword(damage=40,  chargedDamage=55, abilityDamage=75, abilityManaCost=100, abilityCooldown=5, parentPlayer=None),
+                    4 : None#Longsword(damage=40,  chargedDamage=55, abilityDamage=75, abilityManaCost=100, abilityCooldown=5, parentPlayer=None)
     } 
 
     def __init__(self, parentBlock, chestNumber):
@@ -1702,11 +1726,11 @@ class Enemy(Setup.pg.sprite.Sprite):
         self.health = data["health"]
         self.dead = data["dead"]
 
-    def TakeDamage(self, damage):
+    def TakeDamage(self, damage, direction=None):
         self.health -= damage
 
-        if self.gameHandler.player.worldX < self.worldX: # if the player is on the left, knock the enemy right
-            self.carriedVelocityX = 20 # fixed knockback
+        if direction == "RIGHT":
+            self.carriedVelocityX = 20
         else:
             self.carriedVelocityX = -20
         

@@ -1,10 +1,10 @@
 {
     "player": {
-        "worldX": 2521,
+        "worldX": 2259,
         "worldY": 1760,
         "health": 800,
         "maxHealth": 800,
-        "mana": 376.6666666666663,
+        "mana": 400.0,
         "maxMana": 400,
         "mostRecentWaypointCords": [
             1920,
@@ -22,7 +22,7 @@
         },
         "spell": {
             "name": "Fireball",
-            "description": "A burning fireball",
+            "description": "A burning ball of fire",
             "damage": 100,
             "manaCost": 20
         },
@@ -52,7 +52,7 @@
             "spells": [
                 {
                     "name": "Fireball",
-                    "description": "A burning fireball",
+                    "description": "A burning ball of fire",
                     "damage": 100,
                     "manaCost": 20
                 }
@@ -75,24 +75,24 @@
     "enemies": [
         {
             "enemyType": 29,
-            "worldX": 1930.0,
+            "worldX": 1915.0,
             "worldY": 1760,
             "health": 0,
             "dead": true
         },
         {
             "enemyType": 29,
-            "worldX": 3105.0,
+            "worldX": 2607.5,
             "worldY": 1760,
             "health": 0,
             "dead": true
         },
         {
             "enemyType": 29,
-            "worldX": 4955.0,
+            "worldX": 4640,
             "worldY": 1760,
-            "health": 0,
-            "dead": true
+            "health": 200,
+            "dead": false
         }
     ],
     "waypoints": [
