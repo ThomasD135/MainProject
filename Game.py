@@ -27,13 +27,13 @@ class GameHandler(Setup.pg.sprite.Sprite):
         self.friendlyCharacters = []
 
         self.blockAttributeDictionary = {0 : [False, 0, 0], # enemies and bosses all have no collision so no need for attributes
-                                     1 : [True, 0, 10],
-                                     2 : [True, 0, 10],
-                                     3 : [True, 0, 10],
-                                     4 : [True, 0, 10],
-                                     5 : [True, 0, 10],
-                                     6 : [True, 0, 10],
-                                     7 : [True, 0, 10],
+                                     1 : [True, 0, 20],
+                                     2 : [True, 0, 20],
+                                     3 : [True, 0, 20],
+                                     4 : [True, 0, 20],
+                                     5 : [True, 0, 20],
+                                     6 : [True, 0, 20],
+                                     7 : [True, 0, 20],
                                      8 : [True, 30, 20], # spike start
                                      9 : [True, 30, 20],
                                      10 : [True, 30, 20],
@@ -245,22 +245,40 @@ class GameHandler(Setup.pg.sprite.Sprite):
             if not enemy.dead:
                 enemy.PerformAction()
 
+        hitboxesToRemove = []
+
         for hitbox in self.hitboxes:
             hitbox.update()
-
-            if len(self.CollideWithObjects(hitbox, self.blocks)) > 0:
-                if "SPELL" not in hitbox.name:
+            
+            collidedBlocks = self.CollideWithObjects(hitbox, self.blocks)
+            for block in collidedBlocks:
+                if "SPELL" not in hitbox.name: # delete hitbox but do not knockback player
                     if hitbox.direction == "RIGHT":
-                        self.player.ApplyKnockback(20, "LEFT")
-                    else:
-                        self.player.ApplyKnockback(20, "RIGHT")
+                        self.player.ApplyKnockback(block.knockback, "LEFT")
+                    elif hitbox.direction == "LEFT":
+                        self.player.ApplyKnockback(block.knockback, "RIGHT")
 
+                    elif block.damage != 0:    
+                        if hitbox.direction == "UP": # blocks only have vertical knockback if they also deal damage (spikes)
+                            self.player.ApplyKnockback(block.knockback, "DOWN")
+                        elif hitbox.direction == "DOWN":
+                            self.player.ApplyKnockback(block.knockback, "UP")
+                        
+                hitboxesToRemove.append(hitbox)
+
+            for enemy in self.CollideWithObjects(hitbox, self.enemies):
+                if not enemy.dead:
+                    enemy.TakeDamage(hitbox.damage, hitbox.direction)
+
+                    if hitbox.direction == "UP": # blocks only have vertical knockback if they also deal damage (spikes)
+                        self.player.ApplyKnockback(20, "DOWN")
+                    elif hitbox.direction == "DOWN":
+                        self.player.ApplyKnockback(20, "UP")
+
+                    hitboxesToRemove.append(hitbox)
+
+            for hitbox in hitboxesToRemove:
                 self.hitboxes.remove(hitbox)
-            else:           
-                for enemy in self.CollideWithObjects(hitbox, self.enemies):
-                    if not enemy.dead:
-                        enemy.TakeDamage(hitbox.damage, hitbox.direction)
-                        self.hitboxes.remove(hitbox)
 
     def ResetDeadEnemies(self):
         for enemy in self.enemies:
@@ -544,7 +562,7 @@ class WoodenSword(Weapon):
         self.abilityAttackDimentions = (160, 160)
 
     def BasicAttack(self): # player stands still and slashes
-        AttackHitboxHandler.AttackStartAndEndHandler(self, self.basicAttackLengthTimer, "BASIC_WOODENSWORD", self.basicAttackDimentions, self.damage)
+        AttackHitboxHandler.AttackStartAndEndHandler(self, self.basicAttackLengthTimer, "BASIC_WOODENSWORD", self.basicAttackDimentions, self.damage, verticalAttack=True)
 
     def ChargedAttack(self): # player stands still and slashes heavily 
         AttackHitboxHandler.AttackStartAndEndHandler(self, self.chargedAttackLengthTimer, "CHARGED_WOODENSWORD", self.chargedAttackDimentions, self.chargedDamage)
@@ -573,7 +591,7 @@ class Longsword(Weapon):
         self.abilityAttackDimentions = (160, 160)
 
     def BasicAttack(self): # player stands still and slashes
-        AttackHitboxHandler.AttackStartAndEndHandler(self, self.basicAttackLengthTimer, "BASIC_LONGSWORD", self.basicAttackDimentions, self.damage)
+        AttackHitboxHandler.AttackStartAndEndHandler(self, self.basicAttackLengthTimer, "BASIC_LONGSWORD", self.basicAttackDimentions, self.damage, verticalAttack=True)
 
     def ChargedAttack(self): # player stands still and slashes heavily 
         AttackHitboxHandler.AttackStartAndEndHandler(self, self.chargedAttackLengthTimer, "CHARGED_LONGSWORD", self.chargedAttackDimentions, self.chargedDamage)
@@ -583,8 +601,11 @@ class Longsword(Weapon):
 
 class AttackHitboxHandler:
     @staticmethod
-    def AttackStartAndEndHandler(parentObject, timer, attackType, hitboxDimentions, damage, velocityX=0, velocityY=0, lockMovement=True, followPlayer=True, groundOnlyAttack=True):
-        direction = parentObject.parentPlayer.mostRecentDirectionAll
+    def AttackStartAndEndHandler(parentObject, timer, attackType, hitboxDimentions, damage, velocityX=0, velocityY=0, lockMovement=True, followPlayer=True, groundOnlyAttack=True, verticalAttack=False):
+        if verticalAttack:
+            direction = parentObject.parentPlayer.mostRecentDirectionAll
+        else:
+            direction = parentObject.parentPlayer.mostRecentDirection
 
         if direction is None or attackType is None:
             AttackHitboxHandler.EndAttack(parentObject)
@@ -594,7 +615,7 @@ class AttackHitboxHandler:
             if direction in ("LEFT", "RIGHT"): # not attack up or down
                 parentObject.parentPlayer.movementLocked = lockMovement
 
-                if (parentObject.parentPlayer.state == "AIR" and groundOnlyAttack):                 
+                if parentObject.parentPlayer.state == "AIR" and groundOnlyAttack:
                     AttackHitboxHandler.EndAttack(parentObject)
                     return
                 
@@ -1224,6 +1245,8 @@ class Player(Setup.pg.sprite.Sprite):
         if Setup.setup.pressedKey == Setup.pg.K_k:
             self.health = 0
 
+            self.gameHandler.ResetDeadEnemies()
+
     def Respawn(self):
         self.dead = False
         self.ResetHealthAndMana()
@@ -1297,20 +1320,20 @@ class Prompt:
         self.active = False
 
 class TreasureChest:
-    allRewards = {0 : None,#Longsword(damage=40,  chargedDamage=55, abilityDamage=75, abilityManaCost=100, abilityCooldown=5, parentPlayer=None),
-                    1 : None,#Longsword(damage=40,  chargedDamage=55, abilityDamage=75, abilityManaCost=100, abilityCooldown=5, parentPlayer=None),
-                    2 : None,#Longsword(damage=40,  chargedDamage=55, abilityDamage=75, abilityManaCost=100, abilityCooldown=5, parentPlayer=None),
-                    3 : None,#Longsword(damage=40,  chargedDamage=55, abilityDamage=75, abilityManaCost=100, abilityCooldown=5, parentPlayer=None),
-                    4 : None#Longsword(damage=40,  chargedDamage=55, abilityDamage=75, abilityManaCost=100, abilityCooldown=5, parentPlayer=None)
-    } 
-
     def __init__(self, parentBlock, chestNumber):
         self.parent = parentBlock
         self.prompt = Prompt("E_PROMPT_IMAGE", "e")
         self.openedImage = MapCreator.mapDataHandler.mapGrid.blockSheetHandler.GetCorrectBlockImage(self.parent.blockNumber + 1, Setup.setup.BLOCK_WIDTH, Setup.setup.BLOCK_WIDTH, False, 0)
         self.chestOpened = False 
         
-        self.reward = TreasureChest.allRewards[chestNumber]
+        allRewards = {0 : Longsword(damage=40,  chargedDamage=55, abilityDamage=75, abilityManaCost=100, abilityCooldown=5, parentPlayer=None),
+                    1 : Longsword(damage=40,  chargedDamage=55, abilityDamage=75, abilityManaCost=100, abilityCooldown=5, parentPlayer=None),
+                    2 : Longsword(damage=40,  chargedDamage=55, abilityDamage=75, abilityManaCost=100, abilityCooldown=5, parentPlayer=None),
+                    3 : Longsword(damage=40,  chargedDamage=55, abilityDamage=75, abilityManaCost=100, abilityCooldown=5, parentPlayer=None),
+                    4 : Longsword(damage=40,  chargedDamage=55, abilityDamage=75, abilityManaCost=100, abilityCooldown=5, parentPlayer=None)
+        } 
+        
+        self.reward = allRewards[chestNumber]        
 
     def DataToDictionary(self):
         return {"chestOpened": self.chestOpened,
@@ -1729,9 +1752,9 @@ class Enemy(Setup.pg.sprite.Sprite):
     def TakeDamage(self, damage, direction=None):
         self.health -= damage
 
-        if direction == "RIGHT":
+        if direction == "RIGHT": # no knockback when hit from above or below
             self.carriedVelocityX = 20
-        else:
+        elif direction == "LEFT":
             self.carriedVelocityX = -20
         
         if self.health <= 0:

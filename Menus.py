@@ -1,3 +1,4 @@
+from pygame import sprite
 import Setup
 
 Setup.pg.font.init()
@@ -180,16 +181,18 @@ class CreateMainMenu(Setup.pg.sprite.Sprite):
         spacing = 150
         playButton = ButtonGroupMethods.CreateButton("PLAY", width, height, xLocation, yLocation, "PLAY_BUTTON")
         settingsButton = ButtonGroupMethods.CreateButton("SETTINGS", width, height, xLocation, yLocation + spacing, "SETTINGS_BUTTON")
-        mapButton = ButtonGroupMethods.CreateButton("MAP", width, height, xLocation, yLocation + (2 * spacing), "MAP_BUTTON")  
-        quitButton = ButtonGroupMethods.CreateButton("QUIT", width, height, xLocation, yLocation + (3 * spacing), "QUIT_BUTTON")
+        mapButton = ButtonGroupMethods.CreateButton("MAP", width, height, xLocation, yLocation + (2 * spacing), "MAP_BUTTON")         
+        helpButton = ButtonGroupMethods.CreateButton("INFO", width, height, xLocation, yLocation + (3 * spacing), "INFO_BUTTON")
+        quitButton = ButtonGroupMethods.CreateButton("QUIT", width, height, xLocation, yLocation + (4 * spacing), "QUIT_BUTTON")
 
         self.buttons.add(playButton)
         self.buttons.add(settingsButton)
         self.buttons.add(mapButton)
+        self.buttons.add(helpButton)
         self.buttons.add(quitButton) 
 
     def ChildActions(self):
-        ButtonGroupMethods.UpdateChildButton(self.buttons)
+        ButtonGroupMethods.UpdateChildButtons(self.buttons)
 
         clicked = ButtonGroupMethods.CheckClicks(self.buttons)
 
@@ -197,11 +200,13 @@ class CreateMainMenu(Setup.pg.sprite.Sprite):
             case "PLAY":
                 self.PlayButton()
             case "SETTINGS":
-                self.SettingsButton()
-            case "QUIT":
-                self.QuitGame()          
+                self.SettingsButton()                  
             case "MAP":
                 self.MapEditor()
+            case "INFO":
+                self.InfoButton()
+            case "QUIT":
+                self.QuitGame()  
 
     def PlayButton(self):
         menuManagement.AddMenu(menuManagement.newGameButtonGroup, "MENU")
@@ -211,16 +216,59 @@ class CreateMainMenu(Setup.pg.sprite.Sprite):
         menuManagement.AddMenu(menuManagement.settingsButtonGroup, "MENU")
         menuManagement.RemoveMenu(self, "MENU")
 
-    def QuitGame(self):
-        #save data
-        Setup.setup.run = False
-
     def MapEditor(self):
         menuManagement.AddMenu(menuManagement.mapButtonGroup, "MENU")
         menuManagement.RemoveMenu(self, "MENU")
 
         Setup.setup.gameState = "MAP"
 
+    def InfoButton(self):
+        menuManagement.AddMenu(menuManagement.infoMenuGroup, "MENU")
+        menuManagement.RemoveMenu(self, "MENU")
+
+    def QuitGame(self):
+        Setup.setup.run = False
+
+class CreateInfoMenu(Setup.pg.sprite.Sprite):
+    def __init__(self):
+        Setup.pg.sprite.Sprite.__init__(self)
+
+        self.buttons = Setup.pg.sprite.Group()
+        self.textList = [] # any text that must be drawn onto the screen (not images)
+
+    def CreateButtons(self):      
+        width, height = Setup.setup.BLOCK_WIDTH * 2, Setup.setup.BLOCK_WIDTH * 2
+        xLocation, yLocation = 150, 1000
+        exitButton = ButtonGroupMethods.CreateButton("EXIT", width, height, xLocation, yLocation, "QUIT_BUTTON")
+
+        size = 30
+        xLocation, yLocation = Setup.setup.WIDTH // 2, 400
+        spacing = 100
+        infoTextMainControls = Setup.TextMethods.CreateText("INFO1", "(MAIN)   WASD - movement   SHIFT - dash   CONTROL - crouch   SPACE - jump   M - toggle mini map   TAB - menu", Setup.setup.BLUE, xLocation, yLocation, size)
+        infoTextAttackControls = Setup.TextMethods.CreateText("INFO1", "(ATTACK)   LCLICK - attack   RCLICK - charged attack   E - ability   F - spell", Setup.setup.BLUE, xLocation, yLocation + spacing, size)       
+        infoTextMapControls = Setup.TextMethods.CreateText("INFO2", "(MINI MAP)   CONTROL - show cursor   LCLICK - place waypoint   RCLICK - delete waypoint", Setup.setup.BLUE, xLocation, yLocation + (2 * spacing), size)
+        infoTextOtherControls = Setup.TextMethods.CreateText("INFO3", "(OTHER)   K - kill character   E - interact with prompt   HOLD SPACE - longer jump", Setup.setup.BLUE, xLocation, yLocation + (3 * spacing), size)
+
+        self.buttons.add(exitButton)
+
+        self.textList.append(infoTextMainControls)
+        self.textList.append(infoTextAttackControls)
+        self.textList.append(infoTextMapControls)
+        self.textList.append(infoTextOtherControls)
+
+    def ChildActions(self):
+        ButtonGroupMethods.UpdateChildButtons(self.buttons)
+        Setup.TextMethods.UpdateText(self.textList)
+
+        clicked = ButtonGroupMethods.CheckClicks(self.buttons)
+
+        match clicked:
+            case "EXIT":
+                self.ExitButton()
+
+    def ExitButton(self):
+        menuManagement.AddMenu(menuManagement.menuButtonGroup, "MENU") 
+        menuManagement.RemoveMenu(self, "MENU")
         
 class CreateSettingsMenu(Setup.pg.sprite.Sprite):
     def __init__(self):
@@ -255,7 +303,7 @@ class CreateSettingsMenu(Setup.pg.sprite.Sprite):
         self.textList.append(soundControlSliderText)
 
     def ChildActions(self):
-        ButtonGroupMethods.UpdateChildButton(self.buttons)
+        ButtonGroupMethods.UpdateChildButtons(self.buttons)
         Setup.TextMethods.UpdateText(self.textList)
 
         clicked = ButtonGroupMethods.CheckClicks(self.buttons)
@@ -360,7 +408,7 @@ class CreateNewGameMenu(Setup.pg.sprite.Sprite):
                     self.buttons.remove(ButtonGroupMethods.GetButton(f"DELETE_SLOT_{x + 1}", self.buttons))
 
     def ChildActions(self):
-        ButtonGroupMethods.UpdateChildButton(self.buttons)
+        ButtonGroupMethods.UpdateChildButtons(self.buttons)
         self.UpdateNewGameImages()
 
         clicked = ButtonGroupMethods.CheckClicks(self.buttons)
@@ -427,7 +475,7 @@ class NewGameSettings(Setup.pg.sprite.Sprite):
         self.buttons.add(exitButton)
 
     def ChildActions(self):
-        ButtonGroupMethods.UpdateChildButton(self.buttons)
+        ButtonGroupMethods.UpdateChildButtons(self.buttons)
 
         clicked = ButtonGroupMethods.CheckClicks(self.buttons)
 
@@ -472,7 +520,7 @@ class CreateMapMenu(Setup.pg.sprite.Sprite):
         self.buttons.add(deleteButton) 
 
     def ChildActions(self):
-        ButtonGroupMethods.UpdateChildButton(self.buttons)
+        ButtonGroupMethods.UpdateChildButtons(self.buttons)
 
         clicked = ButtonGroupMethods.CheckClicks(self.buttons)
 
@@ -515,7 +563,7 @@ class CreateInGameMenu(Setup.pg.sprite.Sprite):
         self.buttons.add(exitButton)
 
     def ChildActions(self):
-        ButtonGroupMethods.UpdateChildButton(self.buttons)
+        ButtonGroupMethods.UpdateChildButtons(self.buttons)
 
         clicked = ButtonGroupMethods.CheckClicks(self.buttons)
 
@@ -560,7 +608,7 @@ class CreateInventoryMenu(Setup.pg.sprite.Sprite):
         self.buttons.add(armourSlotButton)
 
     def ChildActions(self):
-        ButtonGroupMethods.UpdateChildButton(self.buttons)
+        ButtonGroupMethods.UpdateChildButtons(self.buttons)
 
         clicked = ButtonGroupMethods.CheckClicks(self.buttons)
 
@@ -598,7 +646,7 @@ class CreateInventoryEquipDisplay(Setup.pg.sprite.Sprite):
         self.buttons.add(exitButton)
 
     def ChildActions(self):
-        ButtonGroupMethods.UpdateChildButton(self.buttons)
+        ButtonGroupMethods.UpdateChildButtons(self.buttons)
 
         clicked = ButtonGroupMethods.CheckClicks(self.buttons)
 
@@ -624,7 +672,7 @@ class ButtonGroupMethods():
         return SlidingButton(name, width, height, locationX, locationY, filePathImage, length) 
 
     @staticmethod
-    def UpdateChildButton(buttonList):
+    def UpdateChildButtons(buttonList):
         buttonList.update()
         buttonList.draw(Setup.setup.screen)
 
@@ -653,6 +701,9 @@ class MenuManagement(Setup.pg.sprite.Sprite):
         self.menuButtonGroup = CreateMainMenu() #create all menus and buttons, add / remove menus from MenuManagement to display / hide
         self.menuButtonGroup.CreateButtons()
         self.AddMenu(self.menuButtonGroup, "MENU")
+
+        self.infoMenuGroup = CreateInfoMenu()
+        self.infoMenuGroup.CreateButtons()
 
         self.settingsButtonGroup = CreateSettingsMenu()
         self.settingsButtonGroup.CreateButtons()
