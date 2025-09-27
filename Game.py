@@ -20,6 +20,7 @@ class GameHandler(Setup.pg.sprite.Sprite):
         self.enemies = Setup.pg.sprite.Group()
         self.bosses = Setup.pg.sprite.Group()
         self.hitboxes = Setup.pg.sprite.Group()
+        self.enemyHitboxes = Setup.pg.sprite.Group()
 
         self.playableMap = []
         self.waypoints = []
@@ -130,6 +131,7 @@ class GameHandler(Setup.pg.sprite.Sprite):
         self.enemies = Setup.pg.sprite.Group()
         self.bosses = Setup.pg.sprite.Group()
         self.hitboxes = Setup.pg.sprite.Group()
+        self.enemyHitboxes = Setup.pg.sprite.Group()
         self.playableMap = []
         self.waypoints = []
         self.treasureChests = []
@@ -247,8 +249,8 @@ class GameHandler(Setup.pg.sprite.Sprite):
 
         hitboxesToRemove = []
 
-        for hitbox in self.hitboxes:
-            hitbox.update()
+        for hitbox in self.hitboxes: # player attack hitboxes
+            hitbox.Update()
             
             collidedBlocks = self.CollideWithObjects(hitbox, self.blocks)
             for block in collidedBlocks:
@@ -277,8 +279,26 @@ class GameHandler(Setup.pg.sprite.Sprite):
 
                     hitboxesToRemove.append(hitbox)
 
-            for hitbox in hitboxesToRemove:
-                self.hitboxes.remove(hitbox)
+        for hitbox in hitboxesToRemove:
+            self.hitboxes.remove(hitbox)
+
+        hitboxesToRemove = []
+
+        for hitbox in self.enemyHitboxes:
+            hitbox.Update()
+
+            if len(self.CollideWithObjects(hitbox, self.blocks)) > 0:
+                hitboxesToRemove.append(hitbox)
+
+            if self.CollideWithObject(hitbox, self.player):
+                self.player.TakeHealth(hitbox.damage)
+                self.player.ApplyKnockback(20, hitbox.direction)
+
+                hitboxesToRemove.append(hitbox)
+                break
+
+        for hitbox in hitboxesToRemove:
+            self.enemyHitboxes.remove(hitbox)
 
     def ResetDeadEnemies(self):
         for enemy in self.enemies:
@@ -303,6 +323,15 @@ class GameHandler(Setup.pg.sprite.Sprite):
                 collided.append(collidedObject)
 
         return collided
+
+    def CollideWithObject(self, mainObject, secondObject):
+        mainObject.rect.topleft = (mainObject.worldX, mainObject.worldY)
+        secondObject.rect.topleft = (secondObject.worldX, secondObject.worldY)
+
+        if Setup.pg.sprite.collide_rect(mainObject, secondObject):
+            return True
+
+        return False
 
 class MapBlock(Setup.pg.sprite.Sprite): 
     def __init__(self, blockNumber, rotation, smallRotation, originalLocationX, originalLocationY, image, hasCollision, damage, knockback):
@@ -341,7 +370,7 @@ class Spell:
         self.manaCost = manaCost
         self.parentPlayer = parentPlayer
 
-        self.attackToHitBox = {}
+        self.attackToHitbox = {}
         self.instanceHandler = MultipleSpellInstancesHandler()
 
         self.displayImagePath = Spell.displayImages[name] if name in Spell.spellNames else Spell.displayImages["Fireball"]
@@ -480,7 +509,7 @@ class Weapon:
         self.chargingStartTime = 0
         self.mostRecentAbilityTime = 0
 
-        self.attackToHitBox = {} # attack type e.g. basic to corresponding hitbox
+        self.attackToHitbox = {} # attack type e.g. basic to corresponding hitbox
        
         self.displayImagePath = Weapon.displayImages[name] if name in Weapon.weaponNames else Weapon.displayImages["WoodenSword"]
         
@@ -602,10 +631,12 @@ class Longsword(Weapon):
 class AttackHitboxHandler:
     @staticmethod
     def AttackStartAndEndHandler(parentObject, timer, attackType, hitboxDimentions, damage, velocityX=0, velocityY=0, lockMovement=True, followPlayer=True, groundOnlyAttack=True, verticalAttack=False):
+        parentPlayer = getattr(parentObject, "parentPlayer", None)
+       
         if verticalAttack:
-            direction = parentObject.parentPlayer.mostRecentDirectionAll
+            direction = parentPlayer.mostRecentDirectionAll
         else:
-            direction = parentObject.parentPlayer.mostRecentDirection
+            direction = parentPlayer.mostRecentDirection
 
         if direction is None or attackType is None:
             AttackHitboxHandler.EndAttack(parentObject)
@@ -613,9 +644,9 @@ class AttackHitboxHandler:
     
         if timer.startTime is None:
             if direction in ("LEFT", "RIGHT"): # not attack up or down
-                parentObject.parentPlayer.movementLocked = lockMovement
+                parentPlayer.movementLocked = lockMovement
 
-                if parentObject.parentPlayer.state == "AIR" and groundOnlyAttack:
+                if parentPlayer.state == "AIR" and groundOnlyAttack:
                     AttackHitboxHandler.EndAttack(parentObject)
                     return
                 
@@ -623,16 +654,16 @@ class AttackHitboxHandler:
 
             match direction:
                 case "LEFT":
-                    attackHitBox = Hitbox(attackType, "LEFT", -hitboxDimentions[0], 0, hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, followPlayer, parentObject.parentPlayer)
+                    attackHitBox = Hitbox(attackType, "LEFT", -hitboxDimentions[0], 0, hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, followPlayer, parentPlayer)
                 case "RIGHT":
-                    attackHitBox = Hitbox(attackType,"RIGHT", hitboxDimentions[0], 0, hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, followPlayer, parentObject.parentPlayer)
+                    attackHitBox = Hitbox(attackType,"RIGHT", hitboxDimentions[0], 0, hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, followPlayer, parentPlayer)
                 case "UP":
-                    attackHitBox = Hitbox(attackType, "UP", 0, -hitboxDimentions[1], hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, followPlayer, parentObject.parentPlayer)
+                    attackHitBox = Hitbox(attackType, "UP", 0, -hitboxDimentions[1], hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, followPlayer, parentPlayer)
                 case "DOWN":
-                    attackHitBox = Hitbox(attackType, "DOWN", 0, hitboxDimentions[1], hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, followPlayer, parentObject.parentPlayer)
+                    attackHitBox = Hitbox(attackType, "DOWN", 0, hitboxDimentions[1], hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, followPlayer, parentPlayer)
 
-            parentObject.parentPlayer.gameHandler.hitboxes.add(attackHitBox)
-            parentObject.attackToHitBox.update({attackType : attackHitBox})
+            parentPlayer.gameHandler.hitboxes.add(attackHitBox)
+            parentObject.attackToHitbox.update({attackType : attackHitBox})
 
             return True # attack start
 
@@ -641,16 +672,56 @@ class AttackHitboxHandler:
             timer.Reset()
 
     @staticmethod
+    def EnemyAttackStartAndEndHandler(enemy, timer, attackType, hitboxDimentions, damage, velocityX=0, velocityY=0, lockMovement=False):
+        direction = enemy.mostRecentDirection
+
+        if direction is None or attackType is None:
+            AttackHitboxHandler.EnemyEndAttack(enemy)
+            return
+
+        if timer.startTime is None:
+            enemy.movementLocked = lockMovement
+            timer.StartTimer()
+            
+            match direction:
+                case "LEFT":
+                    attackHitBox = Hitbox(attackType, "LEFT", -hitboxDimentions[0], 0, hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, parentObject=enemy)
+                case "RIGHT":
+                    attackHitBox = Hitbox(attackType,"RIGHT", hitboxDimentions[0], 0, hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, parentObject=enemy)
+                case "UP":
+                    attackHitBox = Hitbox(attackType, "UP", 0, -hitboxDimentions[1], hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, parentObject=enemy)
+                case "DOWN":
+                    attackHitBox = Hitbox(attackType, "DOWN", 0, hitboxDimentions[1], hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, parentObject=enemy)
+
+            enemy.gameHandler.enemyHitboxes.add(attackHitBox)
+            enemy.attackToHitbox.update({attackType : attackHitBox})
+
+            return True
+
+        if timer.CheckFinished():
+            AttackHitboxHandler.EnemyEndAttack(enemy, attackType=attackType)
+            timer.Reset()
+
+    @staticmethod
+    def EnemyEndAttack(enemy, attackType=None):
+        if attackType:
+            enemy.gameHandler.enemyHitboxes.remove(enemy.attackToHitbox[attackType])
+            enemy.attackToHitbox.pop(attackType, None)
+            
+        enemy.currentAttackAttributes = None
+        enemy.movementLocked = False
+
+    @staticmethod
     def EndAttack(parentObject, attackType=None):
         if attackType:
-            parentObject.parentPlayer.gameHandler.hitboxes.remove(parentObject.attackToHitBox[attackType])           
-            parentObject.attackToHitBox.pop(attackType, None)
+            parentObject.parentPlayer.gameHandler.hitboxes.remove(parentObject.attackToHitbox[attackType])           
+            parentObject.attackToHitbox.pop(attackType, None)
 
         parentObject.currentState = "NONE"
         parentObject.parentPlayer.movementLocked = False
 
 class Hitbox(Setup.pg.sprite.Sprite):
-    def __init__(self, hitboxType, direction, offsetX, offsetY, width, height, damage, velocityX, velocityY, followPlayer, parentObject):
+    def __init__(self, hitboxType, direction, offsetX, offsetY, width, height, damage, velocityX, velocityY, followPlayer=False, parentObject=None):
         super().__init__()
         self.parent = parentObject # normally player
         self.followPlayer = followPlayer      
@@ -669,7 +740,7 @@ class Hitbox(Setup.pg.sprite.Sprite):
         self.damage = damage
         self.rect = Setup.pg.Rect(self.worldX, self.worldY, self.width, self.height)
 
-    def update(self):
+    def Update(self):
         if self.followPlayer:
             self.worldX = self.parent.worldX + self.offsetX
             self.worldY = self.parent.worldY + self.offsetY
@@ -680,8 +751,8 @@ class Hitbox(Setup.pg.sprite.Sprite):
         self.rect.topleft = (self.worldX, self.worldY)
 
         # visualise
-        drawX = self.worldX - self.parent.camera.camera.left
-        drawY = self.worldY - self.parent.camera.camera.top
+        drawX = self.worldX - gameHandler.player.camera.camera.left
+        drawY = self.worldY - gameHandler.player.camera.camera.top
         Setup.pg.draw.rect(Setup.setup.screen, Setup.setup.RED, (drawX, drawY, self.width, self.height))
 
 class Inventory:
@@ -1709,10 +1780,17 @@ class Enemy(Setup.pg.sprite.Sprite):
         self.carriedVelocityX = 0
         self.movementSpeeds = [0, 0]
 
+        #attacks
+        self.currentAttackAttributes = None
+        self.currentAttackTimer = CooldownTimer(10000000) # empty timer
+        self.attackToHitbox = {}
+        self.mostRecentDirection = "RIGHT"
+        self.movementLocked = False
+
         # detection
         self.suspicionRange = suspicionRange
         self.detectionRange = detectionRange
-        self.state = "NORMAL" # "NORMAL", "SUSPICIOUS", "DETECTED", "RETURNING"
+        self.state = "NORMAL" # "NORMAL", "SUSPICIOUS", "DETECTED", "RETURNING"       
         self.detectedPlayerLocation = None
 
         # timers
@@ -1720,6 +1798,7 @@ class Enemy(Setup.pg.sprite.Sprite):
         self.suspicionWaitTimer = CooldownTimer(3) # how long the enemy waits at the detected player location before returning
         self.outsideSuspicionRangeWhenDetected = CooldownTimer(5) # how long the player must be outside the suspicion range for the enemy to go from DETECTED to SUSPICIOUS
         self.randomMovementTimer = CooldownTimer(3) # how often the enemy decides a new direction
+        self.attackCooldownTimer = CooldownTimer(1) # the delay between the end of and attack and a new attack
 
         self.movementClasses = {"STATIONARY" : None,
                                   "GUARD" : GuardMovement,
@@ -1769,7 +1848,7 @@ class Enemy(Setup.pg.sprite.Sprite):
             Setup.pg.draw.rect(Setup.setup.screen, Setup.pg.Color("forestgreen"), (drawX, drawY, self.health, 10)) # green health bar
 
     def UpdateState(self):
-        distanceFromPlayer = Setup.math.sqrt((self.worldX - self.gameHandler.player.worldX) ** 2 + (self.worldY - self.gameHandler.player.worldY) ** 2)
+        distanceFromPlayer = self.CalculateDistanceFromPlayer()
 
         if distanceFromPlayer <= self.detectionRange:
             self.state = "DETECTED"
@@ -1799,8 +1878,12 @@ class Enemy(Setup.pg.sprite.Sprite):
     def CalculateDistanceFromStart(self):
         return Setup.math.sqrt((self.worldX - self.startLocationX) ** 2 + (self.worldY - self.startLocationY))
 
+    def CalculateDistanceFromPlayer(self):
+        return Setup.math.sqrt((self.worldX - self.gameHandler.player.worldX) ** 2 + (self.worldY - self.gameHandler.player.worldY) ** 2)
+
     def PerformAction(self):
         self.DisplayHealthBar()
+        self.PerformAttack()
 
         self.worldX += self.carriedVelocityX
 
@@ -1827,7 +1910,7 @@ class Enemy(Setup.pg.sprite.Sprite):
     def Detected(self):
         playerX = self.gameHandler.player.worldX # the current location
 
-        self.MoveToPoint(playerX, self.velocity, self.gameHandler.player)
+        self.MoveToPoint(playerX, self.velocity)
 
     def Suspicious(self):
         playerX = self.detectedPlayerLocation[0] # enemies move left and right
@@ -1835,7 +1918,7 @@ class Enemy(Setup.pg.sprite.Sprite):
         if self.suspicionTimer.startTime is None:
             self.suspicionTimer.StartTimer()
 
-        if self.MoveToPoint(playerX, self.slowVelocity, self.gameHandler.player) or self.suspicionTimer.CheckFinished():
+        if self.MoveToPoint(playerX, self.slowVelocity) or self.suspicionTimer.CheckFinished():
             self.suspicionTimer.Reset()
 
             if self.suspicionWaitTimer.startTime is None:
@@ -1846,7 +1929,7 @@ class Enemy(Setup.pg.sprite.Sprite):
             self.suspicionWaitTimer.Reset()
 
     def Returning(self):    
-        if self.MoveToPoint(self.startLocationX, self.slowVelocity, self.gameHandler.player):
+        if self.MoveToPoint(self.startLocationX, self.slowVelocity):
             self.state = "NORMAL"
 
     def CheckCollisionWithGround(self):
@@ -1863,40 +1946,65 @@ class Enemy(Setup.pg.sprite.Sprite):
 
         return hasCollision
 
-    def MoveToPoint(self, endLocation, velocity, player):
-        direction = None
-        changeInLocationX = 0
-        distanceToEndLocation = abs(endLocation - self.worldX)
+    def MoveToPoint(self, endLocation, velocity):
+        if not self.movementLocked:
+            direction = None
+            changeInLocationX = 0
+            distanceToEndLocation = abs(endLocation - self.worldX)
 
-        if distanceToEndLocation < self.velocity:
-            return True
+            if distanceToEndLocation < self.velocity:
+                return True
                      
-        if self.worldX > endLocation: 
-            changeInLocationX = -velocity - self.width 
-            direction = "LEFT"
-        else:
-            changeInLocationX = velocity + self.width 
-            direction = "RIGHT"
+            if self.worldX > endLocation: 
+                changeInLocationX = -velocity - self.width 
+                direction = "LEFT"
+            else:
+                changeInLocationX = velocity + self.width 
+                direction = "RIGHT"
 
-        self.worldX += changeInLocationX # +/- self.width checks if any part of the enemy has no contact with the ground 
-        self.rect.topleft = (self.worldX, self.worldY)
+            self.mostRecentDirection = direction
+            self.worldX += changeInLocationX # +/- self.width checks if any part of the enemy has no contact with the ground 
+            self.rect.topleft = (self.worldX, self.worldY)
 
-        if not self.CheckCollisionWithGround():
-            self.worldX -= changeInLocationX      
-        elif direction == "RIGHT":
-            self.worldX -= self.width
-        elif direction == "LEFT":
-            self.worldX += self.width
+            if not self.CheckCollisionWithGround():
+                self.worldX -= changeInLocationX      
+            elif direction == "RIGHT":
+                self.worldX -= self.width
+            elif direction == "LEFT":
+                self.worldX += self.width
 
-        for block in self.gameHandler.CollideWithObjects(self, self.gameHandler.blocks):
-            if direction == "RIGHT":
-                self.worldX = block.worldX - self.rect.width 
+            for block in self.gameHandler.CollideWithObjects(self, self.gameHandler.blocks):
+                if direction == "RIGHT":
+                    self.worldX = block.worldX - self.rect.width 
 
-            elif direction == "LEFT": 
-                self.worldX = block.worldX + block.rect.width            
+                elif direction == "LEFT": 
+                    self.worldX = block.worldX + block.rect.width            
 
-        self.rect.topleft = (self.worldX, self.worldY)     
+            self.rect.topleft = (self.worldX, self.worldY)     
 
+    def PerformAttack(self):   
+        self.ChooseAttack()
+
+        if self.currentAttackAttributes:
+            attackType = self.currentAttackAttributes["attackType"]
+            dimentions = self.currentAttackAttributes["dimentions"]
+            damage = self.currentAttackAttributes["damage"]
+
+            AttackHitboxHandler.EnemyAttackStartAndEndHandler(self, self.currentAttackTimer, attackType, dimentions, damage, velocityX=0, velocityY=0, lockMovement=True)
+
+    def ChooseAttack(self):
+        if self.attackCooldownTimer.startTime is None:
+            for attack, attackAttributes in self.attacks.items():
+                if self.CalculateDistanceFromPlayer() <= attackAttributes["range"]:
+                    if self.currentAttackTimer.startTime is None:
+                        self.currentAttackAttributes = attackAttributes
+                        self.currentAttackAttributes.update({"attackType" : attack})
+                        self.currentAttackTimer.cooldown = attackAttributes["length"]
+                        self.attackCooldownTimer.StartTimer()
+
+        if self.attackCooldownTimer.CheckFinished():
+            self.attackCooldownTimer.Reset()
+                        
     def PerformMovement(self):
         self.movementClass.Movement(self)
 
@@ -1940,15 +2048,19 @@ class RandomMovement:
             self.randomMovementTimer.Reset()
 
         if self.direction == "RETURN":
-            enemy.MoveToPoint(enemy.startLocationX, enemy.slowVelocity, enemy.gameHandler.player) # return to start
+            enemy.MoveToPoint(enemy.startLocationX, enemy.slowVelocity) # return to start
         if self.direction == "RIGHT":
-            enemy.MoveToPoint(Setup.sys.maxsize, enemy.slowVelocity, enemy.gameHandler.player) # anywhere to the right
+            enemy.MoveToPoint(Setup.sys.maxsize, enemy.slowVelocity) # anywhere to the right
         elif self.direction == "LEFT":
-            enemy.MoveToPoint(-Setup.sys.maxsize, enemy.slowVelocity, enemy.gameHandler.player) # anywhere to the left
+            enemy.MoveToPoint(-Setup.sys.maxsize, enemy.slowVelocity) # anywhere to the left    
+
 
 class Enemy1(Enemy):
     def __init__(self, worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange, enemyType, gameHandler):
         super().__init__(worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange, enemyType, gameHandler)
+
+        self.attacks = {"BASIC" : {"damage" : 50, "range" : Setup.setup.BLOCK_WIDTH // 1.25, "length" : 1, "dimentions" : [160, 160]}}
+        self.cooldownBetweenAttacks = CooldownTimer(1) # 
 
 class FriendlyCharacter:
     allItems = {0 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", 20),
