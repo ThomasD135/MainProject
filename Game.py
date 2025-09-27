@@ -905,7 +905,7 @@ class Inventory:
         self.UpdateSelectionSlots()
         
 class Player(Setup.pg.sprite.Sprite):
-    def __init__(self, name="Player", gameHandler=None, worldX=Setup.setup.WIDTH / 2, worldY=Setup.setup.HEIGHT / 2, health=500, maxHealth=800, mana=300, maxMana=400, mapFragments=None, mostRecentWaypointCords=None, weapon=None, spell=None, armour=None, inventory=None):
+    def __init__(self, name="Player", gameHandler=None, worldX=Setup.setup.WIDTH / 2, worldY=Setup.setup.HEIGHT / 2, health=800, maxHealth=800, mana=100, maxMana=100, mapFragments=None, mostRecentWaypointCords=None, weapon=None, spell=None, armour=None, inventory=None):
         super().__init__()
         self.name = name
         self.gameHandler = gameHandler
@@ -919,7 +919,7 @@ class Player(Setup.pg.sprite.Sprite):
         self.mostRecentWaypointCords = mostRecentWaypointCords
 
         attributesAndDefault = {"weapon" : WoodenSword(damage=100, chargedDamage=200, abilityDamage=300, abilityManaCost=20, abilityCooldown=5, parentPlayer=self), 
-                                "spell" : Fireball(damage=100, manaCost=20, parentPlayer=self), 
+                                "spell" : Fireball(damage=100, manaCost=50, parentPlayer=self), 
                                 "armour" : Armour("DefaultArmour", "No armour", 0, parentPlayer=self), 
                                 "inventory" : Inventory(self)}
         
@@ -1798,7 +1798,7 @@ class Enemy(Setup.pg.sprite.Sprite):
         self.suspicionWaitTimer = CooldownTimer(3) # how long the enemy waits at the detected player location before returning
         self.outsideSuspicionRangeWhenDetected = CooldownTimer(5) # how long the player must be outside the suspicion range for the enemy to go from DETECTED to SUSPICIOUS
         self.randomMovementTimer = CooldownTimer(3) # how often the enemy decides a new direction
-        self.attackCooldownTimer = CooldownTimer(1) # the delay between the end of and attack and a new attack
+        self.attackCooldownTimer = CooldownTimer(1.5) # the delay between the end of and attack and a new attack
 
         self.movementClasses = {"STATIONARY" : None,
                                   "GUARD" : GuardMovement,
@@ -1992,15 +1992,21 @@ class Enemy(Setup.pg.sprite.Sprite):
 
             AttackHitboxHandler.EnemyAttackStartAndEndHandler(self, self.currentAttackTimer, attackType, dimentions, damage, velocityX=0, velocityY=0, lockMovement=True)
 
-    def ChooseAttack(self):
+    def ChooseAttack(self):     
+        availableAttacks = []
+
         if self.attackCooldownTimer.startTime is None:
             for attack, attackAttributes in self.attacks.items():
                 if self.CalculateDistanceFromPlayer() <= attackAttributes["range"]:
-                    if self.currentAttackTimer.startTime is None:
-                        self.currentAttackAttributes = attackAttributes
-                        self.currentAttackAttributes.update({"attackType" : attack})
-                        self.currentAttackTimer.cooldown = attackAttributes["length"]
-                        self.attackCooldownTimer.StartTimer()
+                    availableAttacks.append((attack, attackAttributes))
+
+            if availableAttacks and self.currentAttackTimer.startTime is None:
+                attack, attackAttributes = Setup.random.choice(availableAttacks)
+
+                self.currentAttackAttributes = dict(attackAttributes)
+                self.currentAttackAttributes.update({"attackType" : attack})
+                self.currentAttackTimer.cooldown = attackAttributes["length"]
+                self.attackCooldownTimer.StartTimer()
 
         if self.attackCooldownTimer.CheckFinished():
             self.attackCooldownTimer.Reset()
@@ -2059,7 +2065,9 @@ class Enemy1(Enemy):
     def __init__(self, worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange, enemyType, gameHandler):
         super().__init__(worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange, enemyType, gameHandler)
 
-        self.attacks = {"BASIC" : {"damage" : 50, "range" : Setup.setup.BLOCK_WIDTH // 1.25, "length" : 1, "dimentions" : [160, 160]}}
+        self.attacks = {"ATTACK_1" : {"damage" : 50, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 1, "dimentions" : [160, 160]},
+                        "ATTACK_2" : {"damage" : 75, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 1, "dimentions" : [240, 160]}}
+
         self.cooldownBetweenAttacks = CooldownTimer(1) # 
 
 class FriendlyCharacter:

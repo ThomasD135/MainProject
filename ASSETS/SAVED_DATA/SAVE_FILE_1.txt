@@ -1,11 +1,11 @@
 {
     "player": {
-        "worldX": 2874,
+        "worldX": 3096,
         "worldY": 1760,
-        "health": 650,
+        "health": 625,
         "maxHealth": 800,
-        "mana": 400,
-        "maxMana": 400,
+        "mana": 100.0,
+        "maxMana": 100,
         "mostRecentWaypointCords": null,
         "weapon": {
             "name": "WoodenSword",
@@ -21,7 +21,7 @@
             "name": "Fireball",
             "description": "A burning ball of fire",
             "damage": 100,
-            "manaCost": 20
+            "manaCost": 50
         },
         "armour": {
             "name": "DefaultArmour",
@@ -51,7 +51,7 @@
                     "name": "Fireball",
                     "description": "A burning ball of fire",
                     "damage": 100,
-                    "manaCost": 20
+                    "manaCost": 50
                 }
             ],
             "armour": [
@@ -72,24 +72,24 @@
     "enemies": [
         {
             "enemyType": 29,
-            "worldX": 2470.0,
-            "worldY": 1760,
-            "health": 100,
-            "dead": false
-        },
-        {
-            "enemyType": 29,
-            "worldX": 3425.0,
+            "worldX": 2402.5,
             "worldY": 1760,
             "health": 0,
             "dead": true
         },
         {
             "enemyType": 29,
-            "worldX": 4662.5,
+            "worldX": 3335.0,
             "worldY": 1760,
-            "health": 200,
-            "dead": false
+            "health": 0,
+            "dead": true
+        },
+        {
+            "enemyType": 29,
+            "worldX": 4650,
+            "worldY": 1760,
+            "health": 0,
+            "dead": true
         }
     ],
     "waypoints": [
