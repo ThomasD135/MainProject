@@ -71,8 +71,17 @@ class GameHandler(Setup.pg.sprite.Sprite):
                            42 : {"class": Enemy1, "health": 200, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
                             }
 
+        self.bossTypes = {21 : {"class": Boss1, "health": 500, "velocity": 5, "size": 160, "phases": 2, "name": "test"},
+                          22 : {"class": Boss1, "health": 500, "velocity": 5, "size": 160, "phases": 2, "name": "test"},
+                          23 : {"class": Boss1, "health": 500, "velocity": 5, "size": 160, "phases": 2, "name": "test"},
+                          24 : {"class": Boss1, "health": 500, "velocity": 5, "size": 160, "phases": 2, "name": "test"},
+                          25 : {"class": Boss1, "health": 500, "velocity": 5, "size": 160, "phases": 2, "name": "test"},
+                          26 : {"class": Boss1, "health": 500, "velocity": 5, "size": 160, "phases": 2, "name": "test"},
+                          27 : {"class": Boss1, "health": 500, "velocity": 5, "size": 160, "phases": 2, "name": "test"},
+                          28 : {"class": Boss1, "health": 500, "velocity": 5, "size": 160, "phases": 2, "name": "test"},}
+
     def DataToDictionary(self):
-        objectListsToSave = ["enemies", "waypoints", "treasureChests", "friendlyCharacters"]
+        objectListsToSave = ["enemies", "bosses", "waypoints", "treasureChests", "friendlyCharacters"]
 
         dataToSave = {
             "player": self.player.DataToDictionary() if self.player else None
@@ -89,7 +98,7 @@ class GameHandler(Setup.pg.sprite.Sprite):
             self.player = Player.DataFromDictionary(data["player"])
             self.player.gameHandler = self      
 
-        attributesToUpdate = ["enemies", "waypoints", "treasureChests", "friendlyCharacters"]
+        attributesToUpdate = ["enemies", "bosses", "waypoints", "treasureChests", "friendlyCharacters"]
 
         for attribute in attributesToUpdate:  # not creating new waypoints, only updating a small number of variables
             if attribute in data:
@@ -103,6 +112,9 @@ class GameHandler(Setup.pg.sprite.Sprite):
 
                 for index in range(0, min(len(attributeList), len(newData))):
                     attributeList[index].LoadFromDictionary(newData[index])
+
+        for boss in self.bosses:
+            boss.ResetBoss()
 
     def SaveGame(self):
         if Setup.setup.currentSaveSlot != -1 and Setup.setup.saveGame:
@@ -168,7 +180,7 @@ class GameHandler(Setup.pg.sprite.Sprite):
 
                 else: # entities (bosses, enemies, pathFinders)
                     if block.blockNumber >= 21 and block.blockNumber <= 28:
-                        pass
+                        self.bosses.add(self.CreateBoss(block.blockNumber, block))
                     elif block.blockNumber >= 29 and block.blockNumber <= 42:
                         self.enemies.add(self.CreateEnemy(block.blockNumber, block))
                     elif block.blockNumber == 48:    
@@ -176,10 +188,33 @@ class GameHandler(Setup.pg.sprite.Sprite):
 
         self.PopulateGraph(self.pathfindingWaypointBlocks)
 
-    def CreateEnemy(self, enemyNumber, block):      
-        filePath = Setup.os.path.join("ASSETS", "ENEMIES", f"ENEMY{enemyNumber - 28}_IMAGE") # first enemy image is ENEMY1_IMAGE, not ENEMY29_IMAGE so -28
-        image = Setup.pg.image.load(filePath + ".png")
-        
+    def CreateBoss(self, bossNumber, block):
+        filePath = Setup.os.path.join("ASSETS", "ENEMIES", f"BOSS{bossNumber - 20}_IMAGE")
+        image = Setup.pg.image.load(filePath + ".png")        
+        bossClass = self.bossTypes[bossNumber]  
+
+        if not bossClass:
+            raise ValueError(f"Enemy number {bossNumber} does not exist")
+          
+        width = bossClass["size"]
+        widthDifferenceToNormalBlock = width - Setup.setup.BLOCK_WIDTH 
+
+        return bossClass["class"](
+            worldX = block.originalLocationX,
+            worldY = block.originalLocationY - widthDifferenceToNormalBlock,
+            image = image,
+            health = bossClass["health"],
+            velocity = bossClass["velocity"],
+            size = bossClass["size"],
+            phases = bossClass["phases"],
+            name = bossClass["name"],
+            bossType = bossNumber,
+            gameHandler = self,
+        )
+
+    def CreateEnemy(self, enemyNumber, block):   
+        filePath = Setup.os.path.join("ASSETS", "ENEMIES", f"ENEMY{enemyNumber - 28}_IMAGE") # first enemy image is ENEMY1_IMAGE, not ENEMY29_IMAGE so -28          
+        image = Setup.pg.image.load(filePath + ".png")        
         enemyClass = self.enemyTypes[enemyNumber]      
 
         if not enemyClass:
@@ -243,9 +278,9 @@ class GameHandler(Setup.pg.sprite.Sprite):
         self.dijkstraGraph = Dijkstra.DijkstraImplementation(self.weightedAdjacencyList.weightedGraph)
 
     def UpdateSprites(self):
-        for enemy in self.enemies:
-            if not enemy.dead:
-                enemy.PerformAction()
+        for entity in self.enemies.sprites() + self.bosses.sprites():
+            if not entity.dead:
+                entity.PerformAction()
 
         hitboxesToRemove = []
 
@@ -268,9 +303,9 @@ class GameHandler(Setup.pg.sprite.Sprite):
                         
                 hitboxesToRemove.append(hitbox)
 
-            for enemy in self.CollideWithObjects(hitbox, self.enemies):
-                if not enemy.dead:
-                    enemy.TakeDamage(hitbox.damage, hitbox.direction)
+            for entity in self.CollideWithObjects(hitbox, self.enemies.sprites() + self.bosses.sprites()):
+                if not entity.dead:
+                    entity.TakeDamage(hitbox.damage, hitbox.direction)
 
                     if hitbox.direction == "UP": # blocks only have vertical knockback if they also deal damage (spikes)
                         self.player.ApplyKnockback(20, "DOWN")
@@ -1209,7 +1244,7 @@ class Player(Setup.pg.sprite.Sprite):
 
     def MiniMapFunctions(self):
         self.miniMap.ChangeScale()
-        self.miniMap.DrawMap(self.gameHandler.blocks, self.gameHandler.enemies, self)
+        self.miniMap.DrawMap(self.gameHandler.blocks, self.gameHandler.enemies, self.gameHandler.bosses, self)
         self.miniMap.DrawWaypoints(self)
         self.miniMap.pathGuide.FindNearestNode(self)
 
@@ -1494,7 +1529,7 @@ class MiniMap(Setup.pg.sprite.Sprite):
             if not fragmentValue:
                 Setup.pg.draw.rect(Setup.setup.screen, (Setup.setup.BLACK), (fragmentLocations[fragment][0], fragmentLocations[fragment][1], fragmentWidthHeight, fragmentWidthHeight))
 
-    def DrawMap(self, blocks, enemies, player):
+    def DrawMap(self, blocks, enemies, bosses, player):
         if not self.enlarged:
             shrinkModifier = 20
             startX = 20
@@ -1511,10 +1546,10 @@ class MiniMap(Setup.pg.sprite.Sprite):
             newX, newY = block.worldX / shrinkModifier, block.worldY / shrinkModifier
             Setup.setup.screen.blit(newImage, (startX + newX, startY + newY))
 
-        for enemy in enemies:
-            if not enemy.dead:
-                newImage = Setup.pg.transform.scale(enemy.image, (enemy.width / shrinkModifier, enemy.height / shrinkModifier))
-                newX, newY = enemy.worldX / shrinkModifier, enemy.worldY / shrinkModifier
+        for entity in enemies.sprites() + bosses.sprites():
+            if not entity.dead:
+                newImage = Setup.pg.transform.scale(entity.image, (entity.width / shrinkModifier, entity.height / shrinkModifier))
+                newX, newY = entity.worldX / shrinkModifier, entity.worldY / shrinkModifier
                 Setup.setup.screen.blit(newImage, (startX + newX, startY + newY))
         
         newPlayerX, newPlayerY = player.worldX / shrinkModifier, player.worldY / shrinkModifier
@@ -1753,65 +1788,37 @@ class CooldownTimer:
     def Reset(self):
         self.startTime = None
 
-class Enemy(Setup.pg.sprite.Sprite):
-    def __init__(self, worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange, enemyType, gameHandler):
+class BaseEnemy(Setup.pg.sprite.Sprite):
+    def __init__(self, worldX, worldY, image, health, velocity, size, enemyType, gameHandler):
         super().__init__()
         self.gameHandler = gameHandler
         self.enemyType = enemyType
         self.dead = False
-
+        
         self.worldX = worldX
         self.worldY = worldY
         self.startLocationX = worldX
         self.startLocationY = worldY
-
         self.width = size
-        self.height = size # square
-
+        self.height = size
         self.image = image
         self.mask = Setup.pg.mask.from_surface(self.image)
-        self.rect = self.image.get_rect()
-        self.rect.topleft = (self.worldX, self.worldY)
-
+        self.rect = self.image.get_rect(topleft=(self.worldX, self.worldY))
+        
         self.health = health
         self.maxHealth = health
         self.velocity = velocity
         self.slowVelocity = velocity / 2
         self.carriedVelocityX = 0
         self.movementSpeeds = [0, 0]
-
+        
         #attacks
         self.currentAttackAttributes = None
-        self.currentAttackTimer = CooldownTimer(10000000) # empty timer
+        self.currentAttackTimer = CooldownTimer(10000000)
         self.attackToHitbox = {}
         self.mostRecentDirection = "RIGHT"
         self.movementLocked = False
-
-        # detection
-        self.suspicionRange = suspicionRange
-        self.detectionRange = detectionRange
-        self.state = "NORMAL" # "NORMAL", "SUSPICIOUS", "DETECTED", "RETURNING"       
-        self.detectedPlayerLocation = None
-
-        # timers
-        self.suspicionTimer = CooldownTimer(5)
-        self.suspicionWaitTimer = CooldownTimer(3) # how long the enemy waits at the detected player location before returning
-        self.outsideSuspicionRangeWhenDetected = CooldownTimer(5) # how long the player must be outside the suspicion range for the enemy to go from DETECTED to SUSPICIOUS
-        self.randomMovementTimer = CooldownTimer(3) # how often the enemy decides a new direction
-        self.attackCooldownTimer = CooldownTimer(1.5) # the delay between the end of and attack and a new attack
-
-        self.movementClasses = {"STATIONARY" : None,
-                                  "GUARD" : GuardMovement,
-                                  "RANDOM" : RandomMovement,
-                                  "FIXED_PATROL" : self.FixedPatrolMovement,
-                                  "MULTIPLE_PATROL" : self.MultiplePatrolMovement,
-                                  "SMART_PATROL" : self.SmartPatrol,
-                                  }
-
-        if self.movementClasses[movementType] is not None:
-            self.movementClass = self.movementClasses[movementType]()
-        else:
-            self.movementClass = None
+        self.attackCooldownTimer = CooldownTimer(1.5)
 
     def DataToDictionary(self):
         return {"enemyType": self.enemyType,
@@ -1839,98 +1846,14 @@ class Enemy(Setup.pg.sprite.Sprite):
         if self.health <= 0:
             self.dead = True
 
-    def DisplayHealthBar(self):
-        if not self.gameHandler.player.dead and not self.gameHandler.player.miniMap.enlarged and not (self.gameHandler.player.inventory.mainMenuOpen or self.gameHandler.player.inventory.equipMenuOpen):
-            drawX = self.worldX - self.gameHandler.player.camera.camera.left
-            drawY = self.worldY - self.gameHandler.player.camera.camera.top - 10 # shift up slightly to draw above enemy
-
-            Setup.pg.draw.rect(Setup.setup.screen, Setup.pg.Color("red4"), (drawX, drawY, self.maxHealth, 10)) # red health bar (background of bar)
-            Setup.pg.draw.rect(Setup.setup.screen, Setup.pg.Color("forestgreen"), (drawX, drawY, self.health, 10)) # green health bar
-
-    def UpdateState(self):
-        distanceFromPlayer = self.CalculateDistanceFromPlayer()
-
-        if distanceFromPlayer <= self.detectionRange:
-            self.state = "DETECTED"
-            self.outsideSuspicionRangeWhenDetected.Reset()
-
-        elif distanceFromPlayer <= self.suspicionRange:
-            if self.state != "DETECTED" and self.state != "RETURNING": # must be within detection range to detect player while returning
-                self.state = "SUSPICIOUS"
-                self.detectedPlayerLocation = (self.gameHandler.player.worldX, self.gameHandler.player.worldY)
-
-        elif distanceFromPlayer > self.suspicionRange and self.state == "DETECTED":
-            self.TransitionFromDetectedToSuspicion()
-
-    def TransitionFromDetectedToSuspicion(self):
-        if self.outsideSuspicionRangeWhenDetected.startTime is None:
-                self.outsideSuspicionRangeWhenDetected.StartTimer()
-        else:
-            if self.outsideSuspicionRangeWhenDetected.CheckFinished():
-                self.state = "SUSPICIOUS"                   
-                self.outsideSuspicionRangeWhenDetected.Reset()
-
-                if self.gameHandler.player.worldX < self.worldX:
-                    self.detectedPlayerLocation = (self.worldX - self.suspicionRange, self.worldY)
-                else:
-                    self.detectedPlayerLocation = (self.worldX + self.suspicionRange, self.worldY)
-
     def CalculateDistanceFromStart(self):
         return Setup.math.sqrt((self.worldX - self.startLocationX) ** 2 + (self.worldY - self.startLocationY))
 
-    def CalculateDistanceFromPlayer(self):
+    def CalculateDistanceFromPlayer(self, fromStartLocation=False):
+        if fromStartLocation:
+            return Setup.math.sqrt((self.startLocationX - self.gameHandler.player.worldX) ** 2 + (self.startLocationY - self.gameHandler.player.worldY) ** 2)
+
         return Setup.math.sqrt((self.worldX - self.gameHandler.player.worldX) ** 2 + (self.worldY - self.gameHandler.player.worldY) ** 2)
-
-    def PerformAction(self):
-        self.DisplayHealthBar()
-        self.PerformAttack()
-
-        self.worldX += self.carriedVelocityX
-
-        if self.carriedVelocityX < 0:
-            self.carriedVelocityX += 1
-        elif self.carriedVelocityX > 0:
-            self.carriedVelocityX -= 1
-
-        if self.movementClass is not None: # stationary enemies cannot move
-            self.UpdateState()
-
-            match self.state:
-                case "NORMAL":
-                    self.PerformMovement()
-                case "DETECTED":
-                    self.Detected()
-                case "SUSPICIOUS":
-                    self.Suspicious()
-                case "RETURNING":
-                    self.Returning()
-
-        self.rect.topleft = (self.worldX, self.worldY)
-
-    def Detected(self):
-        playerX = self.gameHandler.player.worldX # the current location
-
-        self.MoveToPoint(playerX, self.velocity)
-
-    def Suspicious(self):
-        playerX = self.detectedPlayerLocation[0] # enemies move left and right
-
-        if self.suspicionTimer.startTime is None:
-            self.suspicionTimer.StartTimer()
-
-        if self.MoveToPoint(playerX, self.slowVelocity) or self.suspicionTimer.CheckFinished():
-            self.suspicionTimer.Reset()
-
-            if self.suspicionWaitTimer.startTime is None:
-               self.suspicionWaitTimer.StartTimer()
-
-        if self.suspicionWaitTimer.CheckFinished():
-            self.state = "RETURNING"
-            self.suspicionWaitTimer.Reset()
-
-    def Returning(self):    
-        if self.MoveToPoint(self.startLocationX, self.slowVelocity):
-            self.state = "NORMAL"
 
     def CheckCollisionWithGround(self):
         hasCollision = True
@@ -2010,7 +1933,121 @@ class Enemy(Setup.pg.sprite.Sprite):
 
         if self.attackCooldownTimer.CheckFinished():
             self.attackCooldownTimer.Reset()
-                        
+
+class Enemy(BaseEnemy):
+    def __init__(self, worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange, enemyType, gameHandler):
+        super().__init__(worldX, worldY, image, health, velocity, size, enemyType, gameHandler)
+
+        # detection
+        self.suspicionRange = suspicionRange
+        self.detectionRange = detectionRange
+        self.state = "NORMAL" # "NORMAL", "SUSPICIOUS", "DETECTED", "RETURNING"       
+        self.detectedPlayerLocation = None
+        self.suspicionTimer = CooldownTimer(5)
+        self.suspicionWaitTimer = CooldownTimer(3) # how long the enemy waits at the detected player location before returning
+        self.outsideSuspicionRangeWhenDetected = CooldownTimer(5) # how long the player must be outside the suspicion range for the enemy to go from DETECTED to SUSPICIOUS
+        self.randomMovementTimer = CooldownTimer(3) # how often the enemy decides a new direction
+        
+        self.movementClasses = {"STATIONARY" : None,
+                                  "GUARD" : GuardMovement,
+                                  "RANDOM" : RandomMovement,
+                                  "FIXED_PATROL" : self.FixedPatrolMovement,
+                                  "MULTIPLE_PATROL" : self.MultiplePatrolMovement,
+                                  "SMART_PATROL" : self.SmartPatrol,
+                                  }
+
+        if self.movementClasses[movementType] is not None:
+            self.movementClass = self.movementClasses[movementType]()
+        else:
+            self.movementClass = None  
+
+    def DisplayHealthBar(self):
+        if not self.gameHandler.player.dead and not self.gameHandler.player.miniMap.enlarged and not (self.gameHandler.player.inventory.mainMenuOpen or self.gameHandler.player.inventory.equipMenuOpen):
+            drawX = self.worldX - self.gameHandler.player.camera.camera.left
+            drawY = self.worldY - self.gameHandler.player.camera.camera.top - 10 # shift up slightly to draw above enemy
+
+            Setup.pg.draw.rect(Setup.setup.screen, Setup.pg.Color("red4"), (drawX, drawY, self.maxHealth, 10)) # red health bar (background of bar)
+            Setup.pg.draw.rect(Setup.setup.screen, Setup.pg.Color("forestgreen"), (drawX, drawY, self.health, 10)) # green health bar
+
+    def UpdateState(self):
+        distanceFromPlayer = self.CalculateDistanceFromPlayer()
+
+        if distanceFromPlayer <= self.detectionRange:
+            self.state = "DETECTED"
+            self.outsideSuspicionRangeWhenDetected.Reset()
+
+        elif distanceFromPlayer <= self.suspicionRange:
+            if self.state != "DETECTED" and self.state != "RETURNING": # must be within detection range to detect player while returning
+                self.state = "SUSPICIOUS"
+                self.detectedPlayerLocation = (self.gameHandler.player.worldX, self.gameHandler.player.worldY)
+
+        elif distanceFromPlayer > self.suspicionRange and self.state == "DETECTED":
+            self.TransitionFromDetectedToSuspicion()
+
+    def TransitionFromDetectedToSuspicion(self):
+        if self.outsideSuspicionRangeWhenDetected.startTime is None:
+                self.outsideSuspicionRangeWhenDetected.StartTimer()
+        else:
+            if self.outsideSuspicionRangeWhenDetected.CheckFinished():
+                self.state = "SUSPICIOUS"                   
+                self.outsideSuspicionRangeWhenDetected.Reset()
+
+                if self.gameHandler.player.worldX < self.worldX:
+                    self.detectedPlayerLocation = (self.worldX - self.suspicionRange, self.worldY)
+                else:
+                    self.detectedPlayerLocation = (self.worldX + self.suspicionRange, self.worldY)
+
+    def PerformAction(self):
+        self.DisplayHealthBar()
+        self.PerformAttack()
+
+        self.worldX += self.carriedVelocityX
+
+        if self.carriedVelocityX < 0:
+            self.carriedVelocityX += 1
+        elif self.carriedVelocityX > 0:
+            self.carriedVelocityX -= 1
+
+        if self.movementClass is not None: # stationary enemies cannot move
+            self.UpdateState()
+
+            match self.state:
+                case "NORMAL":
+                    self.PerformMovement()
+                case "DETECTED":
+                    self.Detected()
+                case "SUSPICIOUS":
+                    self.Suspicious()
+                case "RETURNING":
+                    self.Returning()
+
+        self.rect.topleft = (self.worldX, self.worldY)
+
+    def Detected(self):
+        playerX = self.gameHandler.player.worldX # the current location
+
+        self.MoveToPoint(playerX, self.velocity)
+
+    def Suspicious(self):
+        playerX = self.detectedPlayerLocation[0] # enemies move left and right
+
+        if self.suspicionTimer.startTime is None:
+            self.suspicionTimer.StartTimer()
+
+        if self.MoveToPoint(playerX, self.slowVelocity) or self.suspicionTimer.CheckFinished():
+            self.suspicionTimer.Reset()
+
+            if self.suspicionWaitTimer.startTime is None:
+               self.suspicionWaitTimer.StartTimer()
+
+        if self.suspicionWaitTimer.CheckFinished():
+            self.state = "RETURNING"
+            self.suspicionWaitTimer.Reset()
+
+    def Returning(self):    
+        if self.MoveToPoint(self.startLocationX, self.slowVelocity):
+            self.state = "NORMAL"
+                    
     def PerformMovement(self):
         self.movementClass.Movement(self)
 
@@ -2060,7 +2097,6 @@ class RandomMovement:
         elif self.direction == "LEFT":
             enemy.MoveToPoint(-Setup.sys.maxsize, enemy.slowVelocity) # anywhere to the left    
 
-
 class Enemy1(Enemy):
     def __init__(self, worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange, enemyType, gameHandler):
         super().__init__(worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange, enemyType, gameHandler)
@@ -2068,7 +2104,71 @@ class Enemy1(Enemy):
         self.attacks = {"ATTACK_1" : {"damage" : 50, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 1, "dimentions" : [160, 160]},
                         "ATTACK_2" : {"damage" : 75, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 1, "dimentions" : [240, 160]}}
 
-        self.cooldownBetweenAttacks = CooldownTimer(1) # 
+class Boss(BaseEnemy):
+    def __init__(self, worldX, worldY, image, health, velocity, size, phases, name, bossType, gameHandler):
+        super().__init__(worldX, worldY, image, health, velocity, size, bossType, gameHandler)
+        self.name = name
+        self.nameText = None
+
+        self.currentPhase = 0
+        self.numberOfPhases = phases 
+        self.bossDetectionRange = Setup.setup.BLOCK_WIDTH * 3 # all bosses have the same range - if the player is within this range then the boss fight begins
+        self.bossFightRange = Setup.setup.BLOCK_WIDTH * 10 # if the player leaves the fight range (from the bosses start location), the fight resets
+        self.state = "NORMAL" # "NORMAL", "DETECTED"
+
+    def PerformAction(self):
+        self.PerformAttack()
+        self.IsPlayerWithinRange()
+
+        self.worldX += self.carriedVelocityX
+
+        if self.carriedVelocityX < 0:
+            self.carriedVelocityX += 1
+        elif self.carriedVelocityX > 0:
+            self.carriedVelocityX -= 1
+
+        if self.state == "DETECTED":
+            self.Detected()
+
+    def Detected(self):
+        playerX = self.gameHandler.player.worldX # the current location
+        self.MoveToPoint(playerX, self.velocity)
+
+        self.DisplayHealthBar()
+
+    def DisplayHealthBar(self):       
+        if self.nameText is None:
+            fontSize = 30
+            self.nameText = Setup.TextMethods.CreateText(f"BOSS_{self.enemyType}", self.name, Setup.setup.BLACK, Setup.setup.WIDTH // 2, Setup.setup.HEIGHT - 75, fontSize)
+
+        if not self.gameHandler.player.dead and not self.gameHandler.player.miniMap.enlarged and not (self.gameHandler.player.inventory.mainMenuOpen or self.gameHandler.player.inventory.equipMenuOpen):
+            drawX = (Setup.setup.WIDTH // 2) - (self.maxHealth // 2) 
+            drawY = Setup.setup.HEIGHT - 100
+            
+            Setup.pg.draw.rect(Setup.setup.screen, Setup.pg.Color("red4"), (drawX, drawY, self.maxHealth, 50)) # red health bar (background of bar)
+            Setup.pg.draw.rect(Setup.setup.screen, Setup.pg.Color("forestgreen"), (drawX, drawY, self.health, 50)) # green health bar
+            Setup.TextMethods.UpdateText([self.nameText])
+
+    def IsPlayerWithinRange(self):
+        distance = self.CalculateDistanceFromPlayer(fromStartLocation=True)
+
+        if distance < self.bossDetectionRange:
+            self.state = "DETECTED"
+        elif distance > self.bossFightRange:
+            self.ResetBoss()
+
+    def ResetBoss(self):
+        self.state = "NORMAL"
+        self.health = self.maxHealth
+        self.worldX, self.worldY = self.startLocationX, self.startLocationY
+        self.currentPhase = 0
+
+class Boss1(Boss):
+    def __init__(self, worldX, worldY, image, health, velocity, size, phases, name, bossType, gameHandler):
+        super().__init__(worldX, worldY, image, health, velocity, size, phases, name, bossType, gameHandler)
+
+        self.attacks = {"ATTACK_1" : {"damage" : 50, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 1, "dimentions" : [160, 160]},
+                        "ATTACK_2" : {"damage" : 75, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 1, "dimentions" : [240, 160]}}
 
 class FriendlyCharacter:
     allItems = {0 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", 20),

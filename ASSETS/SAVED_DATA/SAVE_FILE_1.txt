@@ -1,8 +1,8 @@
 {
     "player": {
-        "worldX": 3096,
+        "worldX": 2877,
         "worldY": 1760,
-        "health": 625,
+        "health": 225,
         "maxHealth": 800,
         "mana": 100.0,
         "maxMana": 100,
@@ -72,23 +72,25 @@
     "enemies": [
         {
             "enemyType": 29,
-            "worldX": 2402.5,
+            "worldX": 2627.5,
             "worldY": 1760,
             "health": 0,
             "dead": true
         },
         {
             "enemyType": 29,
-            "worldX": 3335.0,
+            "worldX": 5100,
             "worldY": 1760,
             "health": 0,
             "dead": true
-        },
+        }
+    ],
+    "bosses": [
         {
-            "enemyType": 29,
-            "worldX": 4650,
+            "enemyType": 21,
+            "worldX": 3520,
             "worldY": 1760,
-            "health": 0,
+            "health": 500,
             "dead": true
         }
     ],
