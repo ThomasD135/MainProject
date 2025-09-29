@@ -1,20 +1,23 @@
 {
     "player": {
-        "worldX": 2877,
+        "worldX": 1211,
         "worldY": 1760,
-        "health": 225,
+        "health": 750,
         "maxHealth": 800,
         "mana": 100.0,
         "maxMana": 100,
-        "mostRecentWaypointCords": null,
+        "mostRecentWaypointCords": [
+            1920,
+            1440
+        ],
         "weapon": {
-            "name": "WoodenSword",
-            "description": "A weak wooden sword",
-            "abilityDescription": "A quick thrust",
-            "damage": 100,
-            "chargedDamage": 200,
-            "abilityDamage": 300,
-            "abilityManaCost": 20,
+            "name": "Longsword",
+            "description": "A long iron sword",
+            "abilityDescription": "A powerful overhead swing",
+            "damage": 40,
+            "chargedDamage": 55,
+            "abilityDamage": 75,
+            "abilityManaCost": 100,
             "abilityCooldown": 5
         },
         "spell": {
@@ -24,15 +27,17 @@
             "manaCost": 50
         },
         "armour": {
-            "name": "DefaultArmour",
-            "description": "No armour",
-            "resistance": 0
+            "name": "SkinOfTheWeepingMaw",
+            "description": "The skin of the weeping maw",
+            "resistance": 20
         },
         "inventory": {
             "itemNames": [
                 "WoodenSword",
                 "Fireball",
-                "DefaultArmour"
+                "DefaultArmour",
+                "Longsword",
+                "SkinOfTheWeepingMaw"
             ],
             "weapons": [
                 {
@@ -40,9 +45,19 @@
                     "description": "A weak wooden sword",
                     "abilityDescription": "A quick thrust",
                     "damage": 100,
-                    "chargedDamage": 200,
-                    "abilityDamage": 300,
+                    "chargedDamage": 150,
+                    "abilityDamage": 200,
                     "abilityManaCost": 20,
+                    "abilityCooldown": 5
+                },
+                {
+                    "name": "Longsword",
+                    "description": "A long iron sword",
+                    "abilityDescription": "A powerful overhead swing",
+                    "damage": 40,
+                    "chargedDamage": 55,
+                    "abilityDamage": 75,
+                    "abilityManaCost": 100,
                     "abilityCooldown": 5
                 }
             ],
@@ -59,6 +74,11 @@
                     "name": "DefaultArmour",
                     "description": "No armour",
                     "resistance": 0
+                },
+                {
+                    "name": "SkinOfTheWeepingMaw",
+                    "description": "The skin of the weeping maw",
+                    "resistance": 20
                 }
             ]
         },
@@ -72,17 +92,17 @@
     "enemies": [
         {
             "enemyType": 29,
-            "worldX": 2627.5,
+            "worldX": 2020.0,
             "worldY": 1760,
             "health": 0,
             "dead": true
         },
         {
-            "enemyType": 29,
-            "worldX": 5100,
+            "enemyType": 30,
+            "worldX": 4640,
             "worldY": 1760,
-            "health": 0,
-            "dead": true
+            "health": 200,
+            "dead": false
         }
     ],
     "bosses": [
@@ -91,7 +111,7 @@
             "worldX": 3520,
             "worldY": 1760,
             "health": 500,
-            "dead": true
+            "dead": false
         }
     ],
     "waypoints": [
@@ -99,7 +119,7 @@
             "waypointActive": false
         },
         {
-            "waypointActive": false
+            "waypointActive": true
         }
     ],
     "treasureChests": [
@@ -107,12 +127,12 @@
             "chestOpened": false
         },
         {
-            "chestOpened": false
+            "chestOpened": true
         }
     ],
     "friendlyCharacters": [
         {
-            "textNumber": 0
+            "textNumber": 3
         },
         {
             "textNumber": 0

@@ -1,6 +1,3 @@
-from pickle import INST
-from re import L
-from turtle import setup
 import Setup
 import MapCreator
 import Menus
@@ -114,7 +111,7 @@ class GameHandler(Setup.pg.sprite.Sprite):
                     attributeList[index].LoadFromDictionary(newData[index])
 
         for boss in self.bosses:
-            boss.ResetBoss()
+            boss.ResetSelf()
 
     def SaveGame(self):
         if Setup.setup.currentSaveSlot != -1 and Setup.setup.saveGame:
@@ -281,6 +278,7 @@ class GameHandler(Setup.pg.sprite.Sprite):
         for entity in self.enemies.sprites() + self.bosses.sprites():
             if not entity.dead:
                 entity.PerformAction()
+                entity.UpdateImage()
 
         hitboxesToRemove = []
 
@@ -335,16 +333,9 @@ class GameHandler(Setup.pg.sprite.Sprite):
         for hitbox in hitboxesToRemove:
             self.enemyHitboxes.remove(hitbox)
 
-    def ResetDeadEnemies(self):
-        for enemy in self.enemies:
-            if enemy.dead:
-                enemy.dead = False
-                enemy.health = enemy.maxHealth
-                enemy.worldX = enemy.startLocationX
-                enemy.worldY = enemy.startLocationY
-                enemy.state = "NORMAL"
-                enemy.carriedMovementX = 0
-                enemy.detectedPlayerLocation = 0
+    def ResetEntities(self):
+        for entity in self.enemies.sprites() + self.bosses.sprites():
+            entity.ResetSelf()
 
     def CollideWithObjects(self, mainObject, listOfObjects):
         collided = []
@@ -953,7 +944,7 @@ class Player(Setup.pg.sprite.Sprite):
         self.mapFragments = mapFragments if mapFragments is not None else {"1": True, "2": True, "3": True, "4": False} # json converts int keys to strings, which forces a conversion later, it is safer to always use string keys
         self.mostRecentWaypointCords = mostRecentWaypointCords
 
-        attributesAndDefault = {"weapon" : WoodenSword(damage=100, chargedDamage=200, abilityDamage=300, abilityManaCost=20, abilityCooldown=5, parentPlayer=self), 
+        attributesAndDefault = {"weapon" : WoodenSword(damage=100, chargedDamage=150, abilityDamage=200, abilityManaCost=20, abilityCooldown=5, parentPlayer=self), 
                                 "spell" : Fireball(damage=100, manaCost=50, parentPlayer=self), 
                                 "armour" : Armour("DefaultArmour", "No armour", 0, parentPlayer=self), 
                                 "inventory" : Inventory(self)}
@@ -1351,7 +1342,7 @@ class Player(Setup.pg.sprite.Sprite):
         if Setup.setup.pressedKey == Setup.pg.K_k:
             self.health = 0
 
-            self.gameHandler.ResetDeadEnemies()
+            self.gameHandler.ResetEntities()
 
     def Respawn(self):
         self.dead = False
@@ -1487,7 +1478,7 @@ class Waypoint:
         if self.prompt.PromptInteractedWith():
             self.waypointActive = True
             player.ResetHealthAndMana()
-            player.gameHandler.ResetDeadEnemies()
+            player.gameHandler.ResetEntities()
             player.mostRecentWaypointCords = (self.parent.worldX, self.parent.worldY)
             player.miniMap.enlarged = not player.miniMap.enlarged
             player.miniMap.seeWaypoints = True
@@ -1802,6 +1793,7 @@ class BaseEnemy(Setup.pg.sprite.Sprite):
         self.width = size
         self.height = size
         self.image = image
+        self.baseImage = image
         self.mask = Setup.pg.mask.from_surface(self.image)
         self.rect = self.image.get_rect(topleft=(self.worldX, self.worldY))
         
@@ -1816,7 +1808,7 @@ class BaseEnemy(Setup.pg.sprite.Sprite):
         self.currentAttackAttributes = None
         self.currentAttackTimer = CooldownTimer(10000000)
         self.attackToHitbox = {}
-        self.mostRecentDirection = "RIGHT"
+        self.mostRecentDirection = "LEFT"
         self.movementLocked = False
         self.attackCooldownTimer = CooldownTimer(1.5)
 
@@ -1846,6 +1838,10 @@ class BaseEnemy(Setup.pg.sprite.Sprite):
         if self.health <= 0:
             self.dead = True
 
+            if isinstance(self, Boss) and Boss.rewards[self.enemyType] is not None:
+                self.gameHandler.player.inventory.AddItem(Boss.rewards[self.enemyType])
+                Boss.rewards[self.enemyType] = None
+
     def CalculateDistanceFromStart(self):
         return Setup.math.sqrt((self.worldX - self.startLocationX) ** 2 + (self.worldY - self.startLocationY))
 
@@ -1868,6 +1864,12 @@ class BaseEnemy(Setup.pg.sprite.Sprite):
         self.rect.topleft = (self.worldX, self.worldY)
 
         return hasCollision
+
+    def UpdateImage(self):
+        if self.mostRecentDirection == "RIGHT":
+            self.image = Setup.pg.transform.flip(self.baseImage, True, False)
+        else:
+            self.image = self.baseImage
 
     def MoveToPoint(self, endLocation, velocity):
         if not self.movementLocked:
@@ -1961,6 +1963,17 @@ class Enemy(BaseEnemy):
         else:
             self.movementClass = None  
 
+    def ResetSelf(self):
+        if self.dead:
+            self.dead = False
+            self.health = self.maxHealth
+            
+        self.worldX, self.worldY = (self.startLocationX, self.startLocationY)
+        self.rect.topleft = (self.worldX, self.worldY)
+        self.state = "NORMAL"
+        self.carriedMovementX = 0
+        self.detectedPlayerLocation = 0
+
     def DisplayHealthBar(self):
         if not self.gameHandler.player.dead and not self.gameHandler.player.miniMap.enlarged and not (self.gameHandler.player.inventory.mainMenuOpen or self.gameHandler.player.inventory.equipMenuOpen):
             drawX = self.worldX - self.gameHandler.player.camera.camera.left
@@ -2004,9 +2017,9 @@ class Enemy(BaseEnemy):
         self.worldX += self.carriedVelocityX
 
         if self.carriedVelocityX < 0:
-            self.carriedVelocityX += 1
+            self.carriedVelocityX = min(0, self.carriedVelocityX + 1)
         elif self.carriedVelocityX > 0:
-            self.carriedVelocityX -= 1
+            self.carriedVelocityX = max(0, self.carriedVelocityX - 1)
 
         if self.movementClass is not None: # stationary enemies cannot move
             self.UpdateState()
@@ -2050,9 +2063,6 @@ class Enemy(BaseEnemy):
                     
     def PerformMovement(self):
         self.movementClass.Movement(self)
-
-    def StationaryMovement(self):
-        pass
 
     def FixedPatrolMovement(self):
         pass
@@ -2105,27 +2115,37 @@ class Enemy1(Enemy):
                         "ATTACK_2" : {"damage" : 75, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 1, "dimentions" : [240, 160]}}
 
 class Boss(BaseEnemy):
+    rewards = {21 : None,
+               22 : None,
+               23 : None,
+               24 : None,
+               25 : None,
+               26 : None,
+               27 : None,
+               28 : None,}
+
     def __init__(self, worldX, worldY, image, health, velocity, size, phases, name, bossType, gameHandler):
         super().__init__(worldX, worldY, image, health, velocity, size, bossType, gameHandler)
         self.name = name
         self.nameText = None
 
-        self.currentPhase = 0
+        self.currentPhase = 1
         self.numberOfPhases = phases 
         self.bossDetectionRange = Setup.setup.BLOCK_WIDTH * 3 # all bosses have the same range - if the player is within this range then the boss fight begins
         self.bossFightRange = Setup.setup.BLOCK_WIDTH * 10 # if the player leaves the fight range (from the bosses start location), the fight resets
         self.state = "NORMAL" # "NORMAL", "DETECTED"
 
     def PerformAction(self):
+        self.PerformPhaseChange()
         self.PerformAttack()
         self.IsPlayerWithinRange()
 
         self.worldX += self.carriedVelocityX
 
         if self.carriedVelocityX < 0:
-            self.carriedVelocityX += 1
+            self.carriedVelocityX = min(0, self.carriedVelocityX + 1)
         elif self.carriedVelocityX > 0:
-            self.carriedVelocityX -= 1
+            self.carriedVelocityX = max(0, self.carriedVelocityX - 1)
 
         if self.state == "DETECTED":
             self.Detected()
@@ -2152,23 +2172,46 @@ class Boss(BaseEnemy):
     def IsPlayerWithinRange(self):
         distance = self.CalculateDistanceFromPlayer(fromStartLocation=True)
 
-        if distance < self.bossDetectionRange:
+        if distance < self.bossDetectionRange or (self.health < self.maxHealth and (self.worldX, self.worldY) == (self.startLocationX, self.startLocationY)): # if the player damages the boss, it detects the player
             self.state = "DETECTED"
         elif distance > self.bossFightRange:
-            self.ResetBoss()
+            self.ResetSelf()
 
-    def ResetBoss(self):
+    def PerformPhaseChange(self):
+        if self.currentPhase < self.numberOfPhases:
+            if self.numberOfPhases == 2:
+                if self.health <= self.maxHealth // 2:
+                    self.UpdatePhase("Two")
+
+            elif self.numberOfPhases == 3:
+                if self.health <= (1 / 3) * self.maxHealth:
+                    self.UpdatePhase("Two")
+                elif self.health <= (2 / 3) * self.maxHealth:
+                    self.UpdatePhase("Three")
+
+    def UpdatePhase(self, phase):
+        self.health *= 2
+        self.currentPhase += 1
+        newAttacks = getattr(self, f"phase{phase}Attacks", None)
+
+        if newAttacks:
+            self.attacks.update(newAttacks)
+
+    def ResetSelf(self):
         self.state = "NORMAL"
         self.health = self.maxHealth
         self.worldX, self.worldY = self.startLocationX, self.startLocationY
-        self.currentPhase = 0
+        self.rect.topleft = (self.worldX, self.worldY)
+        self.currentPhase = 1
 
 class Boss1(Boss):
     def __init__(self, worldX, worldY, image, health, velocity, size, phases, name, bossType, gameHandler):
         super().__init__(worldX, worldY, image, health, velocity, size, phases, name, bossType, gameHandler)
 
         self.attacks = {"ATTACK_1" : {"damage" : 50, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 1, "dimentions" : [160, 160]},
-                        "ATTACK_2" : {"damage" : 75, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 1, "dimentions" : [240, 160]}}
+                        "ATTACK_2" : {"damage" : 75, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 1.25, "dimentions" : [240, 160]}}
+
+        self.phaseTwoAttacks = {"ATTACK_3" : {"damage" : 100, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 2, "dimentions" : [160, 240]}}
 
 class FriendlyCharacter:
     allItems = {0 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", 20),
