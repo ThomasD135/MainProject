@@ -4,7 +4,6 @@ import Menus
 class BlockSheetExtractor():
     def __init__(self):
         self.filePath = Setup.os.path.join("ASSETS", "BLOCK_SHEET", "ALL_BLOCK_SHEET_IMAGE")
-
         self.sheet = Setup.pg.image.load(self.filePath + ".png").convert_alpha()
         self.sheetHover = Setup.pg.image.load(self.filePath + "_HOVER.png").convert_alpha()
 

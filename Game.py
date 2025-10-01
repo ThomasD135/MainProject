@@ -482,18 +482,24 @@ class MultipleSpellInstancesHandler:
 class Armour:
     armourNames = ["DefaultArmour", "SkinOfTheWeepingMaw"]
     displayImages = {}
+    inGameImages = {}
 
     for x in range(0, len(armourNames)):
         displayImages.update({armourNames[x] : f"PLAYER{x + 1}_IMAGE"})
+        inGameImages.update({armourNames[x] : f"PLAYER{x + 1}_WEAPON_IMAGE"})
 
-    def __init__(self, name=None, description=None, resistance=None, parentPlayer = None):
+    def __init__(self, name=None, description=None, resistance=None, armourType=None, parentPlayer=None):
         self.name = name
         self.description = description
         self.resistance = resistance
+        self.armourType = armourType
         self.parentPlayer = parentPlayer
 
         self.displayImagePath = Armour.displayImages[name] if name in Armour.armourNames else Armour.displayImages["DefaultArmour"]
         self.image = Setup.pg.image.load(Setup.os.path.join("ASSETS", "PLAYER", self.displayImagePath) + ".png")
+
+        self.inGameImagePath = Armour.inGameImages[name] if name in Armour.armourNames else Armour.inGameImages["DefaultArmour"]
+        self.imageForGame = Setup.pg.image.load(Setup.os.path.join("ASSETS", "PLAYER", self.inGameImagePath) + ".png")
 
         self.statsToDisplay = ["description", "resistance"]
 
@@ -502,6 +508,7 @@ class Armour:
             "name": self.name,
             "description": self.description,
             "resistance": self.resistance,
+            "armourType": self.armourType,
         }
 
     @classmethod
@@ -510,6 +517,7 @@ class Armour:
             name = data.get("name", ""),
             description = data.get("description", ""),
             resistance = data.get("resistance", 0),
+            armourType = data.get("armourType", 1),
         )    
 
 class Weapon:
@@ -538,6 +546,7 @@ class Weapon:
         self.attackToHitbox = {} # attack type e.g. basic to corresponding hitbox
        
         self.displayImagePath = Weapon.displayImages[name] if name in Weapon.weaponNames else Weapon.displayImages["WoodenSword"]
+        self.image = Setup.pg.image.load(Setup.os.path.join("ASSETS", "WEAPONS", self.displayImagePath) + ".png")
         
         self.statsToDisplay = ["description", "abilityDescription", "damage", "chargedDamage", "abilityDamage", "abilityManaCost", "abilityCooldown"]
 
@@ -853,9 +862,11 @@ class Inventory:
     def UpdatePlayerModelScreen(self):       
         enlargedPlayerImage = Setup.pg.transform.scale(self.parentPlayer.unflippedIdleImage, (Setup.setup.WIDTH / 4, Setup.setup.WIDTH / 4))
         enlargedPlayerTorso = Setup.pg.transform.scale(self.parentPlayer.armour.image, (Setup.setup.WIDTH / 4, Setup.setup.WIDTH / 4))
+        enlargedPlayerLegs = Setup.pg.transform.scale(self.parentPlayer.legs[self.parentPlayer.armour.armourType], (Setup.setup.WIDTH / 4, Setup.setup.WIDTH / 4))
 
         Setup.setup.screen.blit(enlargedPlayerImage, (Setup.setup.WIDTH / 10, (Setup.setup.HEIGHT - Setup.setup.WIDTH / 4) / 2)) # current player image unrotated
         Setup.setup.screen.blit(enlargedPlayerTorso, (Setup.setup.WIDTH / 10, (Setup.setup.HEIGHT - Setup.setup.WIDTH / 4) / 2)) 
+        Setup.setup.screen.blit(enlargedPlayerLegs, (Setup.setup.WIDTH / 10, (Setup.setup.HEIGHT - Setup.setup.WIDTH / 4) / 2)) 
 
     def DrawHoveredItemStats(self, item):
         textToDraw = {}
@@ -895,6 +906,7 @@ class Inventory:
         for button in Menus.menuManagement.inventoryEquipDisplayButtonGroup.buttons:           
             for item in itemList:
                 if clicked == item.name:
+                    item.parentPlayer = self.parentPlayer
                     setattr(self.parentPlayer, displayTypeToAttribute[Menus.menuManagement.inventoryEquipDisplayButtonGroup.displayType], item)
                     Menus.menuManagement.inventoryEquipDisplayButtonGroup.ExitButton()
                     break
@@ -946,7 +958,7 @@ class Player(Setup.pg.sprite.Sprite):
 
         attributesAndDefault = {"weapon" : WoodenSword(damage=100, chargedDamage=150, abilityDamage=200, abilityManaCost=20, abilityCooldown=5, parentPlayer=self), 
                                 "spell" : Fireball(damage=100, manaCost=50, parentPlayer=self), 
-                                "armour" : Armour("DefaultArmour", "No armour", 0, parentPlayer=self), 
+                                "armour" : Armour("DefaultArmour", "No armour", resistance=0, armourType=1, parentPlayer=self), 
                                 "inventory" : Inventory(self)}
         
         for attributeName, default in attributesAndDefault.items():
@@ -974,13 +986,17 @@ class Player(Setup.pg.sprite.Sprite):
         self.miniMap = MiniMap()     
      
         self.idleFilePath = Setup.os.path.join("ASSETS", "PLAYER", "PLAYER_IDLE_SHEET")
-        self.idleImageSheet = Setup.pg.image.load(self.idleFilePath + ".png").convert_alpha()
-        self.idleSheet = Setup.SpriteSheet(self.idleImageSheet, self, self.width * 8)
+        self.idleSheet = Setup.SpriteSheet(self.idleFilePath, self, self.width * 8)
         self.unflippedIdleImage = self.idleSheet.GetImage(0, self.width, self.height, 1)
 
-        self.jumpFilePath = Setup.os.path.join("ASSETS", "PLAYER", "PLAYER_JUMP_SHEET")
-        self.jumpImageSheet = Setup.pg.image.load(self.jumpFilePath + ".png").convert_alpha()
-        self.jumpSheet = Setup.SpriteSheet(self.jumpImageSheet, self, self.width * 8)
+        self.walkFilePath = Setup.os.path.join("ASSETS", "PLAYER", "PLAYER_WALK_SHEET")
+        self.walkSheet = Setup.SpriteSheet(self.walkFilePath, self, self.width * 8)
+
+        numberOfLegs = 2
+        self.legs = {}
+        for x in range(1, numberOfLegs + 1):
+            image = Setup.pg.image.load(Setup.os.path.join("ASSETS", "PLAYER", f"PLAYER{x}_LEGS_IMAGE") + ".png")
+            self.legs.update({x : image})
 
         self.state = "IDLE"
         self.currentFrame = 0
@@ -1033,7 +1049,9 @@ class Player(Setup.pg.sprite.Sprite):
         )
 
     def UpdateCurrentImage(self, flipImage):       
-        self.torsoImage = Setup.pg.transform.flip(self.armour.image, flipImage, False)
+        self.torsoImage = Setup.pg.transform.flip(self.armour.imageForGame, flipImage, False)
+        self.weaponImage = Setup.pg.transform.flip(self.weapon.image, flipImage, False)
+        self.legsImage = Setup.pg.transform.flip(self.legs[self.armour.armourType], flipImage, False)
 
         if self.currentSheet:
             self.currentSheet.Update()
@@ -1199,6 +1217,7 @@ class Player(Setup.pg.sprite.Sprite):
         if not self.dead:
             self.movementSpeeds[0] = 0
             self.Inputs()
+            self.ChangeSheet()
             self.UpdatePlayerMovementSpeeds()         
             self.StopPlayerOnBlockCollision()
 
@@ -1226,6 +1245,13 @@ class Player(Setup.pg.sprite.Sprite):
             return True
 
         return False
+
+    def ChangeSheet(self):
+        match self.state:
+            case "IDLE":
+                self.currentSheet = self.idleSheet
+            case "WALK":
+                self.currentSheet = self.walkSheet
 
     def PlayerMaintenanceFunctions(self):
         self.PassiveManaRegeneration()
@@ -1322,6 +1348,8 @@ class Player(Setup.pg.sprite.Sprite):
             drawY = self.worldY - self.camera.camera.top
             Setup.setup.screen.blit(self.currentImage, (drawX, drawY)) # draw player image
             Setup.setup.screen.blit(self.torsoImage, (drawX, drawY))
+            Setup.setup.screen.blit(self.weaponImage, (drawX, drawY))
+            Setup.setup.screen.blit(self.legsImage, (drawX, drawY))
 
             Setup.pg.draw.rect(Setup.setup.screen, Setup.pg.Color("red4"), (0, 0, self.maxHealth, 50)) # red health bar (background of bar)
             Setup.pg.draw.rect(Setup.setup.screen, Setup.pg.Color("forestgreen"), (0, 0, self.health, 50)) # green health bar
@@ -2214,11 +2242,11 @@ class Boss1(Boss):
         self.phaseTwoAttacks = {"ATTACK_3" : {"damage" : 100, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 2, "dimentions" : [160, 240]}}
 
 class FriendlyCharacter:
-    allItems = {0 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", 20),
-                    1 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", 20),
-                    2 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", 20),
-                    3 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", 20),
-                    4 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", 20)}
+    allItems = {0 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=20, armourType=2),
+                    1 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=20, armourType=2),
+                    2 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=20, armourType=2),
+                    3 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=20, armourType=2),
+                    4 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=20, armourType=2)}
 
     allText = {0 : ["Hi this is the first text, i will help you throughout the game", 
                         "Hi this is the second text", 

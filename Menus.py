@@ -152,13 +152,12 @@ class SlidingButton(Button):
 class Background():
     def __init__(self, filePathImage):
         self.filePath = Setup.os.path.join("ASSETS", "BACKGROUND", filePathImage)
-        self.image = Setup.pg.image.load(self.filePath + ".png").convert_alpha()    
 
         self.width = 1920
         self.height = 1080
         self.totalWidth = self.width * 12
 
-        self.sheet = Setup.SpriteSheet(self.image, self, self.totalWidth)
+        self.sheet = Setup.SpriteSheet(self.filePath, self, self.totalWidth)
         self.currentFrame = 0
         self.startTime = Setup.time.time()       
         

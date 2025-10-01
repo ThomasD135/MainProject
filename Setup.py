@@ -131,8 +131,8 @@ class FontHandler:
             self.rect = self.surface.get_rect(center=(self.locationX, self.locationY))
 
 class SpriteSheet:
-    def __init__(self, image, sheetObject, totalWidth):
-        self.sheet = image
+    def __init__(self, imagePath, sheetObject, totalWidth):
+        self.sheet = pg.image.load(imagePath + ".png").convert_alpha()
         self.sheetObject = sheetObject
         self.totalWidth = totalWidth
         self.interval = 75 / 1000 # each frame is displayed for 75 milliseconds (applies to all animations)

@@ -1,15 +1,12 @@
 {
     "player": {
-        "worldX": 1211,
+        "worldX": 3622,
         "worldY": 1760,
-        "health": 750,
+        "health": 525,
         "maxHealth": 800,
-        "mana": 100.0,
+        "mana": 20.0,
         "maxMana": 100,
-        "mostRecentWaypointCords": [
-            1920,
-            1440
-        ],
+        "mostRecentWaypointCords": null,
         "weapon": {
             "name": "Longsword",
             "description": "A long iron sword",
@@ -29,7 +26,8 @@
         "armour": {
             "name": "SkinOfTheWeepingMaw",
             "description": "The skin of the weeping maw",
-            "resistance": 20
+            "resistance": 20,
+            "armourType": 2
         },
         "inventory": {
             "itemNames": [
@@ -73,12 +71,14 @@
                 {
                     "name": "DefaultArmour",
                     "description": "No armour",
-                    "resistance": 0
+                    "resistance": 0,
+                    "armourType": 1
                 },
                 {
                     "name": "SkinOfTheWeepingMaw",
                     "description": "The skin of the weeping maw",
-                    "resistance": 20
+                    "resistance": 20,
+                    "armourType": 2
                 }
             ]
         },
@@ -92,14 +92,14 @@
     "enemies": [
         {
             "enemyType": 29,
-            "worldX": 2020.0,
+            "worldX": 1720.0,
             "worldY": 1760,
             "health": 0,
             "dead": true
         },
         {
             "enemyType": 30,
-            "worldX": 4640,
+            "worldX": 4947.5,
             "worldY": 1760,
             "health": 200,
             "dead": false
@@ -108,10 +108,10 @@
     "bosses": [
         {
             "enemyType": 21,
-            "worldX": 3520,
+            "worldX": 3244,
             "worldY": 1760,
-            "health": 500,
-            "dead": false
+            "health": -40,
+            "dead": true
         }
     ],
     "waypoints": [
@@ -119,7 +119,7 @@
             "waypointActive": false
         },
         {
-            "waypointActive": true
+            "waypointActive": false
         }
     ],
     "treasureChests": [
@@ -132,7 +132,7 @@
     ],
     "friendlyCharacters": [
         {
-            "textNumber": 3
+            "textNumber": 0
         },
         {
             "textNumber": 0
