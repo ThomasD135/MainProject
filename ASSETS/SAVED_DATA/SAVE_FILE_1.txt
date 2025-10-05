@@ -1,10 +1,10 @@
 {
     "player": {
-        "worldX": 3622,
+        "worldX": 2722,
         "worldY": 1760,
-        "health": 525,
+        "health": 725.0,
         "maxHealth": 800,
-        "mana": 20.0,
+        "mana": 100,
         "maxMana": 100,
         "mostRecentWaypointCords": null,
         "weapon": {
@@ -24,10 +24,10 @@
             "manaCost": 50
         },
         "armour": {
-            "name": "SkinOfTheWeepingMaw",
-            "description": "The skin of the weeping maw",
-            "resistance": 20,
-            "armourType": 2
+            "name": "DefaultArmour",
+            "description": "No armour",
+            "resistance": 0,
+            "armourType": 1
         },
         "inventory": {
             "itemNames": [
@@ -92,14 +92,14 @@
     "enemies": [
         {
             "enemyType": 29,
-            "worldX": 1720.0,
+            "worldX": 2082.5,
             "worldY": 1760,
-            "health": 0,
-            "dead": true
+            "health": 200,
+            "dead": false
         },
         {
             "enemyType": 30,
-            "worldX": 4947.5,
+            "worldX": 4640,
             "worldY": 1760,
             "health": 200,
             "dead": false
@@ -108,9 +108,9 @@
     "bosses": [
         {
             "enemyType": 21,
-            "worldX": 3244,
+            "worldX": 3520,
             "worldY": 1760,
-            "health": -40,
+            "health": 500,
             "dead": true
         }
     ],

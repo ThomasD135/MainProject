@@ -860,7 +860,7 @@ class Inventory:
         Setup.pg.draw.rect(Setup.setup.screen, Setup.setup.GREY, (0, 0, Setup.setup.WIDTH, Setup.setup.HEIGHT))
     
     def UpdatePlayerModelScreen(self):       
-        enlargedPlayerImage = Setup.pg.transform.scale(self.parentPlayer.unflippedIdleImage, (Setup.setup.WIDTH / 4, Setup.setup.WIDTH / 4))
+        enlargedPlayerImage = Setup.pg.transform.scale(self.parentPlayer.heads[self.parentPlayer.armour.armourType], (Setup.setup.WIDTH / 4, Setup.setup.WIDTH / 4))
         enlargedPlayerTorso = Setup.pg.transform.scale(self.parentPlayer.armour.image, (Setup.setup.WIDTH / 4, Setup.setup.WIDTH / 4))
         enlargedPlayerLegs = Setup.pg.transform.scale(self.parentPlayer.legs[self.parentPlayer.armour.armourType], (Setup.setup.WIDTH / 4, Setup.setup.WIDTH / 4))
 
@@ -985,22 +985,28 @@ class Player(Setup.pg.sprite.Sprite):
         self.camera = Camera(self)
         self.miniMap = MiniMap()     
      
-        self.idleFilePath = Setup.os.path.join("ASSETS", "PLAYER", "PLAYER_IDLE_SHEET")
-        self.idleSheet = Setup.SpriteSheet(self.idleFilePath, self, self.width * 8)
-        self.unflippedIdleImage = self.idleSheet.GetImage(0, self.width, self.height, 1)
+        # self.idleFilePath = Setup.os.path.join("ASSETS", "PLAYER", "PLAYER_IDLE_SHEET")
+        # self.idleSheet = Setup.SpriteSheet(self.idleFilePath, self, self.width * 8)
+        # self.unflippedIdleImage = self.idleSheet.GetImage(0, self.width, self.height, 1)
 
-        self.walkFilePath = Setup.os.path.join("ASSETS", "PLAYER", "PLAYER_WALK_SHEET")
-        self.walkSheet = Setup.SpriteSheet(self.walkFilePath, self, self.width * 8)
+        #self.walkFilePath = Setup.os.path.join("ASSETS", "PLAYER", "PLAYER_WALK_SHEET")
+        #self.walkSheet = Setup.SpriteSheet(self.walkFilePath, self, self.width * 8)
 
-        numberOfLegs = 2
+        numberOfVariants = 2 # number of different armour types (legs and head)
         self.legs = {}
-        for x in range(1, numberOfLegs + 1):
-            image = Setup.pg.image.load(Setup.os.path.join("ASSETS", "PLAYER", f"PLAYER{x}_LEGS_IMAGE") + ".png")
-            self.legs.update({x : image})
+        self.heads = {}
+        self.idleSheets = {}
+        self.walkSheets = {}
+
+        for x in range(1, numberOfVariants + 1):
+            self.legs[x] = Setup.pg.image.load(Setup.os.path.join("ASSETS", "PLAYER", f"PLAYER{x}_LEGS_IMAGE.png"))
+            self.heads[x] = Setup.pg.image.load(Setup.os.path.join("ASSETS", "PLAYER", f"PLAYER{x}_HEAD_IMAGE.png"))
+            self.idleSheets[x] = Setup.SpriteSheet(Setup.os.path.join("ASSETS", "PLAYER", f"PLAYER{x}_IDLE_SHEET"), self, self.width * 8)
+            self.walkSheets[x] = Setup.SpriteSheet(Setup.os.path.join("ASSETS", "PLAYER", f"PLAYER{x}_WALK_SHEET"), self, self.width * 8)
 
         self.state = "IDLE"
         self.currentFrame = 0
-        self.currentSheet = self.idleSheet
+        self.currentSheet = self.idleSheets[1]
         self.startTime = Setup.time.time()
         self.isCrouched = False
 
@@ -1052,6 +1058,7 @@ class Player(Setup.pg.sprite.Sprite):
         self.torsoImage = Setup.pg.transform.flip(self.armour.imageForGame, flipImage, False)
         self.weaponImage = Setup.pg.transform.flip(self.weapon.image, flipImage, False)
         self.legsImage = Setup.pg.transform.flip(self.legs[self.armour.armourType], flipImage, False)
+        self.headImage = Setup.pg.transform.flip(self.heads[self.armour.armourType], flipImage, False)
 
         if self.currentSheet:
             self.currentSheet.Update()
@@ -1236,7 +1243,7 @@ class Player(Setup.pg.sprite.Sprite):
             self.DrawDeathScreen()
 
     def TakeHealth(self, damage):
-        self.health -= damage
+        self.health -= (1 - self.armour.resistance / 100) * damage # resistance of 20 (reduction of 20%) = (1 - 0.2) = 0.8
 
     def UseMana(self, manaCost):
         if self.mana >= manaCost:
@@ -1247,11 +1254,18 @@ class Player(Setup.pg.sprite.Sprite):
         return False
 
     def ChangeSheet(self):
-        match self.state:
-            case "IDLE":
-                self.currentSheet = self.idleSheet
-            case "WALK":
-                self.currentSheet = self.walkSheet
+        if self.state != getattr(self, "previousState", None) or self.armour.armourType != getattr(self, "previousArmourType", None):
+            match self.state:
+                case "IDLE":
+                    self.currentSheet = self.idleSheets[self.armour.armourType]
+                case "AIR":
+                    self.currentSheet =  self.idleSheets[self.armour.armourType]
+                case "WALK":
+                    self.currentSheet = self.walkSheets[self.armour.armourType]
+
+            self.previousState = self.state
+            self.previousArmourType = self.armour.armourType
+            self.currentFrame = 0
 
     def PlayerMaintenanceFunctions(self):
         self.PassiveManaRegeneration()
@@ -1285,11 +1299,16 @@ class Player(Setup.pg.sprite.Sprite):
         collisions = self.Movement()
 
         if collisions['bottom']:
-            self.currentSheet = self.idleSheet
             self.state = "IDLE"
             self.playerYFallingSpeed = 0
             self.gravity = Setup.setup.GRAVITY
             self.movementSpeeds[1] = 0
+
+            if self.movementSpeeds[0] != 0 and self.carriedSpeedX == 0:
+                self.state = "WALK"
+            else:
+                self.state = "IDLE"
+
         elif self.movementSpeeds[1] != 0:
             self.state = "AIR"
 
@@ -1349,7 +1368,12 @@ class Player(Setup.pg.sprite.Sprite):
             Setup.setup.screen.blit(self.currentImage, (drawX, drawY)) # draw player image
             Setup.setup.screen.blit(self.torsoImage, (drawX, drawY))
             Setup.setup.screen.blit(self.weaponImage, (drawX, drawY))
-            Setup.setup.screen.blit(self.legsImage, (drawX, drawY))
+
+            if self.state != "WALK":
+                Setup.setup.screen.blit(self.legsImage, (drawX, drawY))
+
+            if self.state != "IDLE" and self.state != "AIR": # temp second condition
+                Setup.setup.screen.blit(self.headImage, (drawX, drawY))
 
             Setup.pg.draw.rect(Setup.setup.screen, Setup.pg.Color("red4"), (0, 0, self.maxHealth, 50)) # red health bar (background of bar)
             Setup.pg.draw.rect(Setup.setup.screen, Setup.pg.Color("forestgreen"), (0, 0, self.health, 50)) # green health bar
