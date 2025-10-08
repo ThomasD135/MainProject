@@ -431,11 +431,8 @@ class CreateNewGameMenu(Setup.pg.sprite.Sprite):
     def NewGameHandler(self, saveSlot):
         Setup.setup.changeSlot = (True, saveSlot)
 
-        if not self.filledSlots[saveSlot - 1]: # empty slot
-            menuManagement.AddMenu(menuManagement.newGameSettingsButtonGroup, "MENU")
-        else:
-            Setup.setup.gameState = "GAME"
-            Setup.pg.mouse.set_visible(False)
+        Setup.setup.gameState = "GAME"
+        Setup.pg.mouse.set_visible(False)
             
         menuManagement.RemoveMenu(self, "MENU")
 
@@ -451,54 +448,6 @@ class CreateNewGameMenu(Setup.pg.sprite.Sprite):
     def ExitButton(self):
         menuManagement.AddMenu(menuManagement.menuButtonGroup, "MENU") 
         menuManagement.RemoveMenu(self, "MENU")    
-
-class NewGameSettings(Setup.pg.sprite.Sprite):
-    def __init__(self):
-        Setup.pg.sprite.Sprite.__init__(self)
-
-        self.buttons = Setup.pg.sprite.Group()
-
-    def CreateButtons(self):
-        width, height = Setup.setup.BLOCK_WIDTH * 2, Setup.setup.BLOCK_WIDTH * 2
-        xLocation, yLocation = Setup.setup.WIDTH // 2, 300
-        spacing = 400
-
-        gainHealthFromBossesButton = ButtonGroupMethods.CreateButton("GAIN_HEALTH", width, height, xLocation, yLocation, "BONUS_HEALTH_BUTTON")
-        confirmSettingsButton = ButtonGroupMethods.CreateButton("CONFIRM", width, height, xLocation, yLocation + spacing, "CONFIRM_BUTTON")
-
-        xLocation, yLocation = 150, 1000
-        exitButton = ButtonGroupMethods.CreateButton("EXIT", width, height, xLocation, yLocation, "QUIT_BUTTON")
-
-        self.buttons.add(gainHealthFromBossesButton)
-        self.buttons.add(confirmSettingsButton)
-        self.buttons.add(exitButton)
-
-    def ChildActions(self):
-        ButtonGroupMethods.UpdateChildButtons(self.buttons)
-
-        clicked = ButtonGroupMethods.CheckClicks(self.buttons)
-
-        match clicked:
-            case "GAIN_HEALTH":
-                self.GainHealthFromBossesButton()
-            case "CONFIRM":
-                self.ConfirmSettingsButton()
-            case "EXIT":
-                self.ExitButton()
-
-    def GainHealthFromBossesButton(self):
-        # change settings in correct save file - can only be changed here once and never again (for this save file)
-        # if settings = OFF, change image etc
-        pass
-
-    def ConfirmSettingsButton(self):
-        Setup.setup.gameState = "GAME"
-        menuManagement.RemoveMenu(self, "MENU")
-        Setup.pg.mouse.set_visible(False)
-
-    def ExitButton(self):
-        menuManagement.AddMenu(menuManagement.menuButtonGroup, "MENU") 
-        menuManagement.RemoveMenu(self, "MENU")      
 
 class CreateMapMenu(Setup.pg.sprite.Sprite):
     def __init__(self):
@@ -712,9 +661,6 @@ class MenuManagement(Setup.pg.sprite.Sprite):
 
         self.newGameButtonGroup = CreateNewGameMenu()
         self.newGameButtonGroup.CreateButtons()
-
-        self.newGameSettingsButtonGroup = NewGameSettings()
-        self.newGameSettingsButtonGroup.CreateButtons()
 
         self.inGameMenuButtonGroup = CreateInGameMenu()
         self.inGameMenuButtonGroup.CreateButtons()

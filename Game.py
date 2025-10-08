@@ -66,16 +66,17 @@ class GameHandler(Setup.pg.sprite.Sprite):
                            40 : {"class": Enemy1, "health": 200, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
                            41 : {"class": Enemy1, "health": 200, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
                            42 : {"class": Enemy1, "health": 200, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
-                            }
+                           }
 
-        self.bossTypes = {21 : {"class": Boss1, "health": 500, "velocity": 5, "size": 160, "phases": 2, "name": "test"},
-                          22 : {"class": Boss1, "health": 500, "velocity": 5, "size": 160, "phases": 2, "name": "test"},
-                          23 : {"class": Boss1, "health": 500, "velocity": 5, "size": 160, "phases": 2, "name": "test"},
-                          24 : {"class": Boss1, "health": 500, "velocity": 5, "size": 160, "phases": 2, "name": "test"},
-                          25 : {"class": Boss1, "health": 500, "velocity": 5, "size": 160, "phases": 2, "name": "test"},
-                          26 : {"class": Boss1, "health": 500, "velocity": 5, "size": 160, "phases": 2, "name": "test"},
-                          27 : {"class": Boss1, "health": 500, "velocity": 5, "size": 160, "phases": 2, "name": "test"},
-                          28 : {"class": Boss1, "health": 500, "velocity": 5, "size": 160, "phases": 2, "name": "test"},}
+        self.bossTypes = {21 : {"class": Boss1, "health": 500, "velocity": 5, "size": 160, "phases": 1, "name": "Glod the Infected"},
+                          22 : {"class": Boss1, "health": 700, "velocity": 4, "size": 160, "phases": 1, "name": "The Wretched Growth"},
+                          23 : {"class": Boss1, "health": 1000, "velocity": 0, "size": 320, "phases": 1, "name": "The Weeping Maw"},
+                          24 : {"class": Boss1, "health": 700, "velocity": 6, "size": 160, "phases": 1, "name": "The Forgotten Champion"},
+                          25 : {"class": Boss1, "health": 2500, "velocity": 8, "size": 160, "phases": 3, "name": "Malakar, the Eclipse Stalker"},
+                          26 : {"class": Boss1, "health": 3000, "velocity": 6, "size": 320, "phases": 3, "name": "Glod, Harbinger of Plague"},
+                          27 : {"class": Boss1, "health": 2000, "velocity": 10, "size": 160, "phases": 1, "name": "Rychard, Brother of Richard"},
+                          28 : {"class": Boss1, "health": 1750, "velocity": 12, "size": 224, "phases": 2, "name": "Vaelin the Sound Born"}
+                          }
 
     def DataToDictionary(self):
         objectListsToSave = ["enemies", "bosses", "waypoints", "treasureChests", "friendlyCharacters"]
@@ -465,7 +466,7 @@ class Fireball(Spell):
             if timer.CheckFinished():
                 finishedinstances.append(instanceID)
 
-            AttackHitboxHandler.AttackStartAndEndHandler(self, timer, f"SPELL_{instanceID}", self.spellDimentions, self.damage, velocityX, velocityY, lockMovement=False, followPlayer=False, groundOnlyAttack=False)                
+            AttackHitboxHandler.AttackStartAndEndHandler(self, timer, f"SPELL_{instanceID}", self.spellDimentions, self.damage, velocityX, velocityY, lockMovement=False, followPlayer=False, groundOnlyAttack=False, useCenter=False)                
 
         for instanceID in finishedinstances:
             self.instanceHandler.instances.pop(instanceID)
@@ -615,15 +616,15 @@ class WoodenSword(Weapon):
 
         self.basicAttackLengthTimer = CooldownTimer(0.75) # seconds
         self.basicAttackSheet = None
-        self.basicAttackDimentions = (160, 160)
+        self.basicAttackDimentions = (160, 80)
 
         self.chargedAttackLengthTimer = CooldownTimer(1.25)
         self.chargedAttackSheet = None
-        self.chargedAttackDimentions = (160, 160)
+        self.chargedAttackDimentions = (160, 80)
 
         self.abilityAttackLengthTimer = CooldownTimer(1)
         self.abilityAttackSheet = None
-        self.abilityAttackDimentions = (160, 160)
+        self.abilityAttackDimentions = (160, 80)
 
     def BasicAttack(self): # player stands still and slashes
         AttackHitboxHandler.AttackStartAndEndHandler(self, self.basicAttackLengthTimer, "BASIC_WOODENSWORD", self.basicAttackDimentions, self.damage, verticalAttack=True)
@@ -644,15 +645,15 @@ class Longsword(Weapon):
 
         self.basicAttackLengthTimer = CooldownTimer(1) # seconds
         self.basicAttackSheet = None
-        self.basicAttackDimentions = (160, 160)
+        self.basicAttackDimentions = (160, 80)
 
         self.chargedAttackLengthTimer = CooldownTimer(1.5)
         self.chargedAttackSheet = None
-        self.chargedAttackDimentions = (160, 160)
+        self.chargedAttackDimentions = (160, 80)
 
         self.abilityAttackLengthTimer = CooldownTimer(1.25)
         self.abilityAttackSheet = None
-        self.abilityAttackDimentions = (160, 160)
+        self.abilityAttackDimentions = (160, 80)
 
     def BasicAttack(self): # player stands still and slashes
         AttackHitboxHandler.AttackStartAndEndHandler(self, self.basicAttackLengthTimer, "BASIC_LONGSWORD", self.basicAttackDimentions, self.damage, verticalAttack=True)
@@ -665,7 +666,7 @@ class Longsword(Weapon):
 
 class AttackHitboxHandler:
     @staticmethod
-    def AttackStartAndEndHandler(parentObject, timer, attackType, hitboxDimentions, damage, velocityX=0, velocityY=0, lockMovement=True, followPlayer=True, groundOnlyAttack=True, verticalAttack=False):
+    def AttackStartAndEndHandler(parentObject, timer, attackType, hitboxDimentions, damage, velocityX=0, velocityY=0, lockMovement=True, followPlayer=True, groundOnlyAttack=True, verticalAttack=False, useCenter=True):
         parentPlayer = getattr(parentObject, "parentPlayer", None)
        
         if verticalAttack:
@@ -689,13 +690,13 @@ class AttackHitboxHandler:
 
             match direction:
                 case "LEFT":
-                    attackHitBox = Hitbox(attackType, "LEFT", -hitboxDimentions[0], 0, hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, followPlayer, parentPlayer)
+                    attackHitBox = Hitbox(attackType, "LEFT", -hitboxDimentions[0], 0, hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, followPlayer, useCenter, parentPlayer)
                 case "RIGHT":
-                    attackHitBox = Hitbox(attackType,"RIGHT", hitboxDimentions[0], 0, hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, followPlayer, parentPlayer)
+                    attackHitBox = Hitbox(attackType,"RIGHT", hitboxDimentions[0], 0, hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, followPlayer, useCenter, parentPlayer)
                 case "UP":
-                    attackHitBox = Hitbox(attackType, "UP", 0, -hitboxDimentions[1], hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, followPlayer, parentPlayer)
+                    attackHitBox = Hitbox(attackType, "UP", 0, -hitboxDimentions[1], hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, followPlayer, useCenter, parentPlayer)
                 case "DOWN":
-                    attackHitBox = Hitbox(attackType, "DOWN", 0, hitboxDimentions[1], hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, followPlayer, parentPlayer)
+                    attackHitBox = Hitbox(attackType, "DOWN", 0, hitboxDimentions[1], hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, followPlayer, useCenter, parentPlayer)
 
             parentPlayer.gameHandler.hitboxes.add(attackHitBox)
             parentObject.attackToHitbox.update({attackType : attackHitBox})
@@ -756,15 +757,13 @@ class AttackHitboxHandler:
         parentObject.parentPlayer.movementLocked = False
 
 class Hitbox(Setup.pg.sprite.Sprite):
-    def __init__(self, hitboxType, direction, offsetX, offsetY, width, height, damage, velocityX, velocityY, followPlayer=False, parentObject=None):
+    def __init__(self, hitboxType, direction, offsetX, offsetY, width, height, damage, velocityX, velocityY, followPlayer=False, useCenter=True, parentObject=None):
         super().__init__()
         self.parent = parentObject # normally player
         self.followPlayer = followPlayer      
         self.name = hitboxType
-
-        self.direction = direction
-        self.worldX = self.parent.worldX + offsetX
-        self.worldY = self.parent.worldY + offsetY
+        self.useCenter = useCenter
+       
         self.offsetX = offsetX
         self.offsetY = offsetY
         self.width = width
@@ -773,22 +772,40 @@ class Hitbox(Setup.pg.sprite.Sprite):
         self.velocityY = velocityY
 
         self.damage = damage
-        self.rect = Setup.pg.Rect(self.worldX, self.worldY, self.width, self.height)
+        self.direction = direction
+
+        self.rect = Setup.pg.Rect(0, 0, self.width, self.height)
+        self.SetPositionFromPlayer()
+
+    def SetPositionFromPlayer(self):
+        if self.useCenter:                      
+            self.worldX = self.parent.rect.centerx + self.offsetX
+            self.worldY = self.parent.rect.centery + self.offsetY
+            self.rect.center = (self.worldX, self.worldY)
+        else:
+            self.worldX = self.parent.rect.x + self.offsetX
+            self.worldY = self.parent.rect.y + self.offsetY
+            self.rect.topleft = (self.worldX, self.worldY)
+
+    def UpdatePositionFromPlayer(self):
+        if self.useCenter:
+            self.rect.center = (self.worldX, self.worldY)
+        else:
+            self.rect.topleft = (self.worldX, self.worldY)
 
     def Update(self):
         if self.followPlayer:
-            self.worldX = self.parent.worldX + self.offsetX
-            self.worldY = self.parent.worldY + self.offsetY
+            self.SetPositionFromPlayer()
         else:
             self.worldX += self.velocityX
-            self.worldY += self.velocityY
-            
-        self.rect.topleft = (self.worldX, self.worldY)
+            self.worldY += self.velocityY           
+            self.UpdatePositionFromPlayer()
 
         # visualise
-        drawX = self.worldX - gameHandler.player.camera.camera.left
-        drawY = self.worldY - gameHandler.player.camera.camera.top
-        Setup.pg.draw.rect(Setup.setup.screen, Setup.setup.RED, (drawX, drawY, self.width, self.height))
+        if not gameHandler.player.dead and not gameHandler.player.miniMap.enlarged and not (gameHandler.player.inventory.mainMenuOpen or gameHandler.player.inventory.equipMenuOpen):
+            drawX = self.rect.x - gameHandler.player.camera.camera.left
+            drawY = self.rect.y - gameHandler.player.camera.camera.top
+            Setup.pg.draw.rect(Setup.setup.screen, Setup.setup.RED, (drawX, drawY, self.width, self.height))
 
 class Inventory:
     allItems = {"DefaultArmour" : Armour,
@@ -984,13 +1001,6 @@ class Player(Setup.pg.sprite.Sprite):
 
         self.camera = Camera(self)
         self.miniMap = MiniMap()     
-     
-        # self.idleFilePath = Setup.os.path.join("ASSETS", "PLAYER", "PLAYER_IDLE_SHEET")
-        # self.idleSheet = Setup.SpriteSheet(self.idleFilePath, self, self.width * 8)
-        # self.unflippedIdleImage = self.idleSheet.GetImage(0, self.width, self.height, 1)
-
-        #self.walkFilePath = Setup.os.path.join("ASSETS", "PLAYER", "PLAYER_WALK_SHEET")
-        #self.walkSheet = Setup.SpriteSheet(self.walkFilePath, self, self.width * 8)
 
         numberOfVariants = 2 # number of different armour types (legs and head)
         self.legs = {}
@@ -1237,8 +1247,7 @@ class Player(Setup.pg.sprite.Sprite):
             self.weapon.Update()
             self.spell.Update()
 
-            self.PlayerMaintenanceFunctions()
-            
+            self.PlayerMaintenanceFunctions()           
         else:
             self.DrawDeathScreen()
 
@@ -1394,11 +1403,10 @@ class Player(Setup.pg.sprite.Sprite):
         if Setup.setup.pressedKey == Setup.pg.K_k:
             self.health = 0
 
-            self.gameHandler.ResetEntities()
-
     def Respawn(self):
         self.dead = False
         self.ResetHealthAndMana()
+        self.gameHandler.ResetEntities()
 
         if self.mostRecentWaypointCords:
             (self.worldX, self.worldY) = self.mostRecentWaypointCords
@@ -1892,6 +1900,7 @@ class BaseEnemy(Setup.pg.sprite.Sprite):
 
             if isinstance(self, Boss) and Boss.rewards[self.enemyType] is not None:
                 self.gameHandler.player.inventory.AddItem(Boss.rewards[self.enemyType])
+                self.gameHandler.player.maxHealth += 100 # player gains 100 max health every time a boss is killed
                 Boss.rewards[self.enemyType] = None
 
     def CalculateDistanceFromStart(self):
@@ -2163,18 +2172,19 @@ class Enemy1(Enemy):
     def __init__(self, worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange, enemyType, gameHandler):
         super().__init__(worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange, enemyType, gameHandler)
 
-        self.attacks = {"ATTACK_1" : {"damage" : 50, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 1, "dimentions" : [160, 160]},
-                        "ATTACK_2" : {"damage" : 75, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 1, "dimentions" : [240, 160]}}
+        self.attacks = {"ATTACK_1" : {"damage" : 50, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 1, "dimentions" : [160, 80]},
+                        "ATTACK_2" : {"damage" : 75, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 1, "dimentions" : [240, 80]}}
 
 class Boss(BaseEnemy):
-    rewards = {21 : None,
-               22 : None,
-               23 : None,
-               24 : None,
-               25 : None,
-               26 : None,
-               27 : None,
-               28 : None,}
+    rewards = {21 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=20, armourType=2),
+               22 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=20, armourType=2),
+               23 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=20, armourType=2),
+               24 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=20, armourType=2),
+               25 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=20, armourType=2),
+               26 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=20, armourType=2),
+               27 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=20, armourType=2),
+               28 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=20, armourType=2)
+    }
 
     def __init__(self, worldX, worldY, image, health, velocity, size, phases, name, bossType, gameHandler):
         super().__init__(worldX, worldY, image, health, velocity, size, bossType, gameHandler)
@@ -2214,11 +2224,15 @@ class Boss(BaseEnemy):
             self.nameText = Setup.TextMethods.CreateText(f"BOSS_{self.enemyType}", self.name, Setup.setup.BLACK, Setup.setup.WIDTH // 2, Setup.setup.HEIGHT - 75, fontSize)
 
         if not self.gameHandler.player.dead and not self.gameHandler.player.miniMap.enlarged and not (self.gameHandler.player.inventory.mainMenuOpen or self.gameHandler.player.inventory.equipMenuOpen):
-            drawX = (Setup.setup.WIDTH // 2) - (self.maxHealth // 2) 
+            scale = 0.5
+            barMaxWidth = self.maxHealth * scale
+            barCurrentWidth = self.health * scale
+            
+            drawX = (Setup.setup.WIDTH // 2) - (barMaxWidth // 2) 
             drawY = Setup.setup.HEIGHT - 100
             
-            Setup.pg.draw.rect(Setup.setup.screen, Setup.pg.Color("red4"), (drawX, drawY, self.maxHealth, 50)) # red health bar (background of bar)
-            Setup.pg.draw.rect(Setup.setup.screen, Setup.pg.Color("forestgreen"), (drawX, drawY, self.health, 50)) # green health bar
+            Setup.pg.draw.rect(Setup.setup.screen, Setup.pg.Color("red4"), (drawX, drawY, barMaxWidth, 50)) # red health bar (background of bar)
+            Setup.pg.draw.rect(Setup.setup.screen, Setup.pg.Color("forestgreen"), (drawX, drawY, barCurrentWidth, 50)) # green health bar
             Setup.TextMethods.UpdateText([self.nameText])
 
     def IsPlayerWithinRange(self):
@@ -2260,10 +2274,10 @@ class Boss1(Boss):
     def __init__(self, worldX, worldY, image, health, velocity, size, phases, name, bossType, gameHandler):
         super().__init__(worldX, worldY, image, health, velocity, size, phases, name, bossType, gameHandler)
 
-        self.attacks = {"ATTACK_1" : {"damage" : 50, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 1, "dimentions" : [160, 160]},
-                        "ATTACK_2" : {"damage" : 75, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 1.25, "dimentions" : [240, 160]}}
+        self.attacks = {"ATTACK_1" : {"damage" : 50, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 1, "dimentions" : [160, 80]},
+                        "ATTACK_2" : {"damage" : 75, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 1.25, "dimentions" : [240, 80]}}
 
-        self.phaseTwoAttacks = {"ATTACK_3" : {"damage" : 100, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 2, "dimentions" : [160, 240]}}
+        self.phaseTwoAttacks = {"ATTACK_3" : {"damage" : 100, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 2, "dimentions" : [160, 80]}}
 
 class FriendlyCharacter:
     allItems = {0 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=20, armourType=2),
