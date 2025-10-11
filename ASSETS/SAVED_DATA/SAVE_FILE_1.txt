@@ -1,11 +1,11 @@
 {
     "player": {
-        "worldX": 1170.0,
-        "worldY": 960,
+        "worldX": 2320,
+        "worldY": 160,
         "health": 800,
         "maxHealth": 800,
-        "mana": 100,
-        "maxMana": 100,
+        "mana": 300,
+        "maxMana": 300,
         "mostRecentWaypointCords": null,
         "weapon": {
             "name": "WoodenSword",
@@ -73,30 +73,82 @@
     },
     "enemies": [
         {
+            "enemyType": 30,
+            "worldX": 6787.508792456959,
+            "worldY": 640,
+            "health": 200,
+            "dead": false
+        },
+        {
             "enemyType": 29,
-            "worldX": 1240.0,
-            "worldY": 1760,
+            "worldX": 4733.474096611925,
+            "worldY": 1280,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 29,
+            "worldX": 5028.208570390169,
+            "worldY": 1280,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 33,
+            "worldX": 3840,
+            "worldY": 2240,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 33,
+            "worldX": 3908.592151902944,
+            "worldY": 2240,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 33,
+            "worldX": 4251.074528216368,
+            "worldY": 2240,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 31,
+            "worldX": 4707.716761891031,
+            "worldY": 2240,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 31,
+            "worldX": 5987.568676648562,
+            "worldY": 2240,
             "health": 200,
             "dead": false
         }
     ],
     "bosses": [
         {
-            "enemyType": 26,
-            "worldX": 4960,
-            "worldY": 1600,
-            "health": 3000,
+            "enemyType": 21,
+            "worldX": 5760,
+            "worldY": 1280,
+            "health": 500,
             "dead": false
         },
         {
-            "enemyType": 25,
-            "worldX": 4800,
-            "worldY": 2400,
-            "health": 2500,
+            "enemyType": 22,
+            "worldX": 5120,
+            "worldY": 2240,
+            "health": 700,
             "dead": false
         }
     ],
     "waypoints": [
+        {
+            "waypointActive": false
+        },
         {
             "waypointActive": false
         },
@@ -107,24 +159,9 @@
     "treasureChests": [
         {
             "chestOpened": false
-        },
-        {
-            "chestOpened": false
         }
     ],
     "friendlyCharacters": [
-        {
-            "textNumber": 0
-        },
-        {
-            "textNumber": 0
-        },
-        {
-            "textNumber": 0
-        },
-        {
-            "textNumber": 0
-        },
         {
             "textNumber": 0
         }

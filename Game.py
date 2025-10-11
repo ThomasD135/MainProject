@@ -239,14 +239,19 @@ class GameHandler(Setup.pg.sprite.Sprite):
         self.blockNumberToObject = {}
 
         unweightedAdjacencyList = {0 : [1],
-                                   1 : [0, 2, 7],
-                                   2 : [1, 3],
-                                   3 : [2, 4],
-                                   4 : [3, 5],
-                                   5 : [4, 6, 7],
-                                   6 : [5],
-                                   7 : [1, 5, 8],
-                                   8 : [7]
+                                   1 : [2, 11],
+                                   2 : [1, 3, 13],
+                                   3 : [2, 4, 7, 13],
+                                   4 : [3, 5, 6],
+                                   5 : [4],
+                                   6 : [4],
+                                   7 : [3, 8, 9],
+                                   8 : [7],
+                                   9 : [7, 10],
+                                   10 : [9],
+                                   11 : [1, 12],
+                                   12 : [11],
+                                   13 : [2, 3]
                                    }
         
         for block in blocks: # populate blockNumberToObject
@@ -960,7 +965,7 @@ class Inventory:
         self.UpdateSelectionSlots()
         
 class Player(Setup.pg.sprite.Sprite):
-    def __init__(self, name="Player", gameHandler=None, worldX=Setup.setup.WIDTH / 2, worldY=Setup.setup.HEIGHT / 2, health=800, maxHealth=800, mana=100, maxMana=100, mapFragments=None, mostRecentWaypointCords=None, weapon=None, spell=None, armour=None, inventory=None):
+    def __init__(self, name="Player", gameHandler=None, worldX=Setup.setup.BLOCK_WIDTH, worldY=Setup.setup.BLOCK_WIDTH, health=800, maxHealth=800, mana=300, maxMana=300, mapFragments=None, mostRecentWaypointCords=None, weapon=None, spell=None, armour=None, inventory=None):
         super().__init__()
         self.name = name
         self.gameHandler = gameHandler
@@ -1052,10 +1057,10 @@ class Player(Setup.pg.sprite.Sprite):
         return cls(
             worldX = data.get("worldX", 0),
             worldY = data.get("worldY", 0),
-            health = data.get("health", 100),
-            maxHealth = data.get("maxHealth", 100),
-            mana = data.get("mana", 50),
-            maxMana = data.get("maxMana", 50),
+            health = data.get("health", 800),
+            maxHealth = data.get("maxHealth", 800),
+            mana = data.get("mana", 300),
+            maxMana = data.get("maxMana", 300),
             mapFragments = data.get("mapFragments", {"1": True, "2": True, "3": True, "4": False}),
             mostRecentWaypointCords = data.get("mostRecentWaypointCords", None),
             weapon = Inventory.allItems[data.get("weapon")["name"]].DataFromDictionary(data.get("weapon")) if data.get("weapon") else None,
@@ -1384,11 +1389,20 @@ class Player(Setup.pg.sprite.Sprite):
             if self.state != "IDLE" and self.state != "AIR": # temp second condition
                 Setup.setup.screen.blit(self.headImage, (drawX, drawY))
 
-            Setup.pg.draw.rect(Setup.setup.screen, Setup.pg.Color("red4"), (0, 0, self.maxHealth, 50)) # red health bar (background of bar)
-            Setup.pg.draw.rect(Setup.setup.screen, Setup.pg.Color("forestgreen"), (0, 0, self.health, 50)) # green health bar
+            self.DrawBar("HEALTH", self.health, self.maxHealth, 0, "red4", "forestgreen", "healthText")
+            self.DrawBar("MANA", self.mana, self.maxMana, 50, "dimgrey", "dodgerblue3", "manaText")
 
-            Setup.pg.draw.rect(Setup.setup.screen, Setup.pg.Color("dimgrey"), (0, 50, self.maxMana, 50)) # grey mana bar (background of bar)
-            Setup.pg.draw.rect(Setup.setup.screen, Setup.pg.Color("dodgerblue3"), (0, 50, self.mana, 50)) # blue mana bar
+    def DrawBar(self, name, currentValue, maxValue, locationY, backgroundColour, foregroundColour, textAttribute):
+        if getattr(self, textAttribute, None) is None:
+            fontSize = 30
+            setattr(self, textAttribute, Setup.TextMethods.CreateText(name, f"{currentValue} / {maxValue}", Setup.setup.BLACK, maxValue / 2, locationY + 25, fontSize))
+
+        Setup.pg.draw.rect(Setup.setup.screen, Setup.pg.Color(backgroundColour), (0, locationY, maxValue, 50))
+        Setup.pg.draw.rect(Setup.setup.screen, Setup.pg.Color(foregroundColour), (0, locationY, currentValue, 50))
+
+        textObject = getattr(self, textAttribute)
+        textObject.SetText(f"{round(currentValue)} / {maxValue}")
+        Setup.TextMethods.UpdateText([textObject])
 
     def DrawDeathScreen(self):
         deathScreenText = Setup.TextMethods.CreateText("DEATH", "DEAD", Setup.setup.RED, Setup.setup.WIDTH // 2, Setup.setup.HEIGHT // 2, 100)
@@ -1933,6 +1947,9 @@ class BaseEnemy(Setup.pg.sprite.Sprite):
             self.image = self.baseImage
 
     def MoveToPoint(self, endLocation, velocity):
+        randomVelocityMultiplier = max(0.8, Setup.random.random())
+        velocity *= randomVelocityMultiplier
+
         if not self.movementLocked:
             direction = None
             changeInLocationX = 0
@@ -2256,7 +2273,7 @@ class Boss(BaseEnemy):
                     self.UpdatePhase("Three")
 
     def UpdatePhase(self, phase):
-        self.health *= 2
+        self.health = min(self.health * 2, self.maxHealth)
         self.currentPhase += 1
         newAttacks = getattr(self, f"phase{phase}Attacks", None)
 
