@@ -435,9 +435,6 @@ class Spell:
 
     def CreateNewInstance(self):
         pass
-
-    def CreateNewHitBox(self):
-        pass
                 
     def UseSpell(self):
         pass
@@ -975,7 +972,7 @@ class Player(Setup.pg.sprite.Sprite):
         self.maxHealth = maxHealth
         self.mana = mana
         self.maxMana = maxMana
-        self.mapFragments = mapFragments if mapFragments is not None else {"1": True, "2": True, "3": True, "4": False} # json converts int keys to strings, which forces a conversion later, it is safer to always use string keys
+        self.mapFragments = mapFragments if mapFragments is not None else {"1": False, "2": False, "3": False, "4": False} # json converts int keys to strings, which forces a conversion later, it is safer to always use string keys
         self.mostRecentWaypointCords = mostRecentWaypointCords
 
         attributesAndDefault = {"weapon" : WoodenSword(damage=100, chargedDamage=150, abilityDamage=200, abilityManaCost=20, abilityCooldown=5, parentPlayer=self), 
@@ -1061,7 +1058,7 @@ class Player(Setup.pg.sprite.Sprite):
             maxHealth = data.get("maxHealth", 800),
             mana = data.get("mana", 300),
             maxMana = data.get("maxMana", 300),
-            mapFragments = data.get("mapFragments", {"1": True, "2": True, "3": True, "4": False}),
+            mapFragments = data.get("mapFragments", {"1": False, "2": False, "3": False, "4": False}),
             mostRecentWaypointCords = data.get("mostRecentWaypointCords", None),
             weapon = Inventory.allItems[data.get("weapon")["name"]].DataFromDictionary(data.get("weapon")) if data.get("weapon") else None,
             spell = Inventory.allItems[data.get("spell")["name"]].DataFromDictionary(data.get("spell")) if data.get("spell") else None,
@@ -1333,11 +1330,6 @@ class Player(Setup.pg.sprite.Sprite):
         if collisions['left'] or collisions['right']: 
             self.movementSpeeds[0] = 0
 
-        if self.mostRecentDirection == "LEFT":
-            self.UpdateCurrentImage(True)
-        else:
-            self.UpdateCurrentImage(False)
-
     def BlockCollision(self, block, directionOfKnockback):
         if block.topFace == directionOfKnockback and block.damage > 0: # if block has no damage, there is no knockback
             self.TakeHealth(block.damage)
@@ -1383,6 +1375,11 @@ class Player(Setup.pg.sprite.Sprite):
             Setup.setup.screen.blit(self.torsoImage, (drawX, drawY))
             Setup.setup.screen.blit(self.weaponImage, (drawX, drawY))
 
+            if self.mostRecentDirection == "LEFT":
+                self.UpdateCurrentImage(flipImage=True)
+            else:
+                self.UpdateCurrentImage(flipImage=False)
+
             if self.state != "WALK":
                 Setup.setup.screen.blit(self.legsImage, (drawX, drawY))
 
@@ -1425,8 +1422,8 @@ class Player(Setup.pg.sprite.Sprite):
         if self.mostRecentWaypointCords:
             (self.worldX, self.worldY) = self.mostRecentWaypointCords
         else:
-            self.worldX = Setup.setup.WIDTH / 2
-            self.worldY = Setup.setup.HEIGHT / 2
+            self.worldX = Setup.setup.BLOCK_WIDTH
+            self.worldY = Setup.setup.BLOCK_WIDTH
 
     def ResetHealthAndMana(self):
         self.mana = self.maxMana
@@ -2051,6 +2048,10 @@ class Enemy(BaseEnemy):
         self.state = "NORMAL"
         self.carriedMovementX = 0
         self.detectedPlayerLocation = 0
+        self.suspicionTimer.Reset()
+        self.suspicionWaitTimer.Reset()
+        self.outsideSuspicionRangeWhenDetected.Reset()
+        self.randomMovementTimer.Reset()
 
     def DisplayHealthBar(self):
         if not self.gameHandler.player.dead and not self.gameHandler.player.miniMap.enlarged and not (self.gameHandler.player.inventory.mainMenuOpen or self.gameHandler.player.inventory.equipMenuOpen):
@@ -2298,10 +2299,10 @@ class Boss1(Boss):
 
 class FriendlyCharacter:
     allItems = {0 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=20, armourType=2),
-                    1 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=20, armourType=2),
-                    2 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=20, armourType=2),
-                    3 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=20, armourType=2),
-                    4 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=20, armourType=2)}
+                    1 : "map",
+                    2 : "map",
+                    3 : "map",
+                    4 : "map"}
 
     allText = {0 : ["Hi this is the first text, i will help you throughout the game", 
                         "Hi this is the second text", 
@@ -2346,7 +2347,14 @@ class FriendlyCharacter:
                     self.textNumber += 1
                 else:
                     self.displayActive = False
-                    player.inventory.AddItem(self.item)
-                    self.item = None
+                    if self.item != "map":
+                        player.inventory.AddItem(self.item)
+                        self.item = None
+                    else:
+                        for fragment, value in player.mapFragments.items():
+                            if not value:
+                                player.mapFragments[fragment] = True
+                                self.item = None
+                                break
 
 gameHandler = GameHandler()

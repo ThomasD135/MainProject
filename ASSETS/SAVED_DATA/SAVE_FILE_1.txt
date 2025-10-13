@@ -1,12 +1,15 @@
 {
     "player": {
-        "worldX": 2320,
-        "worldY": 160,
-        "health": 800,
-        "maxHealth": 800,
-        "mana": 300,
+        "worldX": 5786,
+        "worldY": 640,
+        "health": 385.0,
+        "maxHealth": 900,
+        "mana": 300.0,
         "maxMana": 300,
-        "mostRecentWaypointCords": null,
+        "mostRecentWaypointCords": [
+            2720,
+            1280
+        ],
         "weapon": {
             "name": "WoodenSword",
             "description": "A weak wooden sword",
@@ -33,7 +36,8 @@
             "itemNames": [
                 "WoodenSword",
                 "Fireball",
-                "DefaultArmour"
+                "DefaultArmour",
+                "SkinOfTheWeepingMaw"
             ],
             "weapons": [
                 {
@@ -61,6 +65,12 @@
                     "description": "No armour",
                     "resistance": 0,
                     "armourType": 1
+                },
+                {
+                    "name": "SkinOfTheWeepingMaw",
+                    "description": "The skin of the weeping maw",
+                    "resistance": 20,
+                    "armourType": 2
                 }
             ]
         },
@@ -68,63 +78,91 @@
             "1": true,
             "2": true,
             "3": true,
-            "4": false
+            "4": true
         }
     },
     "enemies": [
         {
             "enemyType": 30,
-            "worldX": 6787.508792456959,
+            "worldX": 6569.711520684725,
             "worldY": 640,
-            "health": 200,
+            "health": 0,
+            "dead": true
+        },
+        {
+            "enemyType": 29,
+            "worldX": 5783.025212503704,
+            "worldY": 1280,
+            "health": 100,
             "dead": false
         },
         {
             "enemyType": 29,
-            "worldX": 4733.474096611925,
+            "worldX": 5416.9400796540485,
             "worldY": 1280,
             "health": 200,
             "dead": false
         },
         {
-            "enemyType": 29,
-            "worldX": 5028.208570390169,
-            "worldY": 1280,
+            "enemyType": 32,
+            "worldX": 2080.0,
+            "worldY": 2208,
             "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 38,
+            "worldX": 2878.7985682745557,
+            "worldY": 2240,
+            "health": 100,
+            "dead": false
+        },
+        {
+            "enemyType": 32,
+            "worldX": 2560,
+            "worldY": 2208,
+            "health": 100,
             "dead": false
         },
         {
             "enemyType": 33,
-            "worldX": 3840,
+            "worldX": 3361.1940789773143,
             "worldY": 2240,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 33,
-            "worldX": 3908.592151902944,
+            "worldX": 4369.268733144335,
             "worldY": 2240,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 33,
-            "worldX": 4251.074528216368,
+            "worldX": 4122.437118034276,
             "worldY": 2240,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 31,
-            "worldX": 4707.716761891031,
+            "worldX": 5177.631795528173,
             "worldY": 2240,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 31,
-            "worldX": 5987.568676648562,
+            "worldX": 7680,
             "worldY": 2240,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 34,
+            "worldX": 4608,
+            "worldY": 3328,
             "health": 200,
             "dead": false
         }
@@ -132,7 +170,7 @@
     "bosses": [
         {
             "enemyType": 21,
-            "worldX": 5760,
+            "worldX": 5782.258879849224,
             "worldY": 1280,
             "health": 500,
             "dead": false
@@ -142,10 +180,16 @@
             "worldX": 5120,
             "worldY": 2240,
             "health": 700,
-            "dead": false
+            "dead": true
         }
     ],
     "waypoints": [
+        {
+            "waypointActive": true
+        },
+        {
+            "waypointActive": true
+        },
         {
             "waypointActive": false
         },
@@ -159,9 +203,27 @@
     "treasureChests": [
         {
             "chestOpened": false
+        },
+        {
+            "chestOpened": false
+        },
+        {
+            "chestOpened": false
         }
     ],
     "friendlyCharacters": [
+        {
+            "textNumber": 3
+        },
+        {
+            "textNumber": 0
+        },
+        {
+            "textNumber": 0
+        },
+        {
+            "textNumber": 0
+        },
         {
             "textNumber": 0
         }
