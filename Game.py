@@ -1872,8 +1872,8 @@ class BaseEnemy(Setup.pg.sprite.Sprite):
         self.maxHealth = health
         self.velocity = velocity
         self.slowVelocity = velocity / 2
-        self.carriedVelocityX = 0
-        self.movementSpeeds = [0, 0]
+        self.knockbackSpeedX = 0
+        self.verticalSpeedY = 0
         
         #attacks
         self.currentAttackAttributes = None
@@ -1902,9 +1902,9 @@ class BaseEnemy(Setup.pg.sprite.Sprite):
         self.health -= damage
 
         if direction == "RIGHT": # no knockback when hit from above or below
-            self.carriedVelocityX = 20
+            self.knockbackSpeedX = 20
         elif direction == "LEFT":
-            self.carriedVelocityX = -20
+            self.knockbackSpeedX = -20
         
         if self.health <= 0:
             self.dead = True
@@ -1943,6 +1943,42 @@ class BaseEnemy(Setup.pg.sprite.Sprite):
         else:
             self.image = self.baseImage
 
+    def ApplyKnockback(self):
+        if getattr(self, "knockbackSpeedX", 0) != 0:
+            self.worldX += self.knockbackSpeedX
+
+            if self.knockbackSpeedX < 0:
+                self.knockbackSpeedX = min(0, self.knockbackSpeedX + 1)
+            elif self.knockbackSpeedX > 0:
+                self.knockbackSpeedX = max(0, self.knockbackSpeedX - 1)
+
+            self.rect.topleft = (self.worldX, self.worldY)
+
+            for block in self.gameHandler.CollideWithObjects(self, self.gameHandler.blocks):
+                if self.knockbackSpeedX > 0:
+                    self.worldX = block.worldX - self.rect.width
+                elif self.knockbackSpeedX < 0:
+                    self.worldX = block.worldX + block.rect.width
+
+                self.knockbackSpeedX = 0 
+                self.rect.topleft = (self.worldX, self.worldY)
+        
+    def Falling(self):
+        self.worldY += self.verticalSpeedY
+
+        if not self.CheckCollisionWithGround():
+            self.verticalSpeedY += Setup.setup.GRAVITY
+
+            if self.verticalSpeedY > 30:
+                self.verticalSpeedY = 30 
+        else:
+            if self.verticalSpeedY >= Setup.setup.GRAVITY * 10:          
+                self.health = -1 # fall damage
+                self.dead = True
+
+            self.worldY -= self.verticalSpeedY
+            self.verticalSpeedY = 0    
+            
     def MoveToPoint(self, endLocation, velocity):
         randomVelocityMultiplier = max(0.8, Setup.random.random())
         velocity *= randomVelocityMultiplier
@@ -1980,7 +2016,7 @@ class BaseEnemy(Setup.pg.sprite.Sprite):
                 elif direction == "LEFT": 
                     self.worldX = block.worldX + block.rect.width            
 
-            self.rect.topleft = (self.worldX, self.worldY)     
+            self.rect.topleft = (self.worldX, self.worldY)    
 
     def PerformAttack(self):   
         self.ChooseAttack()
@@ -2041,8 +2077,8 @@ class Enemy(BaseEnemy):
     def ResetSelf(self):
         if self.dead:
             self.dead = False
-            self.health = self.maxHealth
             
+        self.health = self.maxHealth           
         self.worldX, self.worldY = (self.startLocationX, self.startLocationY)
         self.rect.topleft = (self.worldX, self.worldY)
         self.state = "NORMAL"
@@ -2092,13 +2128,13 @@ class Enemy(BaseEnemy):
     def PerformAction(self):
         self.DisplayHealthBar()
         self.PerformAttack()
+        self.ApplyKnockback()
+        self.Falling()
 
-        self.worldX += self.carriedVelocityX
-
-        if self.carriedVelocityX < 0:
-            self.carriedVelocityX = min(0, self.carriedVelocityX + 1)
-        elif self.carriedVelocityX > 0:
-            self.carriedVelocityX = max(0, self.carriedVelocityX - 1)
+        # if self.knockbackSpeedX < 0:
+        #     self.knockbackSpeedX = min(0, self.knockbackSpeedX + 1)
+        # elif self.knockbackSpeedX > 0:
+        #     self.knockbackSpeedX = max(0, self.knockbackSpeedX - 1)
 
         if self.movementClass is not None: # stationary enemies cannot move
             self.UpdateState()
@@ -2219,13 +2255,13 @@ class Boss(BaseEnemy):
         self.PerformPhaseChange()
         self.PerformAttack()
         self.IsPlayerWithinRange()
+        self.ApplyKnockback()
+        self.Falling()
 
-        self.worldX += self.carriedVelocityX
-
-        if self.carriedVelocityX < 0:
-            self.carriedVelocityX = min(0, self.carriedVelocityX + 1)
-        elif self.carriedVelocityX > 0:
-            self.carriedVelocityX = max(0, self.carriedVelocityX - 1)
+        # if self.knockbackSpeedX < 0:
+        #     self.knockbackSpeedX = min(0, self.knockbackSpeedX + 1)
+        # elif self.knockbackSpeedX > 0:
+        #     self.knockbackSpeedX = max(0, self.knockbackSpeedX - 1)
 
         if self.state == "DETECTED":
             self.Detected()
