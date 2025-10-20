@@ -1,23 +1,23 @@
 {
     "player": {
-        "worldX": 6212,
-        "worldY": 2240,
-        "health": 825.0,
-        "maxHealth": 1000,
+        "worldX": 6913,
+        "worldY": 5120,
+        "health": 590.0,
+        "maxHealth": 800,
         "mana": 300.0,
         "maxMana": 300,
         "mostRecentWaypointCords": [
-            7040,
-            2240
+            6720,
+            4320
         ],
         "weapon": {
-            "name": "Longsword",
-            "description": "A long iron sword",
-            "abilityDescription": "A powerful overhead swing",
-            "damage": 40,
-            "chargedDamage": 55,
-            "abilityDamage": 75,
-            "abilityManaCost": 100,
+            "name": "WoodenSword",
+            "description": "A weak wooden sword",
+            "abilityDescription": "A quick thrust",
+            "damage": 100,
+            "chargedDamage": 150,
+            "abilityDamage": 200,
+            "abilityManaCost": 20,
             "abilityCooldown": 5
         },
         "spell": {
@@ -36,9 +36,7 @@
             "itemNames": [
                 "WoodenSword",
                 "Fireball",
-                "DefaultArmour",
-                "SkinOfTheWeepingMaw",
-                "Longsword"
+                "DefaultArmour"
             ],
             "weapons": [
                 {
@@ -49,16 +47,6 @@
                     "chargedDamage": 150,
                     "abilityDamage": 200,
                     "abilityManaCost": 20,
-                    "abilityCooldown": 5
-                },
-                {
-                    "name": "Longsword",
-                    "description": "A long iron sword",
-                    "abilityDescription": "A powerful overhead swing",
-                    "damage": 40,
-                    "chargedDamage": 55,
-                    "abilityDamage": 75,
-                    "abilityManaCost": 100,
                     "abilityCooldown": 5
                 }
             ],
@@ -76,104 +64,126 @@
                     "description": "No armour",
                     "resistance": 0,
                     "armourType": 1
-                },
-                {
-                    "name": "SkinOfTheWeepingMaw",
-                    "description": "The skin of the weeping maw",
-                    "resistance": 20,
-                    "armourType": 2
                 }
             ]
         },
         "mapFragments": {
             "1": true,
-            "2": true,
-            "3": true,
-            "4": true
+            "2": false,
+            "3": false,
+            "4": false
         }
     },
     "enemies": [
         {
             "enemyType": 30,
-            "worldX": 7020.9693627473525,
+            "worldX": 6863.39547484602,
             "worldY": 640,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 29,
-            "worldX": 3827.160400915875,
+            "worldX": 4641.1383482196225,
             "worldY": 1280,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 29,
-            "worldX": 5937.072187687899,
+            "worldX": 4483.0157018493965,
             "worldY": 1280,
             "health": 200,
             "dead": false
         },
         {
-            "enemyType": 32,
-            "worldX": 2410.4448185446618,
+            "enemyType": 29,
+            "worldX": 1283.7329749635037,
             "worldY": 2240,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 38,
-            "worldX": 2878.4219862478803,
-            "worldY": 2240,
-            "health": 200,
-            "dead": false
-        },
-        {
-            "enemyType": 32,
-            "worldX": 4307.9804538067065,
+            "worldX": 2541.1907134388093,
             "worldY": 2240,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 33,
-            "worldX": 3514.737139701306,
+            "worldX": 4482.335826143843,
+            "worldY": 2240,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 29,
+            "worldX": 3963.7956183509236,
             "worldY": 2240,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 33,
-            "worldX": 3361.04669129547,
+            "worldX": 3481.110055672565,
             "worldY": 2240,
             "health": 200,
             "dead": false
-        },
-        {
-            "enemyType": 33,
-            "worldX": 6361.068607333609,
-            "worldY": 2240,
-            "health": 0,
-            "dead": true
         },
         {
             "enemyType": 31,
-            "worldX": 5592.945288625491,
+            "worldX": 4085.518517107109,
             "worldY": 2240,
-            "health": -20,
-            "dead": true
+            "health": 200,
+            "dead": false
         },
         {
             "enemyType": 31,
-            "worldX": 4152.156824412428,
+            "worldX": 6079.565352925995,
+            "worldY": 2240,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 34,
+            "worldX": 7200.0,
+            "worldY": 3008,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 34,
+            "worldX": 4000,
             "worldY": 3328,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 34,
-            "worldX": 4455.425749473678,
+            "worldX": 4207.866954966747,
             "worldY": 3328,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 34,
+            "worldX": 5920.80268199379,
+            "worldY": 3296,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 37,
+            "worldX": 5101.426736735256,
+            "worldY": 3936,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 35,
+            "worldX": 5568,
+            "worldY": 3968,
             "health": 200,
             "dead": false
         }
@@ -184,22 +194,46 @@
             "worldX": 5760,
             "worldY": 1280,
             "health": 500,
-            "dead": true
+            "dead": false
+        },
+        {
+            "enemyType": 22,
+            "worldX": 960,
+            "worldY": 2240,
+            "health": 700,
+            "dead": false
         },
         {
             "enemyType": 22,
             "worldX": 5120,
             "worldY": 2240,
             "health": 700,
-            "dead": true
+            "dead": false
+        },
+        {
+            "enemyType": 23,
+            "worldX": 6080,
+            "worldY": 2560,
+            "health": 1000,
+            "dead": false
+        },
+        {
+            "enemyType": 25,
+            "worldX": 6580.591786708953,
+            "worldY": 5120,
+            "health": 1900,
+            "dead": false
         }
     ],
     "waypoints": [
         {
-            "waypointActive": true
+            "waypointActive": false
         },
         {
-            "waypointActive": true
+            "waypointActive": false
+        },
+        {
+            "waypointActive": false
         },
         {
             "waypointActive": false
@@ -219,21 +253,21 @@
             "chestOpened": false
         },
         {
-            "chestOpened": true
+            "chestOpened": false
+        },
+        {
+            "chestOpened": false
         }
     ],
     "friendlyCharacters": [
         {
-            "textNumber": 3
+            "textNumber": 2
         },
         {
             "textNumber": 0
         },
         {
-            "textNumber": 0
-        },
-        {
-            "textNumber": 0
+            "textNumber": 5
         },
         {
             "textNumber": 0

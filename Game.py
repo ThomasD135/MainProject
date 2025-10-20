@@ -2082,7 +2082,8 @@ class Enemy(BaseEnemy):
         self.worldX, self.worldY = (self.startLocationX, self.startLocationY)
         self.rect.topleft = (self.worldX, self.worldY)
         self.state = "NORMAL"
-        self.carriedMovementX = 0
+        self.knockbackSpeedX = 0
+        self.verticalSpeedY = 0
         self.detectedPlayerLocation = 0
         self.suspicionTimer.Reset()
         self.suspicionWaitTimer.Reset()
@@ -2334,20 +2335,52 @@ class Boss1(Boss):
         self.phaseTwoAttacks = {"ATTACK_3" : {"damage" : 100, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 2, "dimentions" : [160, 80]}}
 
 class FriendlyCharacter:
-    allItems = {0 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=20, armourType=2),
+    allItems = {0 : "map",
                     1 : "map",
                     2 : "map",
                     3 : "map",
-                    4 : "map"}
+                    4 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=20, armourType=2)}
 
-    allText = {0 : ["Hi this is the first text, i will help you throughout the game", 
-                        "Hi this is the second text", 
-                        "Hi this is the third text",
-                        "Hi this is the summary text"],
-                    1 : ["Hi this is the first text, i will help you throughout the game"],
-                    2 : ["Hi this is the first text, i will help you throughout the game"],
-                    3 : ["Hi this is the first text, i will help you throughout the game"],
-                    4 : ["Hi this is the first text, i will help you throughout the game"]}
+    allText = {0 : ["Hello, I haven't seen you here before", 
+                        "I'm Richard, nice to meet you!",
+                        "Just a warning, you should be careful around here", 
+                        "Good luck on your journey, take this map to help you!"],
+
+                    1 : ["I didn't think I would see you again!",
+                         "I hope that my map was of assistance",
+                         "But anyway, more about this world",
+                         "Everyday our world becomes more corrupt", 
+                         "I'm certian you've already experienced it",
+                         "I would recommend not travelling too far", 
+                         "you don't want to see how this ends",
+                         "For now, take another map, you'll need it!"],
+
+                    2 : ["Hey, you really should stop, it's too dangerous to continue",
+                         "I'm losing a part of myself staying here, but it was already too late",
+                         "I belong here, you will never understand what we have all been through",
+                         "My brother is still out here, wandering aimlessly", 
+                         "But i'm afraid that he has already lost his soul",
+                         "Yet again, i'll give you what I have left"],
+
+                    3 : ["Well, you've ignored my warnings",
+                         "You've seen what i've become",
+                         "Was it worth it?",
+                         "...",
+                         "You're coming closer to meeting him",
+                         "The reason it all started",
+                         "But believe me, he is unstoppable",
+                         "Just give up",
+                         "I have another map, maybe find some more equippment first",
+                         "Then return back to when I first met you",
+                         "I fear this is the last time we will see eachother",
+                         "...",
+                         "Goodbye..."],
+
+                    4 : ["...",
+                         "A rotting corpse",
+                         "Merely a shell of what once existed",
+                         "The epitome of plague",
+                         "..."]}
 
     def __init__(self, parentBlock, friendlyCharacterNumber):
         self.parent = parentBlock
@@ -2374,7 +2407,7 @@ class FriendlyCharacter:
     def FriendlyCharacterFunction(self, player):
         if self.prompt.PromptInteractedWith() or self.displayActive:
             self.displayActive = True
-            Setup.pg.draw.rect(Setup.setup.screen, Setup.setup.BLACK, (500, Setup.setup.HEIGHT * (4 / 5), 920, Setup.setup.HEIGHT // 5))
+            Setup.pg.draw.rect(Setup.setup.screen, Setup.setup.BLACK, (410, Setup.setup.HEIGHT * (4 / 5), 1100, Setup.setup.HEIGHT // 5))
             textToDraw = Setup.TextMethods.CreateText(f"{self.textNumber}", self.text[self.textNumber], Setup.setup.WHITE, Setup.setup.WIDTH // 2, Setup.setup.HEIGHT * (4.5 / 5), 30)
             textToDraw.Draw()
 
