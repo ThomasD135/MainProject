@@ -72,8 +72,8 @@ class GameHandler(Setup.pg.sprite.Sprite):
                           22 : {"class": Boss1, "health": 700, "velocity": 4, "size": 160, "phases": 1, "name": "The Wretched Growth"},
                           23 : {"class": Boss1, "health": 1000, "velocity": 0, "size": 320, "phases": 1, "name": "The Weeping Maw"},
                           24 : {"class": Boss1, "health": 700, "velocity": 6, "size": 160, "phases": 1, "name": "The Forgotten Champion"},
-                          25 : {"class": Boss1, "health": 2500, "velocity": 8, "size": 160, "phases": 3, "name": "Malakar, the Eclipse Stalker"},
-                          26 : {"class": Boss1, "health": 3000, "velocity": 6, "size": 320, "phases": 3, "name": "Glod, Harbinger of Plague"},
+                          25 : {"class": Boss5, "health": 2500, "velocity": 8, "size": 160, "phases": 3, "name": "Malakar, the Eclipse Stalker"},
+                          26 : {"class": Boss6, "health": 3000, "velocity": 6, "size": 320, "phases": 3, "name": "Glod, Harbinger of Plague"},
                           27 : {"class": Boss1, "health": 2000, "velocity": 10, "size": 160, "phases": 1, "name": "Rychard, Brother of Richard"},
                           28 : {"class": Boss1, "health": 1750, "velocity": 12, "size": 224, "phases": 2, "name": "Vaelin the Sound Born"}
                           }
@@ -239,19 +239,39 @@ class GameHandler(Setup.pg.sprite.Sprite):
         self.blockNumberToObject = {}
 
         unweightedAdjacencyList = {0 : [1],
-                                   1 : [2, 11],
-                                   2 : [1, 3, 13],
-                                   3 : [2, 4, 7, 13],
-                                   4 : [3, 5, 6],
-                                   5 : [4],
-                                   6 : [4],
-                                   7 : [3, 8, 9],
-                                   8 : [7],
-                                   9 : [7, 10],
-                                   10 : [9],
-                                   11 : [1, 12],
+                                   1 : [0, 2],
+                                   2 : [1, 3],
+                                   3 : [2, 4],
+                                   4 : [3, 5, 7],
+                                   5 : [4, 6],
+                                   6 : [5],
+                                   7 : [4, 8],
+                                   8 : [7, 9],
+                                   9 : [8, 10],
+                                   10 : [9, 11, 14],
+                                   11 : [10, 12, 13],
                                    12 : [11],
-                                   13 : [2, 3]
+                                   13 : [11],
+                                   14 : [10, 15],
+                                   15 : [14, 16],
+                                   16 : [15, 17, 18],
+                                   17 : [16],
+                                   18 : [16, 19, 21],
+                                   19 : [18, 20],
+                                   20 : [19],
+                                   21 : [18, 22],
+                                   22 : [21, 23],
+                                   23 : [22, 24],
+                                   24 : [23, 25],
+                                   25 : [24, 26, 28],
+                                   26 : [25, 27],
+                                   27 : [26],
+                                   28 : [25, 29],
+                                   29 : [28, 30],
+                                   30 : [29, 31],
+                                   31 : [30, 32],
+                                   32 : [31, 33],
+                                   33 : [32]
                                    }
         
         for block in blocks: # populate blockNumberToObject
@@ -306,9 +326,9 @@ class GameHandler(Setup.pg.sprite.Sprite):
                             self.player.ApplyKnockback(block.knockback, "UP")
                         
                 hitboxesToRemove.append(hitbox)
-
+            
             for entity in self.CollideWithObjects(hitbox, self.enemies.sprites() + self.bosses.sprites()):
-                if not entity.dead:
+                if not entity.dead :
                     entity.TakeDamage(hitbox.damage, hitbox.direction)
 
                     if hitbox.direction == "UP": # blocks only have vertical knockback if they also deal damage (spikes)
@@ -329,7 +349,7 @@ class GameHandler(Setup.pg.sprite.Sprite):
             if len(self.CollideWithObjects(hitbox, self.blocks)) > 0:
                 hitboxesToRemove.append(hitbox)
 
-            if self.CollideWithObject(hitbox, self.player):
+            if self.CollideWithObject(hitbox, self.player) and not self.player.IsInvincible():
                 self.player.TakeHealth(hitbox.damage)
                 self.player.ApplyKnockback(20, hitbox.direction)
 
@@ -975,7 +995,7 @@ class Player(Setup.pg.sprite.Sprite):
         self.mapFragments = mapFragments if mapFragments is not None else {"1": False, "2": False, "3": False, "4": False} # json converts int keys to strings, which forces a conversion later, it is safer to always use string keys
         self.mostRecentWaypointCords = mostRecentWaypointCords
 
-        attributesAndDefault = {"weapon" : WoodenSword(damage=100, chargedDamage=150, abilityDamage=200, abilityManaCost=20, abilityCooldown=5, parentPlayer=self), 
+        attributesAndDefault = {"weapon" : WoodenSword(damage=50, chargedDamage=75, abilityDamage=100, abilityManaCost=25, abilityCooldown=5, parentPlayer=self), 
                                 "spell" : Fireball(damage=100, manaCost=50, parentPlayer=self), 
                                 "armour" : Armour("DefaultArmour", "No armour", resistance=0, armourType=1, parentPlayer=self), 
                                 "inventory" : Inventory(self)}
@@ -1030,6 +1050,7 @@ class Player(Setup.pg.sprite.Sprite):
         self.mostRecentDirectionAll = "RIGHT" # LEFT, RIGHT, UP AND DOWN
         self.playerYFallingSpeed = 0
         self.carriedSpeedX = 0 # dashing etc
+        self.dashInvincibilityTimer = CooldownTimer(0.75)
         self.gravity = Setup.setup.GRAVITY 
 
         self.UpdateCurrentImage(False)
@@ -1211,11 +1232,16 @@ class Player(Setup.pg.sprite.Sprite):
             self.gravity = Setup.setup.GRAVITY
 
     def DashHandler(self, keys):
-        if keys[Setup.pg.K_LSHIFT] and self.carriedSpeedX == 0: # pressing shift (dash) and not already in a dash
+        if keys[Setup.pg.K_LSHIFT] and (self.dashInvincibilityTimer.CheckFinished() or self.dashInvincibilityTimer.startTime is None): # pressing shift (dash) and not already in a dash
+            self.dashInvincibilityTimer.StartTimer()
+
             if self.mostRecentDirection == "LEFT":
                 self.carriedSpeedX = -32
             else:
                 self.carriedSpeedX = 32
+
+        if self.dashInvincibilityTimer.CheckFinished():
+            self.dashInvincibilityTimer.Reset()
 
     def CrouchHandler(self, keys):
         if keys[Setup.pg.K_LCTRL] and self.state != "AIR":
@@ -1253,8 +1279,12 @@ class Player(Setup.pg.sprite.Sprite):
         else:
             self.DrawDeathScreen()
 
-    def TakeHealth(self, damage):
-        self.health -= (1 - self.armour.resistance / 100) * damage # resistance of 20 (reduction of 20%) = (1 - 0.2) = 0.8
+    def IsInvincible(self):
+        return not self.dashInvincibilityTimer.CheckFinished() and self.dashInvincibilityTimer.startTime is not None
+
+    def TakeHealth(self, damage, fromBlock=False):
+        if not self.IsInvincible() or fromBlock:
+            self.health -= (1 - self.armour.resistance / 100) * damage # resistance of 20 (reduction of 20%) = (1 - 0.2) = 0.8
 
     def UseMana(self, manaCost):
         if self.mana >= manaCost:
@@ -1332,7 +1362,7 @@ class Player(Setup.pg.sprite.Sprite):
 
     def BlockCollision(self, block, directionOfKnockback):
         if block.topFace == directionOfKnockback and block.damage > 0: # if block has no damage, there is no knockback
-            self.TakeHealth(block.damage)
+            self.TakeHealth(block.damage, fromBlock=True)
             self.ApplyKnockback(block.knockback, directionOfKnockback)
             return True
 
@@ -1494,11 +1524,8 @@ class TreasureChest:
         self.openedImage = MapCreator.mapDataHandler.mapGrid.blockSheetHandler.GetCorrectBlockImage(self.parent.blockNumber + 1, Setup.setup.BLOCK_WIDTH, Setup.setup.BLOCK_WIDTH, False, 0)
         self.chestOpened = False 
         
-        allRewards = {0 : Longsword(damage=40,  chargedDamage=55, abilityDamage=75, abilityManaCost=100, abilityCooldown=5, parentPlayer=None),
-                    1 : Longsword(damage=40,  chargedDamage=55, abilityDamage=75, abilityManaCost=100, abilityCooldown=5, parentPlayer=None),
-                    2 : Longsword(damage=40,  chargedDamage=55, abilityDamage=75, abilityManaCost=100, abilityCooldown=5, parentPlayer=None),
-                    3 : Longsword(damage=40,  chargedDamage=55, abilityDamage=75, abilityManaCost=100, abilityCooldown=5, parentPlayer=None),
-                    4 : Longsword(damage=40,  chargedDamage=55, abilityDamage=75, abilityManaCost=100, abilityCooldown=5, parentPlayer=None)
+        allRewards = {0 : Longsword(damage=80,  chargedDamage=120, abilityDamage=200, abilityManaCost=40, abilityCooldown=5, parentPlayer=None),
+                    1 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=30, armourType=2),
         } 
         
         self.reward = allRewards[chestNumber]        
@@ -1909,6 +1936,9 @@ class BaseEnemy(Setup.pg.sprite.Sprite):
         if self.health <= 0:
             self.dead = True
 
+            for hitbox in self.attackToHitbox.values():
+                self.gameHandler.enemyHitboxes.remove(hitbox)
+
             if isinstance(self, Boss) and Boss.rewards[self.enemyType] is not None:
                 self.gameHandler.player.inventory.AddItem(Boss.rewards[self.enemyType])
                 self.gameHandler.player.maxHealth += 100 # player gains 100 max health every time a boss is killed
@@ -2132,11 +2162,6 @@ class Enemy(BaseEnemy):
         self.ApplyKnockback()
         self.Falling()
 
-        # if self.knockbackSpeedX < 0:
-        #     self.knockbackSpeedX = min(0, self.knockbackSpeedX + 1)
-        # elif self.knockbackSpeedX > 0:
-        #     self.knockbackSpeedX = max(0, self.knockbackSpeedX - 1)
-
         if self.movementClass is not None: # stationary enemies cannot move
             self.UpdateState()
 
@@ -2231,14 +2256,14 @@ class Enemy1(Enemy):
                         "ATTACK_2" : {"damage" : 75, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 1, "dimentions" : [240, 80]}}
 
 class Boss(BaseEnemy):
-    rewards = {21 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=20, armourType=2),
-               22 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=20, armourType=2),
-               23 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=20, armourType=2),
-               24 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=20, armourType=2),
-               25 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=20, armourType=2),
-               26 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=20, armourType=2),
-               27 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=20, armourType=2),
-               28 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=20, armourType=2)
+    rewards = {21 : None,
+               22 : None,
+               23 : None,
+               24 : None,
+               25 : None,
+               26 : None,
+               27 : None,
+               28 : None
     }
 
     def __init__(self, worldX, worldY, image, health, velocity, size, phases, name, bossType, gameHandler):
@@ -2258,11 +2283,6 @@ class Boss(BaseEnemy):
         self.IsPlayerWithinRange()
         self.ApplyKnockback()
         self.Falling()
-
-        # if self.knockbackSpeedX < 0:
-        #     self.knockbackSpeedX = min(0, self.knockbackSpeedX + 1)
-        # elif self.knockbackSpeedX > 0:
-        #     self.knockbackSpeedX = max(0, self.knockbackSpeedX - 1)
 
         if self.state == "DETECTED":
             self.Detected()
@@ -2333,6 +2353,30 @@ class Boss1(Boss):
                         "ATTACK_2" : {"damage" : 75, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 1.25, "dimentions" : [240, 80]}}
 
         self.phaseTwoAttacks = {"ATTACK_3" : {"damage" : 100, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 2, "dimentions" : [160, 80]}}
+
+class Boss5(Boss):
+    def __init__(self, worldX, worldY, image, health, velocity, size, phases, name, bossType, gameHandler):
+        super().__init__(worldX, worldY, image, health, velocity, size, phases, name, bossType, gameHandler)
+
+        self.attacks = {"ATTACK_1" : {"damage" : 100, "range" : Setup.setup.BLOCK_WIDTH * 1.5, "length" : 1.5, "dimentions" : [160, 80]},
+                        "ATTACK_2" : {"damage" : 150, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 1.25, "dimentions" : [160, 160]},
+                        "ATTACK_3" : {"damage" : 75, "range" : Setup.setup.BLOCK_WIDTH * 2.5, "length" : 1, "dimentions" : [420, 80]}}
+
+        self.phaseTwoAttacks = {"ATTACK_4" : {"damage" : 200, "range" : Setup.setup.BLOCK_WIDTH * 1.5, "length" : 1.25, "dimentions" : [160, 240]}}
+
+        self.phaseThreeAttacks = {"ATTACK_5" : {"damage" : 300, "range" : Setup.setup.BLOCK_WIDTH * 1, "length" : 1, "dimentions" : [160, 160]}}
+
+class Boss6(Boss):
+    def __init__(self, worldX, worldY, image, health, velocity, size, phases, name, bossType, gameHandler):
+        super().__init__(worldX, worldY, image, health, velocity, size, phases, name, bossType, gameHandler)
+
+        self.attacks = {"ATTACK_1" : {"damage" : 100, "range" : Setup.setup.BLOCK_WIDTH * 1.5, "length" : 1.5, "dimentions" : [240, 240]},
+                        "ATTACK_2" : {"damage" : 150, "range" : Setup.setup.BLOCK_WIDTH * 2.5, "length" : 1.25, "dimentions" : [420, 240]},
+                        "ATTACK_3" : {"damage" : 100, "range" : Setup.setup.BLOCK_WIDTH * 3, "length" : 1.5, "dimentions" : [500, 160]}}
+
+        self.phaseTwoAttacks = {"ATTACK_4" : {"damage" : 175, "range" : Setup.setup.BLOCK_WIDTH * 2.5, "length" : 2, "dimentions" : [400, 240]}}
+
+        self.phaseThreeAttacks = {"ATTACK_5" : {"damage" : 400, "range" : Setup.setup.BLOCK_WIDTH * 2, "length" : 3, "dimentions" : [240, 420]}}
 
 class FriendlyCharacter:
     allItems = {0 : "map",

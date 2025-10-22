@@ -1,23 +1,23 @@
 {
     "player": {
-        "worldX": 6913,
-        "worldY": 5120,
-        "health": 590.0,
+        "worldX": 3557,
+        "worldY": 4000,
+        "health": 800,
         "maxHealth": 800,
-        "mana": 300.0,
+        "mana": 300,
         "maxMana": 300,
         "mostRecentWaypointCords": [
-            6720,
-            4320
+            3520,
+            4000
         ],
         "weapon": {
             "name": "WoodenSword",
             "description": "A weak wooden sword",
             "abilityDescription": "A quick thrust",
-            "damage": 100,
-            "chargedDamage": 150,
-            "abilityDamage": 200,
-            "abilityManaCost": 20,
+            "damage": 50,
+            "chargedDamage": 75,
+            "abilityDamage": 100,
+            "abilityManaCost": 25,
             "abilityCooldown": 5
         },
         "spell": {
@@ -43,10 +43,10 @@
                     "name": "WoodenSword",
                     "description": "A weak wooden sword",
                     "abilityDescription": "A quick thrust",
-                    "damage": 100,
-                    "chargedDamage": 150,
-                    "abilityDamage": 200,
-                    "abilityManaCost": 20,
+                    "damage": 50,
+                    "chargedDamage": 75,
+                    "abilityDamage": 100,
+                    "abilityManaCost": 25,
                     "abilityCooldown": 5
                 }
             ],
@@ -69,120 +69,120 @@
         },
         "mapFragments": {
             "1": true,
-            "2": false,
-            "3": false,
-            "4": false
+            "2": true,
+            "3": true,
+            "4": true
         }
     },
     "enemies": [
         {
             "enemyType": 30,
-            "worldX": 6863.39547484602,
+            "worldX": 6957.112875956315,
             "worldY": 640,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 29,
-            "worldX": 4641.1383482196225,
+            "worldX": 4717.9603437803735,
             "worldY": 1280,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 29,
-            "worldX": 4483.0157018493965,
+            "worldX": 5197.391163597923,
             "worldY": 1280,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 29,
-            "worldX": 1283.7329749635037,
+            "worldX": 1684.9301632322,
             "worldY": 2240,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 38,
-            "worldX": 2541.1907134388093,
+            "worldX": 2635.1547735465006,
             "worldY": 2240,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 33,
-            "worldX": 4482.335826143843,
+            "worldX": 4069.446182682582,
             "worldY": 2240,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 29,
-            "worldX": 3963.7956183509236,
+            "worldX": 3770.7655242860396,
             "worldY": 2240,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 33,
-            "worldX": 3481.110055672565,
+            "worldX": 4235.136986314732,
             "worldY": 2240,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 31,
-            "worldX": 4085.518517107109,
+            "worldX": 4570.316346443044,
             "worldY": 2240,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 31,
-            "worldX": 6079.565352925995,
+            "worldX": 6004.644801759429,
             "worldY": 2240,
             "health": 200,
             "dead": false
         },
         {
-            "enemyType": 34,
-            "worldX": 7200.0,
+            "enemyType": 35,
+            "worldX": 7328,
             "worldY": 3008,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 34,
-            "worldX": 4000,
+            "worldX": 4396.115016913889,
             "worldY": 3328,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 34,
-            "worldX": 4207.866954966747,
+            "worldX": 4608,
             "worldY": 3328,
             "health": 200,
             "dead": false
         },
         {
-            "enemyType": 34,
-            "worldX": 5920.80268199379,
+            "enemyType": 37,
+            "worldX": 6174.007489851134,
             "worldY": 3296,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 37,
-            "worldX": 5101.426736735256,
+            "worldX": 4960,
             "worldY": 3936,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 35,
-            "worldX": 5568,
+            "worldX": 5204.788005492425,
             "worldY": 3968,
             "health": 200,
             "dead": false
@@ -197,7 +197,7 @@
             "dead": false
         },
         {
-            "enemyType": 22,
+            "enemyType": 24,
             "worldX": 960,
             "worldY": 2240,
             "health": 700,
@@ -218,10 +218,17 @@
             "dead": false
         },
         {
+            "enemyType": 26,
+            "worldX": 960,
+            "worldY": 3840,
+            "health": 3000,
+            "dead": false
+        },
+        {
             "enemyType": 25,
-            "worldX": 6580.591786708953,
+            "worldX": 6240,
             "worldY": 5120,
-            "health": 1900,
+            "health": 2500,
             "dead": false
         }
     ],
@@ -242,16 +249,13 @@
             "waypointActive": true
         },
         {
-            "waypointActive": true
+            "waypointActive": false
+        },
+        {
+            "waypointActive": false
         }
     ],
     "treasureChests": [
-        {
-            "chestOpened": false
-        },
-        {
-            "chestOpened": false
-        },
         {
             "chestOpened": false
         },
@@ -261,13 +265,16 @@
     ],
     "friendlyCharacters": [
         {
-            "textNumber": 2
+            "textNumber": 0
         },
         {
             "textNumber": 0
         },
         {
-            "textNumber": 5
+            "textNumber": 0
+        },
+        {
+            "textNumber": 0
         },
         {
             "textNumber": 0
