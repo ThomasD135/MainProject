@@ -1,4 +1,5 @@
 import os
+from pickle import FRAME
 import time
 import pygame as pg
 import sys
@@ -15,7 +16,7 @@ class Setup:
         self.run = True
         self.screen = pg.display.set_mode((0, 0), pg.FULLSCREEN)
         self.screenRect = self.screen.get_rect()
-        self.clock = pg.time.Clock()
+        self.clock = pg.time.Clock()       
 
         self.WHITE = (255, 255, 255)
         self.BLACK = (0, 0, 0)
@@ -36,6 +37,8 @@ class Setup:
 
         self.pressedKey = None
         self.textInputBoxes = []
+        textSize = 30
+        self.fpsText = TextMethods.CreateText("FPS", "0", self.WHITE, self.WIDTH - textSize, textSize // 2, textSize)
 
         #map attributes
         self.gameState = "MENU"
@@ -69,6 +72,11 @@ class Setup:
     def update(self):
         self.screen.fill(self.BLACK) # make the screen completely black to hide previous frame
         self.clock.tick(self.FPS)
+
+    def displayFrameRate(self):
+        fps = self.clock.get_fps()
+        self.fpsText.SetText(f"{round(fps, 1)}")
+        TextMethods.UpdateText([self.fpsText])
 
     def loadImage(self, imagePath, width=160, height=160):
         image = pg.image.load(imagePath + ".png").convert_alpha()
@@ -131,31 +139,39 @@ class FontHandler:
             self.rect = self.surface.get_rect(center=(self.locationX, self.locationY))
 
 class SpriteSheet:
-    def __init__(self, imagePath, sheetObject, totalWidth):
+    def __init__(self, imagePath, sheetObject, totalWidth, width, height, scale):
         self.sheet = pg.image.load(imagePath + ".png").convert_alpha()
         self.sheetObject = sheetObject
         self.totalWidth = totalWidth
-        self.interval = 75 / 1000 # each frame is displayed for 75 milliseconds (applies to all animations)
+        self.interval = 70 / 1000 # each frame is displayed for 70 milliseconds (applies to all animations)
+
+        self.width = width
+        self.height = height
+        self.scale = scale
+
+        self.frames = [] # load all images once
+        self.totalFrames = int(totalWidth / width)
+
+        for x in range(self.totalFrames):
+            frameImage = pg.Surface((width, height), pg.SRCALPHA)
+            frameImage.blit(self.sheet, (0, 0), (x * width, 0, width, height))
+            
+            if scale != 1:
+                frameImage = pg.transform.scale(FRAME, (width * scale, height * scale))
+            
+            self.frames.append(frameImage)
 
     def Update(self):
         sheet = self.sheetObject # the sprite sheet of the corresponding object e.g. player, background
-
         currentTime = time.time() # start a timer 
-        interval = currentTime - sheet.startTime # calculate how long the frame has been display for (milliseconds)
 
-        if interval > self.interval: 
-            sheet.currentFrame += 1
-            sheet.startTime = time.time() # start a new timer. startTime is controlled within corresponding object e.g. player, background
+        if currentTime - sheet.startTime > self.interval: 
+            sheet.currentFrame = (sheet.currentFrame + 1) % self.totalFrames
+            sheet.startTime = currentTime # start a new timer. startTime is controlled within corresponding object e.g. player, background
 
-        if sheet.currentFrame == (self.totalWidth / sheet.width): # reset sprite sheet to the first image if at the end of the sheet
-            sheet.currentFrame = 0
-
-    def GetImage(self, frame, width, height, scale):
-        image = pg.Surface((width, height), pg.SRCALPHA)
-        image.blit(self.sheet, (0,0), ((frame * width), 0, width, height)) # select specific region of the sprite sheet depending on the frame
-        image = pg.transform.scale(image, (width * scale, height * scale))
-
-        return image
+    def GetImage(self, frame):#, width, height, scale):
+        frame = self.sheetObject.currentFrame
+        return self.frames[frame]
 
 class SoundHandler:
     @staticmethod

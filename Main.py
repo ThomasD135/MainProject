@@ -25,7 +25,8 @@ def main():
                 Game.gameHandler.player.Update()
                 Game.gameHandler.UpdateSprites()
                 Menus.menuManagement.MenuChildActions("GAME")
-                
+              
+        Setup.setup.displayFrameRate()
         Setup.pg.display.update()
         Game.gameHandler.SaveGame()
 

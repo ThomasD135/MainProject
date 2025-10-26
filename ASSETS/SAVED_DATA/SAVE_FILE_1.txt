@@ -1,14 +1,14 @@
 {
     "player": {
-        "worldX": 3557,
-        "worldY": 4000,
-        "health": 800,
+        "worldX": 6880,
+        "worldY": 2114.0,
+        "health": 725.0,
         "maxHealth": 800,
         "mana": 300,
         "maxMana": 300,
         "mostRecentWaypointCords": [
-            3520,
-            4000
+            7040,
+            2240
         ],
         "weapon": {
             "name": "WoodenSword",
@@ -68,121 +68,184 @@
             ]
         },
         "mapFragments": {
-            "1": true,
-            "2": true,
-            "3": true,
-            "4": true
+            "1": false,
+            "2": false,
+            "3": false,
+            "4": false
         }
     },
     "enemies": [
         {
             "enemyType": 30,
-            "worldX": 6957.112875956315,
+            "worldX": 6960.953124765819,
             "worldY": 640,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 29,
-            "worldX": 4717.9603437803735,
+            "worldX": 4558.757485554459,
             "worldY": 1280,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 29,
-            "worldX": 5197.391163597923,
+            "worldX": 5038.9648468769265,
             "worldY": 1280,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 29,
-            "worldX": 1684.9301632322,
+            "worldX": 1838.1688089970542,
             "worldY": 2240,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 38,
-            "worldX": 2635.1547735465006,
+            "worldX": 1998.2543724720854,
             "worldY": 2240,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 33,
-            "worldX": 4069.446182682582,
+            "worldX": 2185.3086264892036,
             "worldY": 2240,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 29,
-            "worldX": 3770.7655242860396,
+            "worldX": 2400,
             "worldY": 2240,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 33,
-            "worldX": 4235.136986314732,
+            "worldX": 2720,
             "worldY": 2240,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 31,
-            "worldX": 4570.316346443044,
+            "worldX": 2880,
             "worldY": 2240,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 31,
-            "worldX": 6004.644801759429,
+            "worldX": 3520,
             "worldY": 2240,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 35,
-            "worldX": 7328,
+            "worldX": 3680,
+            "worldY": 2240,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 34,
+            "worldX": 3758.832156511782,
+            "worldY": 2240,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 34,
+            "worldX": 4082.1864296556187,
+            "worldY": 2240,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 37,
+            "worldX": 4242.922381681553,
+            "worldY": 2240,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 37,
+            "worldX": 4238.411596464579,
+            "worldY": 2240,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 35,
+            "worldX": 4882.551120528775,
+            "worldY": 2240,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 33,
+            "worldX": 5600,
+            "worldY": 2240,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 31,
+            "worldX": 5998.612210269232,
+            "worldY": 2240,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 33,
+            "worldX": 6634.3937035159015,
+            "worldY": 2240,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 35,
+            "worldX": 7200.0,
             "worldY": 3008,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 34,
-            "worldX": 4396.115016913889,
+            "worldX": 4076.760031656276,
             "worldY": 3328,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 34,
-            "worldX": 4608,
+            "worldX": 4396.771958903514,
             "worldY": 3328,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 37,
-            "worldX": 6174.007489851134,
+            "worldX": 6161.837210378401,
             "worldY": 3296,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 37,
-            "worldX": 4960,
+            "worldX": 5201.965289669286,
             "worldY": 3936,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 35,
-            "worldX": 5204.788005492425,
+            "worldX": 5358.323064768682,
             "worldY": 3968,
             "health": 200,
             "dead": false
@@ -208,7 +271,7 @@
             "worldX": 5120,
             "worldY": 2240,
             "health": 700,
-            "dead": false
+            "dead": true
         },
         {
             "enemyType": 23,
@@ -234,7 +297,7 @@
     ],
     "waypoints": [
         {
-            "waypointActive": false
+            "waypointActive": true
         },
         {
             "waypointActive": false
@@ -243,7 +306,7 @@
             "waypointActive": false
         },
         {
-            "waypointActive": false
+            "waypointActive": true
         },
         {
             "waypointActive": true

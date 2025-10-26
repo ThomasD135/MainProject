@@ -17,9 +17,14 @@ class Button(Setup.pg.sprite.Sprite):
         self.locationY = locationY
    
         self.filePath = Setup.os.path.join("ASSETS", "BUTTON_IMAGES", filePathImage)
-        self.image = Setup.pg.image.load(self.filePath + ".png").convert_alpha();
-        self.image = Setup.pg.transform.scale(self.image, (self.width, self.height)) 
-        self.mask = Setup.pg.mask.from_surface(self.image) # mask allows for more accurate collision detection
+
+        #preload images
+        self.normalImage = Setup.pg.image.load(self.filePath + ".png").convert_alpha()
+        self.normalImage = Setup.pg.transform.scale(self.normalImage, (self.width, self.height))
+        self.hoverImage = Setup.pg.image.load(self.filePath + "_HOVER.png").convert_alpha()
+        self.hoverImage = Setup.pg.transform.scale(self.hoverImage, (self.width, self.height))
+        self.image = self.normalImage
+        self.mask = Setup.pg.mask.from_surface(self.normalImage)
 
         self.rect = self.image.get_rect()
         self.rect.center = (self.locationX, self.locationY)
@@ -27,8 +32,7 @@ class Button(Setup.pg.sprite.Sprite):
         self.clicked = False
         self.hover = False
 
-    def CheckClick(self):
-        mousePosition = Setup.pg.mouse.get_pos()
+    def CheckClick(self, mousePressed, mousePosition):
         positionInMask = mousePosition[0] - self.rect.x, mousePosition[1] - self.rect.y
         
         if self.rect.collidepoint(mousePosition) and (self.mask.get_at(positionInMask) or self.isBlock): # if hovering
@@ -37,28 +41,30 @@ class Button(Setup.pg.sprite.Sprite):
 
             self.hover = True          
 
-            if Setup.pg.mouse.get_pressed()[0] == 1 and not self.clicked: # [0] = left click
+            if mousePressed[0] == 1 and not self.clicked: # [0] = left click
                 self.clicked = True
                 Setup.SoundHandler.PlaySound("BUTTON_CLICK")
                 return self.name
         else:
             self.hover = False
 
-        if Setup.pg.mouse.get_pressed()[0] == 0:
+        if mousePressed[0] == 0:
             self.clicked = False
 
         if not self.isBlock:
             self.ChangeImageHover()
 
     def ChangeImage(self, fileNameEnd):
-        self.image = Setup.pg.image.load(self.filePath + fileNameEnd)
-        self.image = Setup.pg.transform.scale(self.image, (self.width, self.height))
+        self.normalImage = Setup.pg.image.load(self.filePath + fileNameEnd)
+        self.normalImage = Setup.pg.transform.scale(self.normalImage, (self.width, self.height))
+        self.hoverImage = Setup.pg.image.load(self.filePath + "_HOVER" + fileNameEnd)
+        self.hoverImage = Setup.pg.transform.scale(self.hoverImage, (self.width, self.height))
 
     def ChangeImageHover(self):
         if self.hover:
-            self.ChangeImage("_HOVER.png") # change the image to corresponding hover image 
+            self.image = self.hoverImage
         else:
-            self.ChangeImage(".png")
+            self.image = self.normalImage
 
     def ChangeImageClick(self, fileName):
         self.filePath = Setup.os.path.join("ASSETS", "BUTTON_IMAGES", fileName) # change the image to a completely different image
@@ -127,8 +133,8 @@ class SlidingButton(Button):
         super().__init__(name, width, height, locationX, locationY, filePathImage) 
         self.length = length
 
-    def CheckClick(self):
-        super().CheckClick() # calls the Button function
+    def CheckClick(self, mousePressed, mousePosition):
+        super().CheckClick(mousePressed, mousePosition) # calls the Button function
 
         if self.clicked:
             self.Drag(Setup.pg.mouse.get_pos()) 
@@ -157,7 +163,7 @@ class Background():
         self.height = 1080
         self.totalWidth = self.width * 12
 
-        self.sheet = Setup.SpriteSheet(self.filePath, self, self.totalWidth)
+        self.sheet = Setup.SpriteSheet(self.filePath, self, self.totalWidth, self.width, self.height, 1)
         self.currentFrame = 0
         self.startTime = Setup.time.time()       
         
@@ -166,7 +172,7 @@ class Background():
     def DrawFrame(self):    
         self.sheet.Update()
 
-        Setup.setup.screen.blit(self.sheet.GetImage(self.currentFrame, self.width, self.height, 1), (0, 0))
+        Setup.setup.screen.blit(self.sheet.GetImage(self.currentFrame), (0, 0))
 
 class CreateMainMenu(Setup.pg.sprite.Sprite):
     def __init__(self):
@@ -289,7 +295,7 @@ class CreateSettingsMenu(Setup.pg.sprite.Sprite):
         muteButton = ButtonGroupMethods.CreateButton("MUTE", width, height, xLocation, yLocation, "UNMUTE_BUTTON")
 
         xLocation = Setup.setup.WIDTH // 2 - 250
-        soundControlSlider = ButtonGroupMethods.CreateSlidingButton("SOUND", width, height, xLocation, yLocation, "SOUND_BUTTON", 500)
+        soundControlSlider = ButtonGroupMethods.CreateSlidingButton("SOUND", width, height, xLocation, yLocation, "SOUND_BUTTON", 500)        
 
         size = 75
         soundControlSliderText = Setup.TextMethods.CreateText("SOUND", "0", Setup.setup.BLACK, xLocation, yLocation, size)
@@ -337,7 +343,7 @@ class CreateSettingsMenu(Setup.pg.sprite.Sprite):
 
         soundControlSliderText.SetText(f"{volume}")
 
-        if volume == 0:
+        if volume == 0:           
             muteButton.ChangeImageClick("UNMUTE_BUTTON")
         else:
             muteButton.ChangeImageClick("MUTE_BUTTON")
@@ -626,8 +632,11 @@ class ButtonGroupMethods():
 
     @staticmethod
     def CheckClicks(buttons):
+        mousePressed = Setup.pg.mouse.get_pressed()
+        mousePosition = Setup.pg.mouse.get_pos()
+
         for button in buttons:  
-            returnedValue = button.CheckClick() # get the name of clicked button e.g. QUIT
+            returnedValue = button.CheckClick(mousePressed, mousePosition) # get the name of clicked button e.g. QUIT
 
             if (returnedValue != None):
                 return returnedValue

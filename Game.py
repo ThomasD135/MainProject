@@ -301,7 +301,8 @@ class GameHandler(Setup.pg.sprite.Sprite):
         self.dijkstraGraph = Dijkstra.DijkstraImplementation(self.weightedAdjacencyList.weightedGraph)
 
     def UpdateSprites(self):
-        for entity in self.enemies.sprites() + self.bosses.sprites():
+        allEntities = self.enemies.sprites() + self.bosses.sprites()
+        for entity in allEntities:
             if not entity.dead:
                 entity.PerformAction()
                 entity.UpdateImage()
@@ -327,7 +328,7 @@ class GameHandler(Setup.pg.sprite.Sprite):
                         
                 hitboxesToRemove.append(hitbox)
             
-            for entity in self.CollideWithObjects(hitbox, self.enemies.sprites() + self.bosses.sprites()):
+            for entity in self.CollideWithObjects(hitbox, allEntities):
                 if not entity.dead :
                     entity.TakeDamage(hitbox.damage, hitbox.direction)
 
@@ -1033,8 +1034,8 @@ class Player(Setup.pg.sprite.Sprite):
         for x in range(1, numberOfVariants + 1):
             self.legs[x] = Setup.pg.image.load(Setup.os.path.join("ASSETS", "PLAYER", f"PLAYER{x}_LEGS_IMAGE.png"))
             self.heads[x] = Setup.pg.image.load(Setup.os.path.join("ASSETS", "PLAYER", f"PLAYER{x}_HEAD_IMAGE.png"))
-            self.idleSheets[x] = Setup.SpriteSheet(Setup.os.path.join("ASSETS", "PLAYER", f"PLAYER{x}_IDLE_SHEET"), self, self.width * 8)
-            self.walkSheets[x] = Setup.SpriteSheet(Setup.os.path.join("ASSETS", "PLAYER", f"PLAYER{x}_WALK_SHEET"), self, self.width * 8)
+            self.idleSheets[x] = Setup.SpriteSheet(Setup.os.path.join("ASSETS", "PLAYER", f"PLAYER{x}_IDLE_SHEET"), self, self.width * 8, self.width, self.height, 1)
+            self.walkSheets[x] = Setup.SpriteSheet(Setup.os.path.join("ASSETS", "PLAYER", f"PLAYER{x}_WALK_SHEET"), self, self.width * 8, self.width, self.height, 1)
 
         self.state = "IDLE"
         self.currentFrame = 0
@@ -1095,7 +1096,7 @@ class Player(Setup.pg.sprite.Sprite):
 
         if self.currentSheet:
             self.currentSheet.Update()
-            self.currentImage = self.currentSheet.GetImage(self.currentFrame, self.width, self.height, 1)
+            self.currentImage = self.currentSheet.GetImage(self.currentFrame)
             self.currentImage = Setup.pg.transform.scale(self.currentImage, (self.width, self.height)) 
             self.currentImage = Setup.pg.transform.flip(self.currentImage, flipImage, False)
 
@@ -1521,7 +1522,7 @@ class TreasureChest:
     def __init__(self, parentBlock, chestNumber):
         self.parent = parentBlock
         self.prompt = Prompt("E_PROMPT_IMAGE", "e")
-        self.openedImage = MapCreator.mapDataHandler.mapGrid.blockSheetHandler.GetCorrectBlockImage(self.parent.blockNumber + 1, Setup.setup.BLOCK_WIDTH, Setup.setup.BLOCK_WIDTH, False, 0)
+        self.openedImage = MapCreator.mapDataHandler.mapGrid.blockSheetHandler.GetCorrectBlockImage(self.parent.blockNumber + 1)#, Setup.setup.BLOCK_WIDTH, Setup.setup.BLOCK_WIDTH, False, 0)
         self.chestOpened = False 
         
         allRewards = {0 : Longsword(damage=80,  chargedDamage=120, abilityDamage=200, abilityManaCost=40, abilityCooldown=5, parentPlayer=None),
@@ -1892,7 +1893,7 @@ class BaseEnemy(Setup.pg.sprite.Sprite):
         self.height = size
         self.image = image
         self.baseImage = image
-        self.mask = Setup.pg.mask.from_surface(self.image)
+        #self.mask = Setup.pg.mask.from_surface(self.image)
         self.rect = self.image.get_rect(topleft=(self.worldX, self.worldY))
         
         self.health = health

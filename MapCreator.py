@@ -7,22 +7,54 @@ class BlockSheetExtractor():
         self.sheet = Setup.pg.image.load(self.filePath + ".png").convert_alpha()
         self.sheetHover = Setup.pg.image.load(self.filePath + "_HOVER.png").convert_alpha()
 
-    def GetCorrectBlockImage(self, blockPos, originalWidth, originalHeight, isHover, rotation):
-        image = Setup.pg.Surface((originalWidth, originalHeight), Setup.pg.SRCALPHA)
+        self.blockWidth = Setup.setup.BLOCK_WIDTH
+        self.blockHeight = Setup.setup.BLOCK_WIDTH
+        self.zoomLevels = []
+        for x in range(10, 21):
+            self.zoomLevels.append(round(x * 0.05, 2))
+       
+        self.blockCache = {} # {(blockPos, isHover, rotation, zoom) : Surface}
+        self.PreloadBlockImages()
+        
+    def PreloadBlockImages(self):
+        totalBlocks = self.sheet.get_width() // self.blockWidth
 
-        if not isHover:
-            image.blit(self.sheet, (0,0), ((blockPos * originalWidth), 0, originalWidth, originalHeight))
-        else:
-            image.blit(self.sheetHover, (0, 0), ((blockPos * originalWidth), 0, originalWidth, originalHeight))
+        for blockPos in range(totalBlocks): # create a cache of all possible image
+            for hover in [False, True]:
+                availableRotations = [0]
+                if blockPos <= 16: # only normal blocks can be rotated (lantern onwards cannot be rotated)
+                    availableRotations = [0, 90, 180, 270]
 
-        if blockPos <= 16: # only normal blocks can be rotated (lantern onwards cannot be rotated)
-            image = Setup.pg.transform.rotate(image, rotation)
-           
-        return image
+                for rotation in availableRotations:
+                    image = Setup.pg.Surface((self.blockWidth, self.blockHeight), Setup.pg.SRCALPHA)
+                    
+                    if hover:
+                        sheetType = self.sheetHover
+                    else:
+                        sheetType = self.sheet
 
-    def ScaleImage(self, image, width, height):
-        image = Setup.pg.transform.scale(image, (width, height))
-        return image
+                    image.blit(sheetType, (0, 0), (blockPos * self.blockWidth, 0, self.blockWidth, self.blockHeight))
+
+                    if rotation != 0:
+                        image = Setup.pg.transform.rotate(image, rotation)
+
+                    for zoom in self.zoomLevels:
+                        if zoom != 1:
+                            imageZoom = Setup.pg.transform.scale(image, (int(self.blockWidth * zoom), int(self.blockHeight * zoom)))
+                        else:
+                            imageZoom = image
+
+                        self.blockCache[(blockPos, hover, rotation, zoom)] = imageZoom
+
+    def GetCorrectBlockImage(self, blockPos, isHover=False, rotation=0, zoom=1):
+        if blockPos > 16:
+            rotation = 0
+        rotation %= 360
+
+        return self.blockCache[(blockPos, isHover, rotation, round(zoom, 2))]
+
+    # def ScaleImage(self, image, width, height):
+    #     return Setup.pg.transform.scale(image, (width, height))
 
 class MapDataHandling():
     def __init__(self):
@@ -90,7 +122,7 @@ class MapDataHandling():
                 rotation = int(lineData[XPosition][2]) * -90
                 blockNodeNumber = lineData[XPosition][3] + lineData[XPosition][4]
 
-                newBlock = Menus.BlockButton("BLOCK", blockWidth, blockWidth, XPosition * blockWidth, YPosition * blockWidth, blockNumber, rotation, self.mapGrid.blockSheetHandler.GetCorrectBlockImage(blockNumber, blockWidth, blockWidth, False, rotation))
+                newBlock = Menus.BlockButton("BLOCK", blockWidth, blockWidth, XPosition * blockWidth, YPosition * blockWidth, blockNumber, rotation, self.mapGrid.blockSheetHandler.GetCorrectBlockImage(blockNumber, False, rotation, 1))
                 self.mapGrid.PathFindingWaypoints(newBlock, blockNodeNumber)
                 row.append(newBlock)
 
@@ -150,7 +182,7 @@ class MapGrid():
 
         for gridYPosition in range(0, Setup.setup.BLOCKS_WIDE):
             for gridXPosition in range(0, Setup.setup.BLOCKS_WIDE): 
-                blockRow.append(Menus.BlockButton("BLOCK", self.blockWidth, self.blockWidth, gridXPosition * self.blockWidth, gridYPosition * self.blockWidth, self.selectedBlock, self.rotation, self.blockSheetHandler.GetCorrectBlockImage(self.selectedBlock, self.blockWidth, self.blockWidth, False, self.rotation)))
+                blockRow.append(Menus.BlockButton("BLOCK", self.blockWidth, self.blockWidth, gridXPosition * self.blockWidth, gridYPosition * self.blockWidth, self.selectedBlock, self.rotation, self.blockSheetHandler.GetCorrectBlockImage(self.selectedBlock, False, self.rotation, 1)))
 
             self.blockGrid.append(blockRow)
             blockRow = [] 
@@ -164,35 +196,44 @@ class MapGrid():
                     self.blockObjectsInView.add(block)
                          
     def UpdateGridBlocks(self):
-        self.CalculateBlocksWithinRange()       
+        mousePressed = Setup.pg.mouse.get_pressed()
+        mousePosition = Setup.pg.mouse.get_pos()
+        self.CalculateBlocksWithinRange()    
+        
+        deleteButtonHover = Menus.ButtonGroupMethods.GetButton("DELETE", Menus.menuManagement.mapButtonGroup.buttons).hover
+        exitButtonHover = Menus.ButtonGroupMethods.GetButton("EXIT", Menus.menuManagement.mapButtonGroup.buttons).hover
 
         for block in self.blockObjectsInView:
-            if block.CheckClick() != None and not Menus.ButtonGroupMethods.GetButton("DELETE", Menus.menuManagement.mapButtonGroup.buttons).hover and not Menus.ButtonGroupMethods.GetButton("EXIT", Menus.menuManagement.mapButtonGroup.buttons).hover: 
+            if block.CheckClick(mousePressed, mousePosition) != None and not (deleteButtonHover or exitButtonHover):
                 if not Setup.setup.deletingBlocks: # placing        
                     if (block.blockNumber != self.selectedBlock or block.rotation != self.rotation):
-                        block.ChangeImageClick(self.blockSheetHandler.GetCorrectBlockImage(self.selectedBlock, self.originalBlockWidth, self.originalBlockWidth, False, self.rotation))
-                        block.baseImage = block.image # base image must be unscaled, as it is scaled later
-                        block.image = self.blockSheetHandler.ScaleImage(block.image, block.width, block.height) # scale the current image to fix
+                        #block.ChangeImageClick(self.blockSheetHandler.GetCorrectBlockImage(self.selectedBlock, False, self.rotation, self.zoomFactor))
+                        #block.baseImage = block.image # base image must be unscaled, as it is scaled later
+                        #block.image = self.blockSheetHandler.ScaleImage(block.image, block.width, block.height) # scale the current image to fix
                         block.blockNumber = self.selectedBlock
                         block.rotation = self.rotation
                         block.textList = []
+                        block.image = self.blockSheetHandler.GetCorrectBlockImage(block.blockNumber, isHover=False, rotation=block.rotation, zoom=self.zoomFactor)
                 else: # deleting
-                    block.ChangeImageClick(self.blockSheetHandler.GetCorrectBlockImage(0, self.originalBlockWidth, self.originalBlockWidth, False, 0))        
-                    block.baseImage = block.image
-                    block.image = self.blockSheetHandler.ScaleImage(block.image, block.width, block.height)
+                    #block.ChangeImageClick(self.blockSheetHandler.GetCorrectBlockImage(0, zoom=self.zoomFactor))        
+                    #block.baseImage = block.image
+                    #block.image = self.blockSheetHandler.ScaleImage(block.image, block.width, block.height)
                     block.blockNumber = 0
                     block.rotation = 0
                     block.textList = []
+                    block.image = self.blockSheetHandler.GetCorrectBlockImage(0, isHover=False, rotation=0, zoom=self.zoomFactor)
 
-            if block.hover and block.imageType == "NORMAL":
-                block.ChangeImageClick(self.blockSheetHandler.GetCorrectBlockImage(block.blockNumber, self.originalBlockWidth, self.originalBlockWidth, True, block.rotation))
-                block.image = self.blockSheetHandler.ScaleImage(block.image, block.width, block.height)
-                block.imageType = "HOVER"
+            if block.hover:
+                #block.ChangeImageClick(self.blockSheetHandler.GetCorrectBlockImage(block.blockNumber, True, block.rotation, self.zoomFactor))
+                #block.image = self.blockSheetHandler.ScaleImage(block.image, block.width, block.height)
+                #block.imageType = "HOVER"
+                block.image = self.blockSheetHandler.GetCorrectBlockImage(block.blockNumber, isHover=True, rotation=block.rotation, zoom=self.zoomFactor)
 
-            elif block.imageType == "HOVER" and not block.hover:
-                block.ChangeImageClick(self.blockSheetHandler.GetCorrectBlockImage(block.blockNumber, self.originalBlockWidth, self.originalBlockWidth, False, block.rotation))
-                block.image = self.blockSheetHandler.ScaleImage(block.image, block.width, block.height)
-                block.imageType = "NORMAL"
+            else:
+                #block.ChangeImageClick(self.blockSheetHandler.GetCorrectBlockImage(block.blockNumber, False, block.rotation, self.zoomFactor))
+                #block.image = self.blockSheetHandler.ScaleImage(block.image, block.width, block.height)
+                #block.imageType = "NORMAL"
+                block.image = self.blockSheetHandler.GetCorrectBlockImage(block.blockNumber, isHover=False, rotation=block.rotation, zoom=self.zoomFactor)
 
         self.blockObjectsInView.update() 
         self.blockObjectsInView.draw(Setup.setup.screen)
@@ -207,8 +248,8 @@ class MapGrid():
         self.ShowSelectedBlock()
         self.UpdateBlockSizes() 
 
-        self.changedZoom = False
-        self.changedLocationMovement = False
+        #self.changedZoom = False
+        #self.changedLocationMovement = False
 
     def UpdateBlockSizes(self):
         if self.changedZoom or self.changedLocationMovement:
@@ -222,7 +263,8 @@ class MapGrid():
                     block.width = self.blockWidth
                     block.height = self.blockWidth 
 
-                    block.image = Setup.pg.transform.scale(block.baseImage, (block.width, block.height)) 
+                    block.image = self.blockSheetHandler.GetCorrectBlockImage(block.blockNumber, isHover=block.hover, rotation=block.rotation, zoom=self.zoomFactor)
+                    #block.image = Setup.pg.transform.scale(block.baseImage, (block.width, block.height)) 
                     block.rect = block.image.get_rect()
                     block.rect.center = (block.locationX, block.locationY) 
 
@@ -270,7 +312,7 @@ class MapGrid():
                     self.zoomFactor += 0.05
 
             case 5: # mouse wheel scrolling down
-                if self.zoomFactor > 0.2: # 5x smaller 
+                if self.zoomFactor > 0.5: # half the original size
                     self.changedZoom = True
                     self.zoomFactor -= 0.05
 
@@ -281,6 +323,6 @@ class MapGrid():
         blockDisplay = Setup.TextMethods.CreateText("BLOCK", "Selected block: ", Setup.setup.WHITE, 150, 50, 30)
         Setup.TextMethods.UpdateText([blockDisplay])
 
-        Setup.setup.screen.blit(self.blockSheetHandler.GetCorrectBlockImage(self.selectedBlock, self.originalBlockWidth, self.originalBlockWidth, False, self.rotation), (50, 100))
+        Setup.setup.screen.blit(self.blockSheetHandler.GetCorrectBlockImage(self.selectedBlock, False, self.rotation), (50, 100))
          
 mapDataHandler = MapDataHandling()
