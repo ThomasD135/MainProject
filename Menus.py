@@ -172,7 +172,7 @@ class Background():
     def DrawFrame(self):    
         self.sheet.Update()
 
-        Setup.setup.screen.blit(self.sheet.GetImage(self.currentFrame), (0, 0))
+        Setup.setup.screen.blit(self.sheet.GetImage(), (0, 0))
 
 class CreateMainMenu(Setup.pg.sprite.Sprite):
     def __init__(self):

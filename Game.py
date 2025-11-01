@@ -1111,12 +1111,8 @@ class Player(Setup.pg.sprite.Sprite):
 
         if self.currentSheet:
             self.currentSheet.Update()
-            self.currentImage = self.currentSheet.GetImage(self.currentFrame)
-            self.currentImage = Setup.pg.transform.scale(self.currentImage, (self.width, self.height)) 
-            self.currentImage = Setup.pg.transform.flip(self.currentImage, flipImage, False)
-
-            self.mask = Setup.pg.mask.from_surface(self.currentImage) 
-            self.rect = self.mask.get_rect()
+            self.currentImage = self.currentSheet.GetImage(flipImage)
+            self.rect = self.currentImage.get_rect()
             self.rect.topleft = (self.worldX, self.worldY)
 
     def Movement(self):
@@ -1272,115 +1268,28 @@ class Player(Setup.pg.sprite.Sprite):
             self.keyPressVelocity = 6     
 
     def Update(self):
-        start = Setup.time.perf_counter()
-        times = {}
-
-        # ---- 1. Health / death logic ----
-        t0 = Setup.time.perf_counter()
         if self.health <= 0:
             self.dead = True
-        times['HealthCheck'] = Setup.time.perf_counter() - t0
 
         if not self.dead:
-            # ---- 2. Inputs ----
-            t0 = Setup.time.perf_counter()
             self.movementSpeeds[0] = 0
             self.Inputs()
-            times['Inputs'] = Setup.time.perf_counter() - t0
-
-            # ---- 3. Animation / sheet handling ----
-            t0 = Setup.time.perf_counter()
             self.ChangeSheet()
-            times['ChangeSheet'] = Setup.time.perf_counter() - t0
-
-            # ---- 4. Movement & collision ----
-            t0 = Setup.time.perf_counter()
-            self.UpdatePlayerMovementSpeeds()
-            times['UpdateMovementSpeeds'] = Setup.time.perf_counter() - t0
-
-            t0 = Setup.time.perf_counter()
+            self.UpdatePlayerMovementSpeeds()         
             self.StopPlayerOnBlockCollision()
-            times['StopOnCollision'] = Setup.time.perf_counter() - t0
 
-            # ---- 5. Camera and map rendering ----
-            t0 = Setup.time.perf_counter()
             self.camera.Update()
             self.camera.DisplayMap()
-            times['CameraUpdate'] = Setup.time.perf_counter() - t0
-
-            # ---- 6. Mini-map and UI ----
-            t0 = Setup.time.perf_counter()
             self.MiniMapFunctions()
-            times['MiniMapFunctions'] = Setup.time.perf_counter() - t0
 
-            # ---- 7. Attacks & abilities ----
-            t0 = Setup.time.perf_counter()
             self.Attack()
-            times['Attack'] = Setup.time.perf_counter() - t0
-
-            t0 = Setup.time.perf_counter()
-            self.AbilitySpell()
-            times['AbilitySpell'] = Setup.time.perf_counter() - t0
-
-            # ---- 8. Weapon / spell updates ----
-            t0 = Setup.time.perf_counter()
+            self.AbilitySpell()            
             self.weapon.Update()
-            times['WeaponUpdate'] = Setup.time.perf_counter() - t0
-
-            t0 = Setup.time.perf_counter()
             self.spell.Update()
-            times['SpellUpdate'] = Setup.time.perf_counter() - t0
 
-            # ---- 9. General maintenance ----
-            t0 = Setup.time.perf_counter()
-            self.PlayerMaintenanceFunctions()
-            times['Maintenance'] = Setup.time.perf_counter() - t0
-
+            self.PlayerMaintenanceFunctions()           
         else:
-            t0 = Setup.time.perf_counter()
             self.DrawDeathScreen()
-            times['DrawDeathScreen'] = Setup.time.perf_counter() - t0
-
-        # ---- 10. Total frame time ----
-        total = Setup.time.perf_counter() - start
-        times['TOTAL'] = total
-
-        # ---- 11. Accumulate averages ----
-        self.profile_data = getattr(self, "profile_data", {"count": 0, "total": {}})
-
-        for key, val in times.items():
-            self.profile_data["total"][key] = self.profile_data["total"].get(key, 0) + val
-        self.profile_data["count"] += 1
-
-        # Print every 300 frames (or adjust to your liking)
-        if True:
-            avg = {k: (v / self.profile_data["count"]) * 1000 for k, v in self.profile_data["total"].items()}
-            print(f"[Player] Avg over {self.profile_data['count']} frames:", {k: round(v, 3) for k, v in avg.items()})
-            self.profile_data = {"count": 0, "total": {}}
-
-    # def Update(self):
-    #     if self.health <= 0:
-    #         self.dead = True
-
-    #     if not self.dead:
-    #         self.movementSpeeds[0] = 0
-    #         self.Inputs()
-    #         self.ChangeSheet()
-    #         self.UpdatePlayerMovementSpeeds()         
-    #         self.StopPlayerOnBlockCollision()
-
-    #         self.camera.Update()
-    #         self.camera.DisplayMap()
-    #         self.MiniMapFunctions()
-
-    #         self.Attack()
-    #         self.AbilitySpell()            
-    #         self.weapon.Update()
-    #         self.spell.Update()
-
-    #         self.PlayerMaintenanceFunctions()           
-    #     else:
-    #         self.DrawDeathScreen()
 
     def IsInvincible(self):
         return not self.dashInvincibilityTimer.CheckFinished() and self.dashInvincibilityTimer.startTime is not None
@@ -1419,31 +1328,9 @@ class Player(Setup.pg.sprite.Sprite):
 
     def MiniMapFunctions(self):
         self.miniMap.ChangeScale()
-
-        # Profile subcomponents
-        t0 = Setup.time.perf_counter()
         self.miniMap.DrawMap(self.gameHandler.blocks, self.gameHandler.enemies, self.gameHandler.bosses, self)
-        t_draw = Setup.time.perf_counter() - t0
-
-        t0 = Setup.time.perf_counter()
         self.miniMap.DrawWaypoints(self)
-        t_waypoints = Setup.time.perf_counter() - t0
-
-        t0 = Setup.time.perf_counter()
         self.UpdateNearestNode()
-        #self.miniMap.pathGuide.FindNearestNode(self)
-        t_find = Setup.time.perf_counter() - t0
-
-        if True:  # only log when over 1ms to reduce spam
-            pass
-            print(f"MiniMap timings  DrawMap: {t_draw*1000}ms  DrawWaypoints: {t_waypoints*1000}ms  FindNearestNode: {t_find*1000}ms")
-
-    # def MiniMapFunctions(self):
-    #     self.miniMap.ChangeScale()
-    #     self.miniMap.DrawMap(self.gameHandler.blocks, self.gameHandler.enemies, self.gameHandler.bosses, self)
-    #     self.miniMap.DrawWaypoints(self)
-    #     self.UpdateNearestNode()
-    #     #self.miniMap.pathGuide.FindNearestNode(self)
 
     def UpdateNearestNode(self):
         if self.lastNearestNodeTimer.CheckFinished() or self.lastNearestNodeTimer.startTime is None:
@@ -1615,13 +1502,8 @@ class GameBackground:
     def __init__(self, gameHandler):  
         self.gameHandler = gameHandler
 
-        filePath = Setup.os.path.join("ASSETS", "BACKGROUND", "GAME_BACKGROUND_1_IMAGE")
-        self.blockImage = Setup.setup.loadImage(filePath, Setup.setup.BLOCK_WIDTH * Setup.setup.BLOCKS_WIDE, Setup.setup.BLOCK_WIDTH * Setup.setup.BLOCKS_WIDE)
-
-    def DrawImage(self):
-        if len(self.gameHandler.blocks.sprites()) != 0:
-            topLeftBlock = self.gameHandler.blocks.sprites()[0]
-            Setup.setup.screen.blit(self.blockImage, (topLeftBlock.rect.left, topLeftBlock.rect.top))
+    def Draw(self):
+        Setup.setup.screen.fill(Setup.pg.Color("gray15"))
 
 class Prompt:
     def __init__(self, promptName, key):
@@ -1806,38 +1688,6 @@ class MiniMap(Setup.pg.sprite.Sprite):
         else:
             Setup.setup.screen.blit(self.playerIconImageEnlarged, (startX + newPlayerX - (0.5 * 32), startY + newPlayerY - 32)) 
 
-    # def DrawMap(self, blocks, enemies, bosses, player):
-    #     if not self.enlarged:
-    #         shrinkModifier = 20
-    #         startX = 20
-    #         startY = Setup.setup.HEIGHT - 400
-    #         Setup.pg.draw.rect(Setup.setup.screen, (Setup.setup.GREY), (startX, startY, self.width, self.height)) # background to draw on, easier to see map
-    #     else:
-    #         shrinkModifier = 8
-    #         startX = 480
-    #         startY = 60
-    #         Setup.pg.draw.rect(Setup.setup.screen, (Setup.setup.GREY), (0, 0, Setup.setup.WIDTH, Setup.setup.HEIGHT))
-        
-    #     for block in blocks:
-    #         newImage = Setup.pg.transform.scale(block.image, (block.width / shrinkModifier, block.height / shrinkModifier))
-    #         newX, newY = block.worldX / shrinkModifier, block.worldY / shrinkModifier
-    #         Setup.setup.screen.blit(newImage, (startX + newX, startY + newY))
-
-    #     for entity in enemies.sprites() + bosses.sprites():
-    #         if not entity.dead:
-    #             newImage = Setup.pg.transform.scale(entity.image, (entity.width / shrinkModifier, entity.height / shrinkModifier))
-    #             newX, newY = entity.worldX / shrinkModifier, entity.worldY / shrinkModifier
-    #             Setup.setup.screen.blit(newImage, (startX + newX, startY + newY))
-        
-    #     newPlayerX, newPlayerY = player.worldX / shrinkModifier, player.worldY / shrinkModifier
-        
-    #     self.pathGuide.DrawPathGuides(shrinkModifier, startX, startY, player.camera.camera, player)
-    #     self.MapFragments(player, startX, startY, shrinkModifier)
-    #     if not self.enlarged:  
-    #         Setup.setup.screen.blit(self.playerIconImage, (startX + newPlayerX - (0.25 * 32), startY + newPlayerY - (0.5 * 32))) # adjusting icon location to be roughly centered on in-game player
-    #     else:
-    #         Setup.setup.screen.blit(self.playerIconImageEnlarged, (startX + newPlayerX - (0.5 * 32), startY + newPlayerY - 32)) 
-
     def CreateWaypointButtons(self, waypoints):
         width, height = 64, 64
         shrinkModifier = 8
@@ -2019,54 +1869,29 @@ class Camera:
         blocks = self.player.gameHandler.blocks.sprites()
         enemies = self.player.gameHandler.enemies.sprites()
         bosses = self.player.gameHandler.bosses.sprites()
-        #drawWithCameraLocation = blocks + enemies + bosses     
-
-        # for drawObject in blocks + enemies + bosses:
-        #     if getattr(drawObject, "dead", False): # if enemy is dead then do not draw it
-        #         continue
-            
-        #     drawX = drawObject.worldX - self.camera.left
-        #     drawY = drawObject.worldY - self.camera.top
-        #     tempRect = Setup.pg.Rect(drawX, drawY, drawObject.width, drawObject.height)
-
-        #     if Setup.setup.screenRect.colliderect(tempRect): # if on the screen
-        #         Setup.setup.screen.blit(drawObject.image, (drawX, drawY))
-        
-        # blocksWithPrompts = []
-        # waypoints = self.player.gameHandler.waypoints
-        # treasureChests = self.player.gameHandler.treasureChests
-        # friendlyCharacters = self.player.gameHandler.friendlyCharacters
-        
-        # blocksWithPrompts.append(waypoints)
-        # blocksWithPrompts.append(treasureChests)
-        # blocksWithPrompts.append(friendlyCharacters)
-
-        # for blocks in blocksWithPrompts:
-        #     for block in blocks:
-        #         block.IsPlayerInRange(self.player, self.camera)
-        screen_rect = self.camera
+              
         for drawObject in blocks + enemies + bosses:
             if getattr(drawObject, "dead", False):
                 continue
 
-            # Check if object is on-screen
-            if (drawObject.worldX + drawObject.width > screen_rect.left and
-                drawObject.worldX < screen_rect.right and
-                drawObject.worldY + drawObject.height > screen_rect.top and
-                drawObject.worldY < screen_rect.bottom):
-
-                drawX = drawObject.worldX - screen_rect.left
-                drawY = drawObject.worldY - screen_rect.top
+            # check if object is on screen
+            if (drawObject.worldX + drawObject.width > self.camera.left and drawObject.worldX < self.camera.right and drawObject.worldY + drawObject.height > self.camera.top and drawObject.worldY < self.camera.bottom):
+                drawX = drawObject.worldX - self.camera.left
+                drawY = drawObject.worldY - self.camera.top
                 Setup.setup.screen.blit(drawObject.image, (drawX, drawY))
 
-        # Only check player range for nearby objects
-        # range_rect = self.camera.inflate(64, 64)
-        # for blockGroup in [self.player.gameHandler.waypoints,
-        #                    self.player.gameHandler.treasureChests,
-        #                    self.player.gameHandler.friendlyCharacters]:
-        #     for block in blockGroup:
-        #         if range_rect.colliderect(block.rect):
-        #             block.IsPlayerInRange(self.player, self.camera)
+        blocksWithPrompts = []
+        waypoints = self.player.gameHandler.waypoints
+        treasureChests = self.player.gameHandler.treasureChests
+        friendlyCharacters = self.player.gameHandler.friendlyCharacters
+        
+        blocksWithPrompts.append(waypoints)
+        blocksWithPrompts.append(treasureChests)
+        blocksWithPrompts.append(friendlyCharacters)
+
+        for blocks in blocksWithPrompts:
+            for block in blocks:
+                block.IsPlayerInRange(self.player, self.camera)
 
 class CooldownTimer:
     def __init__(self, cooldown):
@@ -2101,7 +1926,6 @@ class BaseEnemy(Setup.pg.sprite.Sprite):
         self.height = size
         self.image = image
         self.baseImage = image
-        #self.mask = Setup.pg.mask.from_surface(self.image)
         self.rect = self.image.get_rect(topleft=(self.worldX, self.worldY))
         
         self.health = health
@@ -2170,7 +1994,6 @@ class BaseEnemy(Setup.pg.sprite.Sprite):
 
         collidedBlock = self.CheckCollisionMap()
         if collidedBlock is None:
-        #if len(self.gameHandler.CollideWithObjects(self, self.gameHandler.blocks)) == 0:
             hasCollision = False
 
         self.worldY -= 1
@@ -2197,7 +2020,6 @@ class BaseEnemy(Setup.pg.sprite.Sprite):
 
             collidedBlock = self.CheckCollisionMap()
             if collidedBlock is not None:
-            #for block in self.gameHandler.CollideWithObjects(self, self.gameHandler.blocks):
                 if self.knockbackSpeedX > 0:
                     self.worldX = collidedBlock - self.rect.width
                 elif self.knockbackSpeedX < 0:
@@ -2279,7 +2101,6 @@ class BaseEnemy(Setup.pg.sprite.Sprite):
 
         collidedBlock = self.CheckCollisionMap()
         if collidedBlock is not None:
-        #for block in self.gameHandler.CollideWithObjects(self, self.gameHandler.blocks):
             if direction == "RIGHT":
                 self.worldX = collidedBlock - self.rect.width 
 
@@ -2395,61 +2216,6 @@ class Enemy(BaseEnemy):
                     self.detectedPlayerLocation = (self.worldX - self.suspicionRange, self.worldY)
                 else:
                     self.detectedPlayerLocation = (self.worldX + self.suspicionRange, self.worldY)
-
-    # def PerformAction(self):
-    #     start = Setup.time.perf_counter()
-    #     times = {}
-
-    #     # ---- 1. Always-run logic ----
-    #     t0 = Setup.time.perf_counter()
-    #     self.DisplayHealthBar()
-    #     times['DisplayHealthBar'] = Setup.time.perf_counter() - t0
-
-    #     t0 = Setup.time.perf_counter()
-    #     self.PerformAttack()
-    #     times['PerformAttack'] = Setup.time.perf_counter() - t0
-
-    #     t0 = Setup.time.perf_counter()
-    #     self.ApplyKnockback()
-    #     times['ApplyKnockback'] = Setup.time.perf_counter() - t0
-
-    #     t0 = Setup.time.perf_counter()
-    #     self.Falling()
-    #     times['Falling'] = Setup.time.perf_counter() - t0
-
-    #     # ---- 2. Movement logic ----
-    #     if self.movementClass is not None:
-    #         t0 = Setup.time.perf_counter()
-    #         self.UpdateState()
-    #         times['UpdateState'] = Setup.time.perf_counter() - t0
-
-    #         t0 = Setup.time.perf_counter()
-    #         match self.state:
-    #             case "NORMAL":
-    #                 self.PerformMovement()
-    #             case "DETECTED":
-    #                 self.Detected()
-    #             case "SUSPICIOUS":
-    #                 self.Suspicious()
-    #             case "RETURNING":
-    #                 self.Returning()
-    #         times['MovementLogic'] = Setup.time.perf_counter() - t0
-
-    #     self.rect.topleft = (self.worldX, self.worldY)
-
-    #     # ---- 3. Total time ----
-    #     total = Setup.time.perf_counter() - start
-    #     times['TOTAL'] = total
-
-    #     self.profile_data = getattr(self, "profile_data", {"count": 0, "total": {}})
-
-    #     for key, val in times.items():
-    #         self.profile_data["total"][key] = self.profile_data["total"].get(key, 0) + val
-    #     self.profile_data["count"] += 1
-
-    #     avg = {k: (v / self.profile_data["count"]) * 1000 for k, v in self.profile_data["total"].items()}
-    #     print(f"[Enemy {id(self)}] Avg over 300 frames:", {k: round(v, 3) for k, v in avg.items()})
-    #     self.profile_data = {"count": 0, "total": {}}
 
     def PerformAction(self):
         self.DisplayHealthBar()

@@ -21,7 +21,7 @@ def main():
 
             case "GAME":
                 Game.gameHandler.LoadGame()
-                Game.gameHandler.background.DrawImage()
+                Game.gameHandler.background.Draw()
                 Game.gameHandler.player.Update()
                 Game.gameHandler.UpdateSprites()
                 Menus.menuManagement.MenuChildActions("GAME")

@@ -150,6 +150,7 @@ class SpriteSheet:
         self.scale = scale
 
         self.frames = [] # load all images once
+        self.flippedFrames = []
         self.totalFrames = int(totalWidth / width)
 
         for x in range(self.totalFrames):
@@ -160,6 +161,7 @@ class SpriteSheet:
                 frameImage = pg.transform.scale(FRAME, (width * scale, height * scale))
             
             self.frames.append(frameImage)
+            self.flippedFrames.append(pg.transform.flip(frameImage, True, False))
 
     def Update(self):
         sheet = self.sheetObject # the sprite sheet of the corresponding object e.g. player, background
@@ -169,9 +171,10 @@ class SpriteSheet:
             sheet.currentFrame = (sheet.currentFrame + 1) % self.totalFrames
             sheet.startTime = currentTime # start a new timer. startTime is controlled within corresponding object e.g. player, background
 
-    def GetImage(self, frame):#, width, height, scale):
-        frame = self.sheetObject.currentFrame
-        return self.frames[frame]
+    def GetImage(self, flipped=False):#, width, height, scale):
+        if flipped:
+            return self.flippedFrames[self.sheetObject.currentFrame]
+        return self.frames[self.sheetObject.currentFrame]
 
 class SoundHandler:
     @staticmethod

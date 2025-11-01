@@ -1,10 +1,10 @@
 {
     "player": {
-        "worldX": 1636,
+        "worldX": 824,
         "worldY": 160,
         "health": 800,
         "maxHealth": 800,
-        "mana": 300.0,
+        "mana": 300,
         "maxMana": 300,
         "mostRecentWaypointCords": null,
         "weapon": {
@@ -65,8 +65,8 @@
             ]
         },
         "mapFragments": {
-            "1": true,
-            "2": true,
+            "1": false,
+            "2": false,
             "3": false,
             "4": false
         }
@@ -74,112 +74,112 @@
     "enemies": [
         {
             "enemyType": 30,
-            "worldX": 4438.856293357119,
+            "worldX": 3574.2063210181186,
+            "worldY": 1280,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 30,
+            "worldX": 3183.0502579614836,
+            "worldY": 1280,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 30,
+            "worldX": 3697.6610745274234,
+            "worldY": 1280,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 30,
+            "worldX": 3815.9847564842203,
+            "worldY": 1280,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 30,
+            "worldX": 4213.73673452351,
+            "worldY": 1280,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 30,
+            "worldX": 3625.187999837021,
+            "worldY": 1280,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 30,
+            "worldX": 4695.135170929666,
+            "worldY": 1280,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 30,
+            "worldX": 4104.698789159765,
+            "worldY": 1280,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 30,
+            "worldX": 4462.810333609802,
+            "worldY": 1280,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 30,
+            "worldX": 4746.5904714975295,
+            "worldY": 1280,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 30,
+            "worldX": 4902.88305718648,
+            "worldY": 1280,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 30,
+            "worldX": 5813.320329830888,
+            "worldY": 1280,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 30,
+            "worldX": 5736.651054112287,
+            "worldY": 1280,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 30,
+            "worldX": 5811.922745505287,
+            "worldY": 1280,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 30,
+            "worldX": 6097.630180069095,
             "worldY": 1280,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 29,
-            "worldX": 3064.9832276999623,
-            "worldY": 1280,
-            "health": 200,
-            "dead": false
-        },
-        {
-            "enemyType": 30,
-            "worldX": 2701.945111651389,
-            "worldY": 1280,
-            "health": 200,
-            "dead": false
-        },
-        {
-            "enemyType": 30,
-            "worldX": 4444.743428689301,
-            "worldY": 1280,
-            "health": 200,
-            "dead": false
-        },
-        {
-            "enemyType": 30,
-            "worldX": 3052.8048228189186,
-            "worldY": 1280,
-            "health": 200,
-            "dead": false
-        },
-        {
-            "enemyType": 30,
-            "worldX": 5292.592065827629,
-            "worldY": 1280,
-            "health": 200,
-            "dead": false
-        },
-        {
-            "enemyType": 30,
-            "worldX": 2786.8547756915646,
-            "worldY": 1280,
-            "health": 200,
-            "dead": false
-        },
-        {
-            "enemyType": 30,
-            "worldX": 3964.466850570956,
-            "worldY": 1280,
-            "health": 200,
-            "dead": false
-        },
-        {
-            "enemyType": 30,
-            "worldX": 6088.528627541025,
-            "worldY": 1280,
-            "health": 200,
-            "dead": false
-        },
-        {
-            "enemyType": 30,
-            "worldX": 4187.879167081525,
-            "worldY": 1280,
-            "health": 200,
-            "dead": false
-        },
-        {
-            "enemyType": 30,
-            "worldX": 4664.79670040806,
-            "worldY": 1280,
-            "health": 200,
-            "dead": false
-        },
-        {
-            "enemyType": 30,
-            "worldX": 6255.490899171792,
-            "worldY": 1280,
-            "health": 200,
-            "dead": false
-        },
-        {
-            "enemyType": 30,
-            "worldX": 5443.998963812323,
-            "worldY": 1280,
-            "health": 200,
-            "dead": false
-        },
-        {
-            "enemyType": 30,
-            "worldX": 4578.876038180268,
-            "worldY": 1280,
-            "health": 200,
-            "dead": false
-        },
-        {
-            "enemyType": 30,
-            "worldX": 4973.308093513945,
-            "worldY": 1280,
-            "health": 200,
-            "dead": false
-        },
-        {
-            "enemyType": 29,
-            "worldX": 5961.448113407695,
+            "worldX": 6095.253483295504,
             "worldY": 1280,
             "health": 200,
             "dead": false
@@ -219,10 +219,10 @@
     ],
     "friendlyCharacters": [
         {
-            "textNumber": 3
+            "textNumber": 0
         },
         {
-            "textNumber": 7
+            "textNumber": 0
         },
         {
             "textNumber": 0
