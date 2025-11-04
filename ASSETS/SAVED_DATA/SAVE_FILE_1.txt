@@ -1,10 +1,10 @@
 {
     "player": {
-        "worldX": 824,
-        "worldY": 160,
+        "worldX": 2986,
+        "worldY": 320,
         "health": 800,
         "maxHealth": 800,
-        "mana": 300,
+        "mana": 300.0,
         "maxMana": 300,
         "mostRecentWaypointCords": null,
         "weapon": {
@@ -65,7 +65,7 @@
             ]
         },
         "mapFragments": {
-            "1": false,
+            "1": true,
             "2": false,
             "3": false,
             "4": false
@@ -74,112 +74,112 @@
     "enemies": [
         {
             "enemyType": 30,
-            "worldX": 3574.2063210181186,
+            "worldX": 3147.5266840104878,
             "worldY": 1280,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 30,
-            "worldX": 3183.0502579614836,
+            "worldX": 3304.814900821678,
             "worldY": 1280,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 30,
-            "worldX": 3697.6610745274234,
+            "worldX": 4307.684110360364,
             "worldY": 1280,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 30,
-            "worldX": 3815.9847564842203,
+            "worldX": 3734.4590727198665,
             "worldY": 1280,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 30,
-            "worldX": 4213.73673452351,
+            "worldX": 3781.1948957087207,
             "worldY": 1280,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 30,
-            "worldX": 3625.187999837021,
+            "worldX": 3945.385454153016,
             "worldY": 1280,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 30,
-            "worldX": 4695.135170929666,
+            "worldX": 5107.660002299724,
             "worldY": 1280,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 30,
-            "worldX": 4104.698789159765,
+            "worldX": 4419.052877773053,
             "worldY": 1280,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 30,
-            "worldX": 4462.810333609802,
+            "worldX": 4697.849598314518,
             "worldY": 1280,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 30,
-            "worldX": 4746.5904714975295,
+            "worldX": 5066.478154270155,
             "worldY": 1280,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 30,
-            "worldX": 4902.88305718648,
+            "worldX": 5334.699902755949,
             "worldY": 1280,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 30,
-            "worldX": 5813.320329830888,
+            "worldX": 5378.818941326989,
             "worldY": 1280,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 30,
-            "worldX": 5736.651054112287,
+            "worldX": 5544.684374254992,
             "worldY": 1280,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 30,
-            "worldX": 5811.922745505287,
+            "worldX": 5079.805367454595,
             "worldY": 1280,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 30,
-            "worldX": 6097.630180069095,
+            "worldX": 5979.5016374894485,
             "worldY": 1280,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 29,
-            "worldX": 6095.253483295504,
+            "worldX": 5451.463253800052,
             "worldY": 1280,
             "health": 200,
             "dead": false
@@ -219,7 +219,7 @@
     ],
     "friendlyCharacters": [
         {
-            "textNumber": 0
+            "textNumber": 3
         },
         {
             "textNumber": 0

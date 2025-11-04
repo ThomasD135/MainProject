@@ -1,4 +1,3 @@
-from pygame import sprite
 import Setup
 
 Setup.pg.font.init()

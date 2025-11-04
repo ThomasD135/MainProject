@@ -2514,9 +2514,14 @@ class FriendlyCharacter:
     def FriendlyCharacterFunction(self, player):
         if self.prompt.PromptInteractedWith() or self.displayActive:
             self.displayActive = True
-            Setup.pg.draw.rect(Setup.setup.screen, Setup.setup.BLACK, (410, Setup.setup.HEIGHT * (4 / 5), 1100, Setup.setup.HEIGHT // 5))
-            textToDraw = Setup.TextMethods.CreateText(f"{self.textNumber}", self.text[self.textNumber], Setup.setup.WHITE, Setup.setup.WIDTH // 2, Setup.setup.HEIGHT * (4.5 / 5), 30)
-            textToDraw.Draw()
+            Setup.pg.draw.rect(Setup.setup.screen, Setup.setup.GREY, (410, Setup.setup.HEIGHT * (4 / 5), 1100, Setup.setup.HEIGHT // 5)) # background
+
+            textSize = 30
+            dialogueText = Setup.TextMethods.CreateText(f"{self.textNumber}", self.text[self.textNumber], Setup.setup.WHITE, Setup.setup.WIDTH // 2, Setup.setup.HEIGHT * (4.5 / 5), textSize)
+            lineNumberText = Setup.TextMethods.CreateText(f"LINE_NUMBER", f"{self.textNumber + 1} / {len(self.text)}", Setup.setup.WHITE, 410 + (textSize * 1.5), Setup.setup.HEIGHT * (4 / 5) + textSize, textSize)
+            nameText = Setup.TextMethods.CreateText(f"NPC_NAME", "Richard", Setup.setup.WHITE, 410 + (textSize * 2), Setup.setup.HEIGHT - textSize, textSize)
+
+            Setup.TextMethods.UpdateText([dialogueText, lineNumberText, nameText])
 
             if Setup.setup.pressedKey == Setup.pg.K_RETURN:
                 if self.textNumber < len(self.text) - 1:
