@@ -12,7 +12,7 @@ pg.font.init()
 
 class Setup:
     def __init__(self):
-        self.FPS = 60 
+        self.FPS = 60
         self.run = True
         self.screen = pg.display.set_mode((0, 0), pg.FULLSCREEN)
         self.screenRect = self.screen.get_rect()

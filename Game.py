@@ -53,7 +53,7 @@ class GameHandler(Setup.pg.sprite.Sprite):
                                      }# [collision with player, damage if any, knockback when hit (is increased if player takes damage from block]
 
         self.enemyTypes = {29 : {"class": Enemy1, "health": 200, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
-                           30 : {"class": Enemy1, "health": 200, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
+                           30 : {"class": Enemy2, "health": 200, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
                            31 : {"class": Enemy1, "health": 200, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},   
                            32 : {"class": Enemy1, "health": 200, "movementType": "RANDOM", "velocity": 5, "size": 192, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
                            33 : {"class": Enemy1, "health": 200, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
@@ -756,11 +756,11 @@ class AttackHitboxHandler:
             
             match direction:
                 case "LEFT":
-                    attackHitBox = Hitbox(attackType, "LEFT", -hitboxDimentions[0], 0, hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, parentObject=enemy)
+                    attackHitBox = Hitbox(attackType, "LEFT", -hitboxDimentions[0], 0, hitboxDimentions[0], hitboxDimentions[1], damage, -velocityX, velocityY, parentObject=enemy)
                 case "RIGHT":
                     attackHitBox = Hitbox(attackType,"RIGHT", hitboxDimentions[0], 0, hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, parentObject=enemy)
                 case "UP":
-                    attackHitBox = Hitbox(attackType, "UP", 0, -hitboxDimentions[1], hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, parentObject=enemy)
+                    attackHitBox = Hitbox(attackType, "UP", 0, -hitboxDimentions[1], hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, -velocityY, parentObject=enemy)
                 case "DOWN":
                     attackHitBox = Hitbox(attackType, "DOWN", 0, hitboxDimentions[1], hitboxDimentions[0], hitboxDimentions[1], damage, velocityX, velocityY, parentObject=enemy)
 
@@ -810,9 +810,9 @@ class Hitbox(Setup.pg.sprite.Sprite):
         self.direction = direction
 
         self.rect = Setup.pg.Rect(0, 0, self.width, self.height)
-        self.SetPositionFromPlayer()
+        self.SetPositionFromObject()
 
-    def SetPositionFromPlayer(self):
+    def SetPositionFromObject(self):
         if self.useCenter:                      
             self.worldX = self.parent.rect.centerx + self.offsetX
             self.worldY = self.parent.rect.centery + self.offsetY
@@ -822,19 +822,19 @@ class Hitbox(Setup.pg.sprite.Sprite):
             self.worldY = self.parent.rect.y + self.offsetY
             self.rect.topleft = (self.worldX, self.worldY)
 
-    def UpdatePositionFromPlayer(self):
+    def UpdatePositionFromObject(self):
         if self.useCenter:
             self.rect.center = (self.worldX, self.worldY)
         else:
             self.rect.topleft = (self.worldX, self.worldY)
 
-    def Update(self):
+    def Update(self):        
         if self.followPlayer:
-            self.SetPositionFromPlayer()
+            self.SetPositionFromObject()
         else:
             self.worldX += self.velocityX
             self.worldY += self.velocityY           
-            self.UpdatePositionFromPlayer()
+            self.UpdatePositionFromObject()
 
         # visualise
         if not gameHandler.player.dead and not gameHandler.player.miniMap.enlarged and not (gameHandler.player.inventory.mainMenuOpen or gameHandler.player.inventory.equipMenuOpen):
@@ -1066,7 +1066,7 @@ class Player(Setup.pg.sprite.Sprite):
         self.mostRecentDirectionAll = "RIGHT" # LEFT, RIGHT, UP AND DOWN
         self.playerYFallingSpeed = 0
         self.carriedSpeedX = 0 # dashing etc
-        self.dashInvincibilityTimer = CooldownTimer(0.75)
+        self.dashInvincibilityTimer = CooldownTimer(0.45)
         self.gravity = Setup.setup.GRAVITY 
 
         self.UpdateCurrentImage(False)
@@ -1287,7 +1287,7 @@ class Player(Setup.pg.sprite.Sprite):
             self.weapon.Update()
             self.spell.Update()
 
-            self.PlayerMaintenanceFunctions()           
+            self.PlayerMaintenanceFunctions()          
         else:
             self.DrawDeathScreen()
 
@@ -1479,7 +1479,7 @@ class Player(Setup.pg.sprite.Sprite):
         self.health = self.maxHealth
 
     def Attack(self):
-        if not self.inventory.mainMenuOpen and not self.inventory.equipMenuOpen:
+        if not self.inventory.mainMenuOpen and not self.inventory.equipMenuOpen and not self.IsInvincible():
             if Setup.pg.mouse.get_pressed()[0] and not self.weapon.isChargingAttack:
                 self.weapon.isChargingAttack = True
                 self.weapon.chargingStartTime = Setup.time.time()
@@ -2116,8 +2116,11 @@ class BaseEnemy(Setup.pg.sprite.Sprite):
             attackType = self.currentAttackAttributes["attackType"]
             dimentions = self.currentAttackAttributes["dimentions"]
             damage = self.currentAttackAttributes["damage"]
+            velocityX = self.currentAttackAttributes.get("velocityX", 0)
+            velocityY = self.currentAttackAttributes.get("velocityY", 0)
+            lockMovement = True
 
-            AttackHitboxHandler.EnemyAttackStartAndEndHandler(self, self.currentAttackTimer, attackType, dimentions, damage, velocityX=0, velocityY=0, lockMovement=True)
+            AttackHitboxHandler.EnemyAttackStartAndEndHandler(self, self.currentAttackTimer, attackType, dimentions, damage, velocityX, velocityY, lockMovement)
 
     def ChooseAttack(self):     
         availableAttacks = []
@@ -2275,6 +2278,10 @@ class Enemy(BaseEnemy):
     def SmartPatrol(self):
         pass
 
+class FlyingMovement:
+    def Movement(self, enemy):
+        enemy.MoveToPo
+
 class GuardMovement:
     def Movement(self, enemy):
         enemy.MoveToPoint(enemy.startLocationX, enemy.velocity)
@@ -2317,6 +2324,13 @@ class Enemy1(Enemy):
 
         self.attacks = {"ATTACK_1" : {"damage" : 50, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 1, "dimentions" : [160, 80]},
                         "ATTACK_2" : {"damage" : 75, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 1, "dimentions" : [240, 80]}}
+
+class Enemy2(Enemy):
+    def __init__(self, worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange, enemyType, gameHandler):
+        super().__init__(worldX, worldY, image, health, movementType, velocity, size, suspicionRange, detectionRange, enemyType, gameHandler)
+
+        self.attacks = {"ATTACK_1" : {"damage" : 25, "range" : Setup.setup.BLOCK_WIDTH * 1, "length" : 1, "dimentions" : [160, 80]},
+                        "ATTACK_2" : {"damage" : 40, "range" : self.detectionRange, "length" : 2, "dimentions" : [80, 80], "velocityX" : 10}}
 
 class Boss(BaseEnemy):
     rewards = {21 : None,
