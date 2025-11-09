@@ -7,7 +7,7 @@ class GameHandler(Setup.pg.sprite.Sprite):
     def __init__(self):
         Setup.pg.sprite.Sprite.__init__(self)
         self.player = None
-        self.background = GameBackground(self)      
+        self.background = GameBackground(self)             
                                         
         self.weightedAdjacencyList = Dijkstra.AdjacencyList()
         self.dijkstraGraph = None
@@ -78,6 +78,8 @@ class GameHandler(Setup.pg.sprite.Sprite):
                           28 : {"class": Boss1, "health": 1750, "velocity": 12, "size": 224, "phases": 2, "name": "Vaelin the Sound Born"}
                           }
 
+        self.bossGauntlet = PostGameBossGauntlet(self)        
+
     def DataToDictionary(self):
         objectListsToSave = ["enemies", "bosses", "waypoints", "treasureChests", "friendlyCharacters"]
 
@@ -133,8 +135,8 @@ class GameHandler(Setup.pg.sprite.Sprite):
             if Setup.os.path.exists(filePath) and Setup.os.path.getsize(filePath) > 0:                            
                 with open(filePath, "r") as file:
                     data = Setup.json.load(file)
-                    self.DataFromDictionary(data)       
-
+                    self.DataFromDictionary(data)                       
+        
     def ResetData(self):
         self.player = Player("Player", self)
         self.blocks = Setup.pg.sprite.Group() 
@@ -197,7 +199,7 @@ class GameHandler(Setup.pg.sprite.Sprite):
                         
         self.PopulateGraph(self.pathfindingWaypointBlocks)
 
-    def CreateBoss(self, bossNumber, block):
+    def CreateBoss(self, bossNumber, block=None, locationX=100, locationY=100):
         filePath = Setup.os.path.join("ASSETS", "ENEMIES", f"BOSS{bossNumber - 20}_IMAGE")
         image = Setup.pg.image.load(filePath + ".png")        
         bossClass = self.bossTypes[bossNumber]  
@@ -207,10 +209,17 @@ class GameHandler(Setup.pg.sprite.Sprite):
           
         width = bossClass["size"]
         widthDifferenceToNormalBlock = width - Setup.setup.BLOCK_WIDTH 
+       
+        if block is None:
+            bossWorldX = locationX
+            bossWorldY = locationY - widthDifferenceToNormalBlock
+        else:
+            bossWorldX = block.originalLocationX
+            bossWorldY = block.originalLocationY - widthDifferenceToNormalBlock
 
         return bossClass["class"](
-            worldX = block.originalLocationX,
-            worldY = block.originalLocationY - widthDifferenceToNormalBlock,
+            worldX = bossWorldX,
+            worldY = bossWorldY,
             image = image,
             health = bossClass["health"],
             velocity = bossClass["velocity"],
@@ -371,6 +380,8 @@ class GameHandler(Setup.pg.sprite.Sprite):
 
         for hitbox in hitboxesToRemove:
             self.enemyHitboxes.remove(hitbox)
+
+        self.bossGauntlet.CheckStateOfBossAndPlayer(self.player)
 
     def ResetEntities(self):
         for entity in self.enemies.sprites() + self.bosses.sprites():
@@ -613,7 +624,7 @@ class Weapon:
 
     def Attack(self, endInputTime):
         lengthOfAttackCharge = endInputTime - self.chargingStartTime # how long left click was held
-        chargeAttackThreshold = 1 # second
+        chargeAttackThreshold = 0.35 # seconds
 
         if self.currentState == "NONE":
             if lengthOfAttackCharge < chargeAttackThreshold:
@@ -636,15 +647,6 @@ class Weapon:
             case "ABILITY":
                 self.PerformAbility()
 
-    def BasicAttack(self):
-        pass
-        
-    def ChargedAttack(self):
-        pass
-
-    def PerformAbility(self):
-        pass
-
 class WoodenSword(Weapon):
     def __init__(self, name="WoodenSword", description="A weak wooden sword", abilityDescription="A quick thrust", damage=None, chargedDamage=None, abilityDamage=None, abilityManaCost=None, abilityCooldown=None, parentPlayer=None):
         super().__init__(name, description, abilityDescription, damage, chargedDamage, abilityDamage, abilityManaCost, abilityCooldown, parentPlayer)
@@ -653,9 +655,9 @@ class WoodenSword(Weapon):
         self.basicAttackSheet = None
         self.basicAttackDimentions = (160, 80)
 
-        self.chargedAttackLengthTimer = CooldownTimer(1.25)
+        self.chargedAttackLengthTimer = CooldownTimer(1)
         self.chargedAttackSheet = None
-        self.chargedAttackDimentions = (160, 80)
+        self.chargedAttackDimentions = (240, 80)
 
         self.abilityAttackLengthTimer = CooldownTimer(1)
         self.abilityAttackSheet = None
@@ -682,9 +684,9 @@ class Longsword(Weapon):
         self.basicAttackSheet = None
         self.basicAttackDimentions = (160, 80)
 
-        self.chargedAttackLengthTimer = CooldownTimer(1.5)
+        self.chargedAttackLengthTimer = CooldownTimer(1.25)
         self.chargedAttackSheet = None
-        self.chargedAttackDimentions = (160, 80)
+        self.chargedAttackDimentions = (240, 80)
 
         self.abilityAttackLengthTimer = CooldownTimer(1.25)
         self.abilityAttackSheet = None
@@ -1069,15 +1071,15 @@ class Player(Setup.pg.sprite.Sprite):
         self.dashInvincibilityTimer = CooldownTimer(0.45)
         self.gravity = Setup.setup.GRAVITY 
 
-        self.UpdateCurrentImage(False)
+        self.UpdateCurrentImage(False)       
 
     def DataToDictionary(self):
-        return {"worldX": self.worldX,
-                "worldY": self.worldY,
-                "health": self.health,
-                "maxHealth": self.maxHealth,
-                "mana": self.mana,
-                "maxMana": self.maxMana,
+        return {"worldX": self.worldX if self.gameHandler.bossGauntlet.currentBoss is None else self.mostRecentWaypointCords[0],
+                "worldY": self.worldY if self.gameHandler.bossGauntlet.currentBoss is None else self.mostRecentWaypointCords[1],
+                "health": self.health if self.gameHandler.bossGauntlet.currentBoss is None else self.gameHandler.bossGauntlet.originalMaxHealth,
+                "maxHealth": self.maxHealth if self.gameHandler.bossGauntlet.currentBoss is None else self.gameHandler.bossGauntlet.originalMaxHealth,
+                "mana": self.mana if self.gameHandler.bossGauntlet.currentBoss is None else self.gameHandler.bossGauntlet.originalMaxMana,
+                "maxMana": self.maxMana if self.gameHandler.bossGauntlet.currentBoss is None else self.gameHandler.bossGauntlet.originalMaxMana,
                 "mostRecentWaypointCords": self.mostRecentWaypointCords,
                 "weapon": self.weapon.DataToDictionary() if self.weapon else None,
                 "spell": self.spell.DataToDictionary() if self.spell else None,
@@ -1287,7 +1289,7 @@ class Player(Setup.pg.sprite.Sprite):
             self.weapon.Update()
             self.spell.Update()
 
-            self.PlayerMaintenanceFunctions()          
+            self.PlayerMaintenanceFunctions()       
         else:
             self.DrawDeathScreen()
 
@@ -1467,7 +1469,9 @@ class Player(Setup.pg.sprite.Sprite):
         self.dead = False
         self.ResetHealthAndMana()
         self.gameHandler.ResetEntities()
-
+        self.ResetToLastLocation()
+        
+    def ResetToLastLocation(self):
         if self.mostRecentWaypointCords:
             (self.worldX, self.worldY) = self.mostRecentWaypointCords
         else:
@@ -1497,6 +1501,9 @@ class Player(Setup.pg.sprite.Sprite):
 
             if Setup.setup.pressedKey == Setup.pg.K_f: # no cooldown
                 self.spell.Attack()
+
+            if Setup.setup.pressedKey == Setup.pg.K_g:
+                self.gameHandler.bossGauntlet.SpawnBoss(21)
 
 class GameBackground:
     def __init__(self, gameHandler):  
@@ -1535,7 +1542,7 @@ class TreasureChest:
     def __init__(self, parentBlock, chestNumber):
         self.parent = parentBlock
         self.prompt = Prompt("E_PROMPT_IMAGE", "e")
-        self.openedImage = MapCreator.mapDataHandler.mapGrid.blockSheetHandler.GetCorrectBlockImage(self.parent.blockNumber + 1)#, Setup.setup.BLOCK_WIDTH, Setup.setup.BLOCK_WIDTH, False, 0)
+        self.openedImage = MapCreator.mapDataHandler.mapGrid.blockSheetHandler.GetCorrectBlockImage(self.parent.blockNumber + 1)
         self.chestOpened = False 
         
         allRewards = {0 : Longsword(damage=80,  chargedDamage=120, abilityDamage=200, abilityManaCost=40, abilityCooldown=5, parentPlayer=None),
@@ -2553,5 +2560,50 @@ class FriendlyCharacter:
                                 break
 
                         self.item = None
+
+class PostGameBossGauntlet:
+    def __init__(self, gameHandler):
+        self.gameHandler = gameHandler
+
+        self.bossLocationX, self.bossLocationY = 7000, 7360
+        self.originalMaxHealth = None
+        self.originalMaxMana = None
+        self.currentBoss = None
+
+    def SpawnBoss(self, bossNumber):
+        if self.currentBoss is not None:
+            return
+        
+        self.currentBoss = self.gameHandler.CreateBoss(bossNumber, locationX=self.bossLocationX, locationY=self.bossLocationY)
+        self.gameHandler.bosses.add(self.currentBoss)
+        self.TeleportPlayer(self.gameHandler.player, 2)
+
+    def TeleportPlayer(self, player, difficulty):
+        player.worldX, player.worldY = self.bossLocationX - (Setup.setup.BLOCK_WIDTH * 5), self.bossLocationY 
+        
+        self.originalMaxHealth = player.maxHealth
+        self.originalMaxMana = player.maxMana
+
+        if difficulty == 2:
+            player.maxHealth /= 2
+            player.health = player.maxHealth
+            player.maxMana /= 2
+            player.mana = player.maxMana
+        elif difficulty == 3:
+            player.maxHealth = 1
+            player.health = player.maxHealth
+            player.maxMana = 0
+            player.mana = player.maxMana
+
+    def CheckStateOfBossAndPlayer(self, player):
+        if self.currentBoss is None:
+            return
+
+        if self.currentBoss.dead or player.dead:
+            self.gameHandler.bosses.remove(self.currentBoss)
+            self.currentBoss = None   
+            player.maxHealth = self.originalMaxHealth
+            player.maxMana = self.originalMaxMana
+            player.Respawn()
 
 gameHandler = GameHandler()

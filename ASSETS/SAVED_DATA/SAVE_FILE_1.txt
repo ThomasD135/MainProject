@@ -1,10 +1,10 @@
 {
     "player": {
-        "worldX": 4094,
-        "worldY": 1280,
-        "health": 505.0,
+        "worldX": 2240,
+        "worldY": 160,
+        "health": 800,
         "maxHealth": 800,
-        "mana": 300.0,
+        "mana": 300,
         "maxMana": 300,
         "mostRecentWaypointCords": [
             2240,
@@ -68,8 +68,8 @@
             ]
         },
         "mapFragments": {
-            "1": true,
-            "2": true,
+            "1": false,
+            "2": false,
             "3": false,
             "4": false
         }
@@ -77,20 +77,28 @@
     "enemies": [
         {
             "enemyType": 29,
-            "worldX": 3760.9170705820097,
+            "worldX": 3745.1526666355776,
             "worldY": 1280,
-            "health": -50,
-            "dead": true
+            "health": 200,
+            "dead": false
         },
         {
             "enemyType": 30,
-            "worldX": 4254.9351188292385,
+            "worldX": 4228.453143507715,
             "worldY": 1280,
-            "health": -50,
-            "dead": true
+            "health": 200,
+            "dead": false
         }
     ],
-    "bosses": [],
+    "bosses": [
+        {
+            "enemyType": 21,
+            "worldX": 6751.859920117153,
+            "worldY": 7360,
+            "health": 200,
+            "dead": false
+        }
+    ],
     "waypoints": [
         {
             "waypointActive": true
@@ -124,10 +132,10 @@
     ],
     "friendlyCharacters": [
         {
-            "textNumber": 3
+            "textNumber": 0
         },
         {
-            "textNumber": 7
+            "textNumber": 0
         },
         {
             "textNumber": 0
