@@ -651,15 +651,15 @@ class WoodenSword(Weapon):
     def __init__(self, name="WoodenSword", description="A weak wooden sword", abilityDescription="A quick thrust", damage=None, chargedDamage=None, abilityDamage=None, abilityManaCost=None, abilityCooldown=None, parentPlayer=None):
         super().__init__(name, description, abilityDescription, damage, chargedDamage, abilityDamage, abilityManaCost, abilityCooldown, parentPlayer)
 
-        self.basicAttackLengthTimer = CooldownTimer(0.75) # seconds
+        self.basicAttackLengthTimer = CooldownTimer(0.5) # seconds
         self.basicAttackSheet = None
         self.basicAttackDimentions = (160, 80)
 
-        self.chargedAttackLengthTimer = CooldownTimer(1)
+        self.chargedAttackLengthTimer = CooldownTimer(0.75)
         self.chargedAttackSheet = None
         self.chargedAttackDimentions = (240, 80)
 
-        self.abilityAttackLengthTimer = CooldownTimer(1)
+        self.abilityAttackLengthTimer = CooldownTimer(0.7)
         self.abilityAttackSheet = None
         self.abilityAttackDimentions = (160, 80)
 
@@ -680,15 +680,15 @@ class Longsword(Weapon):
     def __init__(self, name="Longsword", description="A long iron sword", abilityDescription="A powerful overhead swing", damage=None, chargedDamage=None, abilityDamage=None, abilityManaCost=None, abilityCooldown=None, parentPlayer=None):
         super().__init__(name, description, abilityDescription, damage, chargedDamage, abilityDamage, abilityManaCost, abilityCooldown, parentPlayer)
 
-        self.basicAttackLengthTimer = CooldownTimer(1) # seconds
+        self.basicAttackLengthTimer = CooldownTimer(0.6) # seconds
         self.basicAttackSheet = None
         self.basicAttackDimentions = (160, 80)
 
-        self.chargedAttackLengthTimer = CooldownTimer(1.25)
+        self.chargedAttackLengthTimer = CooldownTimer(0.8)
         self.chargedAttackSheet = None
         self.chargedAttackDimentions = (240, 80)
 
-        self.abilityAttackLengthTimer = CooldownTimer(1.25)
+        self.abilityAttackLengthTimer = CooldownTimer(1)
         self.abilityAttackSheet = None
         self.abilityAttackDimentions = (160, 80)
 
@@ -997,7 +997,7 @@ class Inventory:
         self.UpdateSelectionSlots()
         
 class Player(Setup.pg.sprite.Sprite):
-    def __init__(self, name="Player", gameHandler=None, worldX=Setup.setup.BLOCK_WIDTH, worldY=Setup.setup.BLOCK_WIDTH, health=800, maxHealth=800, mana=300, maxMana=300, mapFragments=None, mostRecentWaypointCords=None, weapon=None, spell=None, armour=None, inventory=None):
+    def __init__(self, name="Player", gameHandler=None, worldX=Setup.setup.BLOCK_WIDTH, worldY=Setup.setup.BLOCK_WIDTH, health=800, maxHealth=800, mana=300, maxMana=300, mapFragments=None, mostRecentWaypointCords=(Setup.setup.BLOCK_WIDTH, Setup.setup.BLOCK_WIDTH), weapon=None, spell=None, armour=None, inventory=None):
         super().__init__()
         self.name = name
         self.gameHandler = gameHandler
@@ -1005,6 +1005,7 @@ class Player(Setup.pg.sprite.Sprite):
         self.worldY = worldY
         self.health = health
         self.maxHealth = maxHealth
+        self.damageTakenMultiplier = 1
         self.mana = mana
         self.maxMana = maxMana
         self.mapFragments = mapFragments if mapFragments is not None else {"1": False, "2": False, "3": False, "4": False} # json converts int keys to strings, which forces a conversion later, it is safer to always use string keys
@@ -1076,10 +1077,10 @@ class Player(Setup.pg.sprite.Sprite):
     def DataToDictionary(self):
         return {"worldX": self.worldX if self.gameHandler.bossGauntlet.currentBoss is None else self.mostRecentWaypointCords[0],
                 "worldY": self.worldY if self.gameHandler.bossGauntlet.currentBoss is None else self.mostRecentWaypointCords[1],
-                "health": self.health if self.gameHandler.bossGauntlet.currentBoss is None else self.gameHandler.bossGauntlet.originalMaxHealth,
-                "maxHealth": self.maxHealth if self.gameHandler.bossGauntlet.currentBoss is None else self.gameHandler.bossGauntlet.originalMaxHealth,
-                "mana": self.mana if self.gameHandler.bossGauntlet.currentBoss is None else self.gameHandler.bossGauntlet.originalMaxMana,
-                "maxMana": self.maxMana if self.gameHandler.bossGauntlet.currentBoss is None else self.gameHandler.bossGauntlet.originalMaxMana,
+                "health": self.health if self.gameHandler.bossGauntlet.currentBoss is None else self.maxHealth,
+                "maxHealth": self.maxHealth,
+                "mana": self.mana if self.gameHandler.bossGauntlet.currentBoss is None else self.maxMana,
+                "maxMana": self.maxMana,
                 "mostRecentWaypointCords": self.mostRecentWaypointCords,
                 "weapon": self.weapon.DataToDictionary() if self.weapon else None,
                 "spell": self.spell.DataToDictionary() if self.spell else None,
@@ -1298,7 +1299,7 @@ class Player(Setup.pg.sprite.Sprite):
 
     def TakeHealth(self, damage, fromBlock=False):
         if not self.IsInvincible() or fromBlock:
-            self.health -= (1 - self.armour.resistance / 100) * damage # resistance of 20 (reduction of 20%) = (1 - 0.2) = 0.8
+            self.health -= (1 - self.armour.resistance / 100) * damage * self.damageTakenMultiplier # resistance of 20 (reduction of 20%) = (1 - 0.2) = 0.8
 
     def UseMana(self, manaCost):
         if self.mana >= manaCost:
@@ -1472,11 +1473,7 @@ class Player(Setup.pg.sprite.Sprite):
         self.ResetToLastLocation()
         
     def ResetToLastLocation(self):
-        if self.mostRecentWaypointCords:
-            (self.worldX, self.worldY) = self.mostRecentWaypointCords
-        else:
-            self.worldX = Setup.setup.BLOCK_WIDTH
-            self.worldY = Setup.setup.BLOCK_WIDTH
+        (self.worldX, self.worldY) = self.mostRecentWaypointCords # initialised to start location
 
     def ResetHealthAndMana(self):
         self.mana = self.maxMana
@@ -1503,7 +1500,7 @@ class Player(Setup.pg.sprite.Sprite):
                 self.spell.Attack()
 
             if Setup.setup.pressedKey == Setup.pg.K_g:
-                self.gameHandler.bossGauntlet.SpawnBoss(21)
+                self.gameHandler.bossGauntlet.SpawnBoss(bossNumber=21, difficulty=1) # defaults
 
 class GameBackground:
     def __init__(self, gameHandler):  
@@ -2566,44 +2563,75 @@ class PostGameBossGauntlet:
         self.gameHandler = gameHandler
 
         self.bossLocationX, self.bossLocationY = 7000, 7360
-        self.originalMaxHealth = None
-        self.originalMaxMana = None
         self.currentBoss = None
+        self.selectedDifficulty = 1
+        self.selectedBoss = 21
 
-    def SpawnBoss(self, bossNumber):
+    def SpawnBoss(self, bossNumber, difficulty):
         if self.currentBoss is not None:
             return
         
         self.currentBoss = self.gameHandler.CreateBoss(bossNumber, locationX=self.bossLocationX, locationY=self.bossLocationY)
         self.gameHandler.bosses.add(self.currentBoss)
-        self.TeleportPlayer(self.gameHandler.player, 2)
+        self.TeleportPlayer(self.gameHandler.player, difficulty)
 
     def TeleportPlayer(self, player, difficulty):
         player.worldX, player.worldY = self.bossLocationX - (Setup.setup.BLOCK_WIDTH * 5), self.bossLocationY 
-        
-        self.originalMaxHealth = player.maxHealth
-        self.originalMaxMana = player.maxMana
+        player.health = player.maxHealth
+        player.mana = player.maxMana
 
-        if difficulty == 2:
-            player.maxHealth /= 2
-            player.health = player.maxHealth
-            player.maxMana /= 2
-            player.mana = player.maxMana
-        elif difficulty == 3:
-            player.maxHealth = 1
-            player.health = player.maxHealth
-            player.maxMana = 0
-            player.mana = player.maxMana
+        if difficulty == 2: # player takes double damage and has half the mana regeneration speed
+            player.damageTakenMultiplier = 2 
+            player.manaRegenerationSpeed = 25 / 60 
+        elif difficulty == 3: # player dies in one hit and does not regenerate mana
+            player.damageTakenMultiplier = 1000
+            player.manaRegenerationSpeed = 0
+
+    def ChangeDifficulty(self, difficulty, player):
+        self.selectedDifficulty = difficulty
+        self.selectedBoss = self.currentBoss.enemyType
+
+        self.ResetPlayerAndBoss(player)  
+
+        self.SpawnBoss(self.selectedBoss, self.selectedDifficulty)
+
+    def ChangeBoss(self, bossNumber, player):
+        if bossNumber > 28:
+            bossNumber = 21
+
+        if bossNumber < 21:
+            bossNumber = 28
+
+        self.selectedBoss = bossNumber
+
+        self.ResetPlayerAndBoss(player)
+
+        self.SpawnBoss(self.selectedBoss, self.selectedDifficulty)
 
     def CheckStateOfBossAndPlayer(self, player):
         if self.currentBoss is None:
             return
 
+        if Setup.setup.pressedKey == Setup.pg.K_1:
+            self.ChangeDifficulty(1, player)
+        elif Setup.setup.pressedKey == Setup.pg.K_2:
+            self.ChangeDifficulty(2, player)
+        elif Setup.setup.pressedKey == Setup.pg.K_3:
+            self.ChangeDifficulty(3, player)
+
+        if Setup.setup.pressedKey == Setup.pg.K_i:
+            self.ChangeBoss(self.selectedBoss - 1, player)
+        elif Setup.setup.pressedKey == Setup.pg.K_o:
+            self.ChangeBoss(self.selectedBoss + 1, player)        
+
         if self.currentBoss.dead or player.dead:
-            self.gameHandler.bosses.remove(self.currentBoss)
-            self.currentBoss = None   
-            player.maxHealth = self.originalMaxHealth
-            player.maxMana = self.originalMaxMana
-            player.Respawn()
+            self.ResetPlayerAndBoss(player)
+
+    def ResetPlayerAndBoss(self, player):
+        self.gameHandler.bosses.remove(self.currentBoss)
+        self.currentBoss = None   
+        player.damageTakenMultiplier = 1
+        player.manaRegenerationSpeed = 50 / 60
+        player.Respawn()
 
 gameHandler = GameHandler()

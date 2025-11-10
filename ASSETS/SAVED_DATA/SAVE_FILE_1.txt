@@ -1,13 +1,13 @@
 {
     "player": {
-        "worldX": 2240,
+        "worldX": 322,
         "worldY": 160,
         "health": 800,
         "maxHealth": 800,
-        "mana": 300,
+        "mana": 300.0,
         "maxMana": 300,
         "mostRecentWaypointCords": [
-            2240,
+            160,
             160
         ],
         "weapon": {
@@ -77,31 +77,23 @@
     "enemies": [
         {
             "enemyType": 29,
-            "worldX": 3745.1526666355776,
+            "worldX": 4240.583457685106,
             "worldY": 1280,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 30,
-            "worldX": 4228.453143507715,
+            "worldX": 4719.649045664866,
             "worldY": 1280,
             "health": 200,
             "dead": false
         }
     ],
-    "bosses": [
-        {
-            "enemyType": 21,
-            "worldX": 6751.859920117153,
-            "worldY": 7360,
-            "health": 200,
-            "dead": false
-        }
-    ],
+    "bosses": [],
     "waypoints": [
         {
-            "waypointActive": true
+            "waypointActive": false
         },
         {
             "waypointActive": false

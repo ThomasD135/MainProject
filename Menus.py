@@ -251,14 +251,12 @@ class CreateInfoMenu(Setup.pg.sprite.Sprite):
         infoTextMainControls = Setup.TextMethods.CreateText("INFO1", "(MAIN)   WASD - movement   SHIFT - dash   CONTROL - crouch   SPACE - jump   M - toggle mini map   TAB - menu", Setup.setup.BLUE, xLocation, yLocation, size)
         infoTextAttackControls = Setup.TextMethods.CreateText("INFO1", "(ATTACK)   LCLICK - attack   RCLICK - charged attack   E - ability   F - spell", Setup.setup.BLUE, xLocation, yLocation + spacing, size)       
         infoTextMapControls = Setup.TextMethods.CreateText("INFO2", "(MINI MAP)   CONTROL - show cursor   LCLICK - place waypoint   RCLICK - delete waypoint", Setup.setup.BLUE, xLocation, yLocation + (2 * spacing), size)
-        infoTextOtherControls = Setup.TextMethods.CreateText("INFO3", "(OTHER)   K - kill character   E - interact with prompt   HOLD SPACE - longer jump", Setup.setup.BLUE, xLocation, yLocation + (3 * spacing), size)
+        infoTextGauntletControls = Setup.TextMethods.CreateText("INFO3", "(GAUNTLET)   G - fight boss   (1/2/3) - select difficulty   (I/O) - select boss", Setup.setup.BLUE, xLocation, yLocation + (3 * spacing), size)
+        infoTextOtherControls = Setup.TextMethods.CreateText("INFO3", "(OTHER)   K - kill character   E - interact with prompt   HOLD SPACE - longer jump", Setup.setup.BLUE, xLocation, yLocation + (4 * spacing), size)
+
 
         self.buttons.add(exitButton)
-
-        self.textList.append(infoTextMainControls)
-        self.textList.append(infoTextAttackControls)
-        self.textList.append(infoTextMapControls)
-        self.textList.append(infoTextOtherControls)
+        self.textList = [infoTextMainControls, infoTextAttackControls, infoTextMapControls, infoTextGauntletControls, infoTextOtherControls]
 
     def ChildActions(self):
         ButtonGroupMethods.UpdateChildButtons(self.buttons)
