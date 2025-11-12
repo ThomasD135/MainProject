@@ -252,11 +252,11 @@ class CreateInfoMenu(Setup.pg.sprite.Sprite):
         infoTextAttackControls = Setup.TextMethods.CreateText("INFO1", "(ATTACK)   LCLICK - attack   RCLICK - charged attack   E - ability   F - spell", Setup.setup.BLUE, xLocation, yLocation + spacing, size)       
         infoTextMapControls = Setup.TextMethods.CreateText("INFO2", "(MINI MAP)   CONTROL - show cursor   LCLICK - place waypoint   RCLICK - delete waypoint", Setup.setup.BLUE, xLocation, yLocation + (2 * spacing), size)
         infoTextGauntletControls = Setup.TextMethods.CreateText("INFO3", "(GAUNTLET)   G - fight boss   (1/2/3) - select difficulty   (I/O) - select boss", Setup.setup.BLUE, xLocation, yLocation + (3 * spacing), size)
-        infoTextOtherControls = Setup.TextMethods.CreateText("INFO3", "(OTHER)   K - kill character   E - interact with prompt   HOLD SPACE - longer jump", Setup.setup.BLUE, xLocation, yLocation + (4 * spacing), size)
-
+        infoTextGauntletDifficulty = Setup.TextMethods.CreateText("INFO4", "(GAUNTLET DIFFICULTY)   1 - normal   2 - take 2x damage + 0.5x mana regen   3 - instakill + no mana regen", Setup.setup.BLUE, xLocation, yLocation + (4 * spacing), size)
+        infoTextOtherControls = Setup.TextMethods.CreateText("INFO3", "(OTHER)   K - kill character   E - interact with prompt   HOLD SPACE - longer jump", Setup.setup.BLUE, xLocation, yLocation + (5 * spacing), size)
 
         self.buttons.add(exitButton)
-        self.textList = [infoTextMainControls, infoTextAttackControls, infoTextMapControls, infoTextGauntletControls, infoTextOtherControls]
+        self.textList = [infoTextMainControls, infoTextAttackControls, infoTextMapControls, infoTextGauntletControls, infoTextGauntletDifficulty, infoTextOtherControls]
 
     def ChildActions(self):
         ButtonGroupMethods.UpdateChildButtons(self.buttons)

@@ -1,10 +1,10 @@
 {
     "player": {
-        "worldX": 322,
+        "worldX": 160,
         "worldY": 160,
         "health": 800,
         "maxHealth": 800,
-        "mana": 300.0,
+        "mana": 300,
         "maxMana": 300,
         "mostRecentWaypointCords": [
             160,
@@ -16,15 +16,15 @@
             "abilityDescription": "A quick thrust",
             "damage": 50,
             "chargedDamage": 75,
-            "abilityDamage": 100,
-            "abilityManaCost": 25,
+            "abilityDamage": 125,
+            "abilityManaCost": 125,
             "abilityCooldown": 5
         },
         "spell": {
             "name": "Fireball",
             "description": "A burning ball of fire",
-            "damage": 100,
-            "manaCost": 50
+            "damage": 60,
+            "manaCost": 75
         },
         "armour": {
             "name": "DefaultArmour",
@@ -45,8 +45,8 @@
                     "abilityDescription": "A quick thrust",
                     "damage": 50,
                     "chargedDamage": 75,
-                    "abilityDamage": 100,
-                    "abilityManaCost": 25,
+                    "abilityDamage": 125,
+                    "abilityManaCost": 125,
                     "abilityCooldown": 5
                 }
             ],
@@ -54,8 +54,8 @@
                 {
                     "name": "Fireball",
                     "description": "A burning ball of fire",
-                    "damage": 100,
-                    "manaCost": 50
+                    "damage": 60,
+                    "manaCost": 75
                 }
             ],
             "armour": [
@@ -77,20 +77,28 @@
     "enemies": [
         {
             "enemyType": 29,
-            "worldX": 4240.583457685106,
+            "worldX": 3888.987680729342,
             "worldY": 1280,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 30,
-            "worldX": 4719.649045664866,
+            "worldX": 4590.349539915509,
             "worldY": 1280,
             "health": 200,
             "dead": false
         }
     ],
-    "bosses": [],
+    "bosses": [
+        {
+            "enemyType": 24,
+            "worldX": 6923.685372646032,
+            "worldY": 7360,
+            "health": 700,
+            "dead": false
+        }
+    ],
     "waypoints": [
         {
             "waypointActive": false

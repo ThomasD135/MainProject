@@ -69,13 +69,13 @@ class GameHandler(Setup.pg.sprite.Sprite):
                            }
 
         self.bossTypes = {21 : {"class": Boss1, "health": 500, "velocity": 5, "size": 160, "phases": 1, "name": "Glod the Infected"},
-                          22 : {"class": Boss1, "health": 700, "velocity": 4, "size": 160, "phases": 1, "name": "The Wretched Growth"},
-                          23 : {"class": Boss1, "health": 1000, "velocity": 0, "size": 320, "phases": 1, "name": "The Weeping Maw"},
-                          24 : {"class": Boss1, "health": 700, "velocity": 6, "size": 160, "phases": 1, "name": "The Forgotten Champion"},
+                          22 : {"class": Boss2, "health": 700, "velocity": 4, "size": 160, "phases": 1, "name": "The Wretched Growth"},
+                          23 : {"class": Boss3, "health": 1000, "velocity": 0, "size": 320, "phases": 1, "name": "The Weeping Maw"},
+                          24 : {"class": Boss4, "health": 700, "velocity": 6, "size": 160, "phases": 1, "name": "The Forgotten Champion"},
                           25 : {"class": Boss5, "health": 2500, "velocity": 8, "size": 160, "phases": 3, "name": "Malakar, the Eclipse Stalker"},
                           26 : {"class": Boss6, "health": 3000, "velocity": 6, "size": 320, "phases": 3, "name": "Glod, Harbinger of Plague"},
-                          27 : {"class": Boss1, "health": 2000, "velocity": 10, "size": 160, "phases": 1, "name": "Rychard, Brother of Richard"},
-                          28 : {"class": Boss1, "health": 1750, "velocity": 12, "size": 224, "phases": 2, "name": "Vaelin the Sound Born"}
+                          27 : {"class": Boss7, "health": 2000, "velocity": 10, "size": 160, "phases": 1, "name": "Rychard, Brother of Richard"},
+                          28 : {"class": Boss8, "health": 1750, "velocity": 12, "size": 224, "phases": 2, "name": "Vaelin the Sound Born"}
                           }
 
         self.bossGauntlet = PostGameBossGauntlet(self)        
@@ -1011,8 +1011,8 @@ class Player(Setup.pg.sprite.Sprite):
         self.mapFragments = mapFragments if mapFragments is not None else {"1": False, "2": False, "3": False, "4": False} # json converts int keys to strings, which forces a conversion later, it is safer to always use string keys
         self.mostRecentWaypointCords = mostRecentWaypointCords
 
-        attributesAndDefault = {"weapon" : WoodenSword(damage=50, chargedDamage=75, abilityDamage=100, abilityManaCost=25, abilityCooldown=5, parentPlayer=self), 
-                                "spell" : Fireball(damage=100, manaCost=50, parentPlayer=self), 
+        attributesAndDefault = {"weapon" : WoodenSword(damage=50, chargedDamage=75, abilityDamage=125, abilityManaCost=125, abilityCooldown=5, parentPlayer=self), 
+                                "spell" : Fireball(damage=60, manaCost=75, parentPlayer=self), 
                                 "armour" : Armour("DefaultArmour", "No armour", resistance=0, armourType=1, parentPlayer=self), 
                                 "inventory" : Inventory(self)}
         
@@ -1542,7 +1542,7 @@ class TreasureChest:
         self.openedImage = MapCreator.mapDataHandler.mapGrid.blockSheetHandler.GetCorrectBlockImage(self.parent.blockNumber + 1)
         self.chestOpened = False 
         
-        allRewards = {0 : Longsword(damage=80,  chargedDamage=120, abilityDamage=200, abilityManaCost=40, abilityCooldown=5, parentPlayer=None),
+        allRewards = {0 : Longsword(damage=80,  chargedDamage=120, abilityDamage=200, abilityManaCost=150, abilityCooldown=5, parentPlayer=None),
                     1 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=30, armourType=2),
         } 
         
@@ -2435,6 +2435,31 @@ class Boss1(Boss):
 
         self.phaseTwoAttacks = {"ATTACK_3" : {"damage" : 100, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 2, "dimentions" : [160, 80]}}
 
+class Boss2(Boss):
+    def __init__(self, worldX, worldY, image, health, velocity, size, phases, name, bossType, gameHandler):
+        super().__init__(worldX, worldY, image, health, velocity, size, phases, name, bossType, gameHandler)
+
+        self.attacks = {"ATTACK_1" : {"damage" : 50, "range" : Setup.setup.BLOCK_WIDTH * 1.5, "length" : 1.25, "dimentions" : [240, 80]},
+                        "ATTACK_2" : {"damage" : 125, "range" : Setup.setup.BLOCK_WIDTH * 3, "length" : 2, "dimentions" : [240, 80], "velocityX" : 8},
+                        "ATTACK_3" : {"damage" : 100, "range" : Setup.setup.BLOCK_WIDTH * 3, "length" : 2, "dimentions" : [160, 80], "velocityX" : 10}}
+
+class Boss3(Boss):
+    def __init__(self, worldX, worldY, image, health, velocity, size, phases, name, bossType, gameHandler):
+        super().__init__(worldX, worldY, image, health, velocity, size, phases, name, bossType, gameHandler)
+
+        self.attacks = {"ATTACK_1" : {"damage" : 50, "range" : Setup.setup.BLOCK_WIDTH * 2, "length" : 1, "dimentions" : [160, 160]},
+                        "ATTACK_2" : {"damage" : 125, "range" : Setup.setup.BLOCK_WIDTH * 2.5, "length" : 1.5, "dimentions" : [240, 160]},
+                        "ATTACK_3" : {"damage" : 100, "range" : Setup.setup.BLOCK_WIDTH * 4, "length" : 2, "dimentions" : [160, 160], "velocityX" : 16}}
+
+class Boss4(Boss):
+    def __init__(self, worldX, worldY, image, health, velocity, size, phases, name, bossType, gameHandler):
+        super().__init__(worldX, worldY, image, health, velocity, size, phases, name, bossType, gameHandler)
+
+        self.attacks = {"ATTACK_1" : {"damage" : 50, "range" : Setup.setup.BLOCK_WIDTH * 0.5, "length" : 0.5, "dimentions" : [80, 80]},
+                        "ATTACK_2" : {"damage" : 80, "range" : Setup.setup.BLOCK_WIDTH * 2, "length" : 1.5, "dimentions" : [160, 80]},
+                        "ATTACK_3" : {"damage" : 150, "range" : Setup.setup.BLOCK_WIDTH * 2, "length" : 2, "dimentions" : [240, 80]},
+                        "ATTACK_4" : {"damage" : 200, "range" : Setup.setup.BLOCK_WIDTH * 0.5, "length" : 2.5, "dimentions" : [80, 40]}}
+
 class Boss5(Boss):
     def __init__(self, worldX, worldY, image, health, velocity, size, phases, name, bossType, gameHandler):
         super().__init__(worldX, worldY, image, health, velocity, size, phases, name, bossType, gameHandler)
@@ -2458,6 +2483,27 @@ class Boss6(Boss):
         self.phaseTwoAttacks = {"ATTACK_4" : {"damage" : 175, "range" : Setup.setup.BLOCK_WIDTH * 2.5, "length" : 2, "dimentions" : [400, 240]}}
 
         self.phaseThreeAttacks = {"ATTACK_5" : {"damage" : 400, "range" : Setup.setup.BLOCK_WIDTH * 2, "length" : 3, "dimentions" : [240, 420]}}
+
+class Boss7(Boss):
+    def __init__(self, worldX, worldY, image, health, velocity, size, phases, name, bossType, gameHandler):
+        super().__init__(worldX, worldY, image, health, velocity, size, phases, name, bossType, gameHandler)
+
+        self.attacks = {"ATTACK_1" : {"damage" : 125, "range" : Setup.setup.BLOCK_WIDTH * 2, "length" : 1, "dimentions" : [320, 40]},
+                        "ATTACK_2" : {"damage" : 125, "range" : Setup.setup.BLOCK_WIDTH * 2, "length" : 1.25, "dimentions" : [240, 80]},
+                        "ATTACK_3" : {"damage" : 200, "range" : Setup.setup.BLOCK_WIDTH * 1, "length" : 1.5, "dimentions" : [240, 80]},
+                        "ATTACK_4" : {"damage" : 200, "range" : Setup.setup.BLOCK_WIDTH * 0.5, "length" : 1, "dimentions" : [160, 120]}}
+
+class Boss8(Boss):
+    def __init__(self, worldX, worldY, image, health, velocity, size, phases, name, bossType, gameHandler):
+        super().__init__(worldX, worldY, image, health, velocity, size, phases, name, bossType, gameHandler)
+
+        self.attacks = {"ATTACK_1" : {"damage" : 150, "range" : Setup.setup.BLOCK_WIDTH * 2, "length" : 1.25, "dimentions" : [240, 100]},
+                        "ATTACK_2" : {"damage" : 200, "range" : Setup.setup.BLOCK_WIDTH * 1.5, "length" : 1.5, "dimentions" : [160, 80]},
+                        "ATTACK_3" : {"damage" : 400, "range" : Setup.setup.BLOCK_WIDTH * 0.5, "length" : 3, "dimentions" : [80, 80]}}
+
+        self.phaseTwoAttacks = {"ATTACK_4" : {"damage" : 200, "range" : Setup.setup.BLOCK_WIDTH * 3, "length" : 3, "dimentions" : [80, 80] , "velocityX" : 5},
+                        "ATTACK_5" : {"damage" : 150, "range" : Setup.setup.BLOCK_WIDTH * 2, "length" : 2, "dimentions" : [160, 80] , "velocityX" : 10},
+                        "ATTACK_6" : {"damage" : 50, "range" : Setup.setup.BLOCK_WIDTH * 5, "length" : 1.5, "dimentions" : [240, 40], "velocityX" : 20}}
 
 class FriendlyCharacter:
     allItems = {0 : "map",
@@ -2626,6 +2672,8 @@ class PostGameBossGauntlet:
 
         if self.currentBoss.dead or player.dead:
             self.ResetPlayerAndBoss(player)
+            self.selectedDifficulty = 1
+            self.selectedBoss = 21
 
     def ResetPlayerAndBoss(self, player):
         self.gameHandler.bosses.remove(self.currentBoss)
