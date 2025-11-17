@@ -253,7 +253,7 @@ class CreateInfoMenu(Setup.pg.sprite.Sprite):
         infoTextMapControls = Setup.TextMethods.CreateText("INFO2", "(MINI MAP)   CONTROL - show cursor   LCLICK - place waypoint   RCLICK - delete waypoint", Setup.setup.BLUE, xLocation, yLocation + (2 * spacing), size)
         infoTextGauntletControls = Setup.TextMethods.CreateText("INFO3", "(GAUNTLET)   G - fight boss   (1/2/3) - select difficulty   (I/O) - select boss", Setup.setup.BLUE, xLocation, yLocation + (3 * spacing), size)
         infoTextGauntletDifficulty = Setup.TextMethods.CreateText("INFO4", "(GAUNTLET DIFFICULTY)   1 - normal   2 - take 2x damage + 0.5x mana regen   3 - instakill + no mana regen", Setup.setup.BLUE, xLocation, yLocation + (4 * spacing), size)
-        infoTextOtherControls = Setup.TextMethods.CreateText("INFO3", "(OTHER)   K - kill character   E - interact with prompt   HOLD SPACE - longer jump", Setup.setup.BLUE, xLocation, yLocation + (5 * spacing), size)
+        infoTextOtherControls = Setup.TextMethods.CreateText("INFO3", "(OTHER)   K - kill character   E - interact with prompt   P - Save game   HOLD SPACE - longer jump", Setup.setup.BLUE, xLocation, yLocation + (5 * spacing), size)
 
         self.buttons.add(exitButton)
         self.textList = [infoTextMainControls, infoTextAttackControls, infoTextMapControls, infoTextGauntletControls, infoTextGauntletDifficulty, infoTextOtherControls]
@@ -284,8 +284,8 @@ class CreateSettingsMenu(Setup.pg.sprite.Sprite):
         xLocation, yLocation = 150, 1000
         exitButton = ButtonGroupMethods.CreateButton("EXIT", width, height, xLocation, yLocation, "QUIT_BUTTON")   
         
-        xLocation, yLocation = Setup.setup.WIDTH // 2, 300
-        toggleCrouchButton = ButtonGroupMethods.CreateButton("CROUCH", width, height, xLocation, yLocation, "CROUCH_BUTTON")
+        # xLocation, yLocation = Setup.setup.WIDTH // 2, 300
+        # toggleCrouchButton = ButtonGroupMethods.CreateButton("CROUCH", width, height, xLocation, yLocation, "CROUCH_BUTTON")
 
         width, height = Setup.setup.BLOCK_WIDTH, Setup.setup.BLOCK_WIDTH
         xLocation, yLocation = Setup.setup.WIDTH // 2 - 450, 500
@@ -298,7 +298,7 @@ class CreateSettingsMenu(Setup.pg.sprite.Sprite):
         soundControlSliderText = Setup.TextMethods.CreateText("SOUND", "0", Setup.setup.BLACK, xLocation, yLocation, size)
         
         self.buttons.add(exitButton) 
-        self.buttons.add(toggleCrouchButton)
+        #self.buttons.add(toggleCrouchButton)
         self.buttons.add(soundControlSlider)
         self.buttons.add(muteButton)
 

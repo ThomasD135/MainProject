@@ -974,18 +974,20 @@ class Inventory:
 
         if len(Menus.menuManagement.inventoryEquipDisplayButtonGroup.buttons) != len(menuType) + 1: # check for buttons + exit button      
             width, height = 320, 320
-            xLocation, yLocation = width, height
+            xLocation, yLocation = width, 200
             maxNumberOfItemsWidth = (Setup.setup.WIDTH - (width * 2)) // width
             row = 0
+            index = 0
 
-            for index, item in enumerate(menuType):
+            for item in menuType:
                 if index > maxNumberOfItemsWidth:
-                    index /= maxNumberOfItemsWidth
+                    index = 0
                     row += 1
 
                 itemButton = Menus.ButtonGroupMethods.CreateButton(item.name, width, height, xLocation + (width * index), yLocation + (height * row), item.displayImagePath)  
                 self.inventoryEquipDisplayMenu.buttons.add(itemButton)
-                
+                index += 1
+                                
     def DrawEquipMenu(self):
         self.DrawBackground()
         self.DrawItemEquipSlots()
@@ -1502,6 +1504,10 @@ class Player(Setup.pg.sprite.Sprite):
             if Setup.setup.pressedKey == Setup.pg.K_g:
                 self.gameHandler.bossGauntlet.SpawnBoss(bossNumber=21, difficulty=1) # defaults
 
+            if Setup.setup.pressedKey == Setup.pg.K_p:
+                Setup.setup.saveGame = True
+                self.gameHandler.SaveGame()
+
 class GameBackground:
     def __init__(self, gameHandler):  
         self.gameHandler = gameHandler
@@ -1543,7 +1549,7 @@ class TreasureChest:
         self.chestOpened = False 
         
         allRewards = {0 : Longsword(damage=80,  chargedDamage=120, abilityDamage=200, abilityManaCost=150, abilityCooldown=5, parentPlayer=None),
-                    1 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=30, armourType=2),
+                    1 : Armour("SkinOfTheWeepingMaw", "The skin of the weeping maw", resistance=30, armourType=2)
         } 
         
         self.reward = allRewards[chestNumber]        
@@ -2520,10 +2526,10 @@ class FriendlyCharacter:
                     1 : ["I didn't think I would see you again!",
                          "I hope that my map was of assistance",
                          "But anyway, more about this world",
-                         "Everyday our world becomes more corrupt", 
+                         "Every day our world becomes more corrupt", 
                          "I'm certian you've already experienced it",
                          "I would recommend not travelling too far", 
-                         "you don't want to see how this ends",
+                         "You don't want to see how this ends",
                          "For now, take another map, you'll need it!"],
 
                     2 : ["Hey, you really should stop, it's too dangerous to continue",
