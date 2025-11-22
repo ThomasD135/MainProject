@@ -25,6 +25,11 @@ class AdjacencyList:
         return (distance - 160) / 160 # distance caluclated from left most of each block, instead of the gap between blocks (subtract 160 to account for this - doesnt affect functionality)
                                       # divide by 160 to return a smaller number, distances are always multiples of 160
 
+    def FinaliseGraph(self, allNodes): # some connections are directed so fill empty connections
+        for node in allNodes:
+            if node not in self.weightedGraph:
+                self.weightedGraph[node] = {}
+
 class PriorityQueue:
     def __init__(self):
         self.queue = []
@@ -46,17 +51,19 @@ class PriorityQueue:
     
         if self.IsEmpty():
             self.queue.append(itemToAdd)
-        else:
-            inserted = False
+            return
 
-            for itemIndex in range(0, len(self.queue)):
-                if itemToAdd[1] < self.queue[itemIndex][1]:
-                    self.queue.insert(itemIndex, itemToAdd)
-                    inserted = True
-                    break
-                if not inserted:
-                    self.queue.append(itemToAdd)
-            
+        inserted = False
+
+        for itemIndex in range(0, len(self.queue)):
+            if priority < self.queue[itemIndex][1]:
+                self.queue.insert(itemIndex, itemToAdd)
+                inserted = True
+                break
+
+        if not inserted:
+            self.queue.append(itemToAdd)
+          
     def Dequeue(self): 
         if self.IsEmpty():
             raise IndexError("Queue is empty (dequeue)")
@@ -115,14 +122,22 @@ class DijkstraImplementation:
         while not self.priorityQueue.IsEmpty():
             currentNode = self.priorityQueue.Dequeue()[0]
 
+            if currentNode not in self.unvisitedNodes:
+                continue
+
+            if self.tentativeDistances[currentNode] == Setup.sys.maxsize:
+                break # if smallest distance is infinite then the remaining nodes are unreachable
+
             if currentNode == goalNode:
                 break
 
-            if currentNode in self.unvisitedNodes:
-                self.UpdateQueue(currentNode)
-                self.unvisitedNodes.remove(currentNode)
+            self.UpdateQueue(currentNode)
+            self.unvisitedNodes.remove(currentNode)
 
     def RecallShortestPath(self, goalNode):
+        if self.tentativeDistances.get(goalNode, Setup.sys.maxsize) == Setup.sys.maxsize:
+            return None # if there is no path
+
         shortestPath = []
         current = goalNode
 

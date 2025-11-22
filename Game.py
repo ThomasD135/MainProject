@@ -24,33 +24,39 @@ class GameHandler(Setup.pg.sprite.Sprite):
         self.treasureChests = []
         self.friendlyCharacters = []
 
-        self.blockAttributeDictionary = {0 : [False, 0, 0], # enemies and bosses all have no collision so no need for attributes
-                                     1 : [True, 0, 20],
-                                     2 : [True, 0, 20],
-                                     3 : [True, 0, 20],
-                                     4 : [True, 0, 20],
-                                     5 : [True, 0, 20],
-                                     6 : [True, 0, 20],
-                                     7 : [True, 0, 20],
-                                     8 : [True, 30, 20], # spike start
-                                     9 : [True, 30, 20],
-                                     10 : [True, 30, 20],
-                                     11 : [True, 30, 20],
-                                     12 : [True, 30, 20],
-                                     13 : [True, 30, 20], # spike end
-                                     14 : [False, 0, 0],
-                                     15 : [False, 0, 0],
-                                     16 : [False, 0, 0],
-                                     17 : [False, 0, 0],
-                                     18 : [False, 0, 0],
-                                     19 : [False, 0, 0],
-                                     20 : [False, 0, 0],
-                                     43 : [False, 0, 0], # friendly character start
-                                     44 : [False, 0, 0],
-                                     45 : [False, 0, 0],
-                                     46 : [False, 0, 0],
-                                     47 : [False, 0, 0], # friendly character end
-                                     }# [collision with player, damage if any, knockback when hit (is increased if player takes damage from block]
+        # enemies and bosses all have no collision so no need for attributes
+        self.blockAttributeDictionary = {
+            0:  {"collision": False, "damage": 0,  "knockback": 0},
+            # collidable blocks
+            1:  {"collision": True,  "damage": 0,  "knockback": 20},
+            2:  {"collision": True,  "damage": 0,  "knockback": 20},
+            3:  {"collision": True,  "damage": 0,  "knockback": 20},
+            4:  {"collision": True,  "damage": 0,  "knockback": 20},
+            5:  {"collision": True,  "damage": 0,  "knockback": 20},
+            6:  {"collision": True,  "damage": 0,  "knockback": 20},
+            7:  {"collision": True,  "damage": 0,  "knockback": 20},
+            # spikes
+            8:  {"collision": True,  "damage": 50, "knockback": 20},
+            9:  {"collision": True,  "damage": 50, "knockback": 20},
+            10: {"collision": True,  "damage": 50, "knockback": 20},
+            11: {"collision": True,  "damage": 50, "knockback": 20},
+            12: {"collision": True,  "damage": 50, "knockback": 20},
+            13: {"collision": True,  "damage": 50, "knockback": 20},
+            # non collidable blocks
+            14: {"collision": False, "damage": 0,  "knockback": 0},
+            15: {"collision": False, "damage": 0,  "knockback": 0},
+            16: {"collision": False, "damage": 0,  "knockback": 0},
+            17: {"collision": False, "damage": 0,  "knockback": 0},
+            18: {"collision": False, "damage": 0,  "knockback": 0},
+            19: {"collision": False, "damage": 0,  "knockback": 0},
+            20: {"collision": False, "damage": 0,  "knockback": 0},
+            # friendly characters
+            43: {"collision": False, "damage": 0,  "knockback": 0},
+            44: {"collision": False, "damage": 0,  "knockback": 0},
+            45: {"collision": False, "damage": 0,  "knockback": 0},
+            46: {"collision": False, "damage": 0,  "knockback": 0},
+            47: {"collision": False, "damage": 0,  "knockback": 0},
+        }
 
         self.enemyTypes = {29 : {"class": Enemy1, "health": 200, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
                            30 : {"class": Enemy2, "health": 200, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
@@ -151,17 +157,33 @@ class GameHandler(Setup.pg.sprite.Sprite):
         self.CreatePlayableMap()
                
     def CreatePlayableMap(self):
+        AIR_BLOCK = 0
+
+        NON_COLLISION_END   = 20
+
+        FRIENDLY_CHAR_START = 43
+        FRIENDLY_CHAR_END   = 47
+
+        BOSS_START   = 21
+        BOSS_END     = 28
+        ENEMY_START  = 29
+        ENEMY_END    = 42
+
+        PATHFINDING_WAYPOINT = 48
+        WAYPOINT_BLOCKS = {17, 18}
+        TREASURE_CHEST_BLOCK  = 19
+
         Setup.setup.loadedMap = True
 
         for row in MapCreator.mapDataHandler.mapGrid.blockGrid:
             collisionMapRow = []
 
             for block in row:    
-                if block.blockNumber <= 20 or (block.blockNumber >= 43 and block.blockNumber <= 47): # a block and not an entity - friendly characters cannot move so are represented as a block
+                if block.blockNumber <= NON_COLLISION_END or (block.blockNumber >= FRIENDLY_CHAR_START and block.blockNumber <= FRIENDLY_CHAR_END): # a block and not an entity - friendly characters cannot move so are represented as a block
                     attributes = self.blockAttributeDictionary[block.blockNumber] 
 
                     if attributes:
-                        if attributes[0]:
+                        if attributes["collision"]:
                             collisionMapRow.append(1)
                         else:
                             collisionMapRow.append(0)
@@ -169,30 +191,30 @@ class GameHandler(Setup.pg.sprite.Sprite):
                         if block.rotation <= -360:
                             block.rotation %= 360
 
-                        mapBlock = MapBlock(block.blockNumber, block.rotation, block.rotation // -90, block.originalLocationX, block.originalLocationY, block.image, attributes[0], attributes[1], attributes[2])
+                        mapBlock = MapBlock(block.blockNumber, block.rotation, block.rotation // -90, block.originalLocationX, block.originalLocationY, block.image, attributes["collision"], attributes["damage"], attributes["knockback"])
                      
-                        if block.blockNumber != 0: # self.blocks will be used to display the blocks, block 0 is a filler block for the map creator and should not be visible in game
+                        if block.blockNumber != AIR_BLOCK: # self.blocks will be used to display the blocks, block 0 is a filler block for the map creator and should not be visible in game
                             self.blocks.add(mapBlock)
 
-                        if block.blockNumber == 17 or block.blockNumber == 18: # waypoints
+                        if block.blockNumber in WAYPOINT_BLOCKS: # waypoints
                             self.waypoints.append(Waypoint(mapBlock))
 
-                        if block.blockNumber == 19: # treasure chests
+                        if block.blockNumber == TREASURE_CHEST_BLOCK: # treasure chests
                             self.treasureChests.append(TreasureChest(mapBlock, len(self.treasureChests)))
 
-                        if block.blockNumber >= 43 and block.blockNumber <= 47: # friendly characters
-                            self.friendlyCharacters.append(FriendlyCharacter(mapBlock, block.blockNumber - 43)) # between 0 and 4
+                        if block.blockNumber >= FRIENDLY_CHAR_START and block.blockNumber <= FRIENDLY_CHAR_END: # friendly characters
+                            self.friendlyCharacters.append(FriendlyCharacter(mapBlock, block.blockNumber - FRIENDLY_CHAR_START)) # between 0 and 4
                     else:
                         raise ValueError("block has not attributes")
 
                 else: # entities (bosses, enemies, pathFinders)
                     collisionMapRow.append(0)
 
-                    if block.blockNumber >= 21 and block.blockNumber <= 28:
+                    if block.blockNumber >= BOSS_START and block.blockNumber <= BOSS_END:
                         self.bosses.add(self.CreateBoss(block.blockNumber, block))
-                    elif block.blockNumber >= 29 and block.blockNumber <= 42:
+                    elif block.blockNumber >= ENEMY_START and block.blockNumber <= ENEMY_END:
                         self.enemies.add(self.CreateEnemy(block.blockNumber, block))
-                    elif block.blockNumber == 48:    
+                    elif block.blockNumber == PATHFINDING_WAYPOINT:    
                         self.pathfindingWaypointBlocks.append(block)      
 
             self.collisionMap.append(collisionMapRow)
@@ -259,25 +281,25 @@ class GameHandler(Setup.pg.sprite.Sprite):
         self.blockNumberToObject = {}
 
         unweightedAdjacencyList = {0 : [1],
-                                   1 : [0, 2],
-                                   2 : [1, 3],
+                                   1 : [0, 2, 38],
+                                   2 : [3, 36], # cannot return to 1
                                    3 : [2, 4],
                                    4 : [3, 5, 7],
-                                   5 : [4, 6],
+                                   5 : [4, 6, 39],
                                    6 : [5],
                                    7 : [4, 8],
-                                   8 : [7, 9],
+                                   8 : [9, 34], # cannot return to 7
                                    9 : [8, 10],
                                    10 : [9, 11, 14],
                                    11 : [10, 12, 13],
-                                   12 : [11],
+                                   12 : [11, 37],
                                    13 : [11],
-                                   14 : [10, 15],
+                                   14 : [15], # cannot return to 10
                                    15 : [14, 16],
                                    16 : [15, 17, 18],
                                    17 : [16],
                                    18 : [16, 19, 21],
-                                   19 : [18, 20],
+                                   19 : [18, 20, 35],
                                    20 : [19],
                                    21 : [18, 22],
                                    22 : [21, 23],
@@ -291,7 +313,13 @@ class GameHandler(Setup.pg.sprite.Sprite):
                                    30 : [29, 31],
                                    31 : [30, 32],
                                    32 : [31, 33],
-                                   33 : [32]
+                                   33 : [32],
+                                   34 : [8, 35],
+                                   35 : [19, 34],
+                                   36 : [2, 37],
+                                   37 : [12, 36],
+                                   38 : [1, 39],
+                                   39 : [5, 38],
                                    }
         
         for block in blocks: # populate blockNumberToObject
@@ -318,6 +346,7 @@ class GameHandler(Setup.pg.sprite.Sprite):
 
                         self.weightedAdjacencyList.PopulateGraph(block, blockNeighboursObjects, blockNodeNumber, blockNeighbours)   
 
+        self.weightedAdjacencyList.FinaliseGraph(allNodes=unweightedAdjacencyList.keys())
         self.dijkstraGraph = Dijkstra.DijkstraImplementation(self.weightedAdjacencyList.weightedGraph)
 
     def UpdateSprites(self):
@@ -1010,7 +1039,7 @@ class Player(Setup.pg.sprite.Sprite):
         self.damageTakenMultiplier = 1
         self.mana = mana
         self.maxMana = maxMana
-        self.mapFragments = mapFragments if mapFragments is not None else {"1": False, "2": False, "3": False, "4": False} # json converts int keys to strings, which forces a conversion later, it is safer to always use string keys
+        self.mapFragments = mapFragments if mapFragments is not None else {"1": True, "2": True, "3": True, "4": True} # json converts int keys to strings, which forces a conversion later, it is safer to always use string keys
         self.mostRecentWaypointCords = mostRecentWaypointCords
 
         attributesAndDefault = {"weapon" : WoodenSword(damage=50, chargedDamage=75, abilityDamage=125, abilityManaCost=125, abilityCooldown=5, parentPlayer=self), 
@@ -1817,12 +1846,15 @@ class PathGuide:
         self.path = dijkstraGraph.RecallShortestPath(self.endNode)
         self.pathBlockObjects = []
 
+        if self.path is None:
+            return
+
         for blockNumber in self.path:
             if blockNumber in blockNumberToObject:
                 self.pathBlockObjects.append(blockNumberToObject[blockNumber])
 
     def DrawPathGuides(self, shrinkModifier, startX, startY, camera, player): 
-        if self.active: 
+        if self.active and self.path is not None: 
             if len(self.path) == 1: # draw from player to last waypoint
                 playerCordsMini = (player.rect.centerx // shrinkModifier + startX, player.rect.centery // shrinkModifier + startY)
                 blockCordsMini = ((self.pathBlockObjects[0].originalLocationX + Setup.setup.BLOCK_WIDTH // 2) // shrinkModifier + startX, (self.pathBlockObjects[0].originalLocationY + Setup.setup.BLOCK_WIDTH // 2) // shrinkModifier + startY)
@@ -2167,10 +2199,7 @@ class Enemy(BaseEnemy):
 
         self.movementClasses = {"STATIONARY" : None,
                                   "GUARD" : GuardMovement,
-                                  "RANDOM" : RandomMovement,
-                                  "FIXED_PATROL" : self.FixedPatrolMovement,
-                                  "MULTIPLE_PATROL" : self.MultiplePatrolMovement,
-                                  "SMART_PATROL" : self.SmartPatrol,
+                                  "RANDOM" : RandomMovement
                                   }
 
         if self.movementClasses[movementType] is not None:
@@ -2278,19 +2307,6 @@ class Enemy(BaseEnemy):
                     
     def PerformMovement(self):
         self.movementClass.Movement(self)
-
-    def FixedPatrolMovement(self):
-        pass
-
-    def MultiplePatrolMovement(self):
-        pass
-
-    def SmartPatrol(self):
-        pass
-
-class FlyingMovement:
-    def Movement(self, enemy):
-        enemy.MoveToPo
 
 class GuardMovement:
     def Movement(self, enemy):

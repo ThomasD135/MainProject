@@ -1,23 +1,23 @@
 {
     "player": {
-        "worldX": 2484,
-        "worldY": 1280,
-        "health": 800,
+        "worldX": 6944,
+        "worldY": 4320,
+        "health": 575.0,
         "maxHealth": 800,
-        "mana": 300.0,
+        "mana": 300,
         "maxMana": 300,
         "mostRecentWaypointCords": [
             160,
             160
         ],
         "weapon": {
-            "name": "Longsword",
-            "description": "A long iron sword",
-            "abilityDescription": "A powerful overhead swing",
-            "damage": 80,
-            "chargedDamage": 120,
-            "abilityDamage": 200,
-            "abilityManaCost": 150,
+            "name": "WoodenSword",
+            "description": "A weak wooden sword",
+            "abilityDescription": "A quick thrust",
+            "damage": 50,
+            "chargedDamage": 75,
+            "abilityDamage": 125,
+            "abilityManaCost": 125,
             "abilityCooldown": 5
         },
         "spell": {
@@ -27,18 +27,16 @@
             "manaCost": 75
         },
         "armour": {
-            "name": "SkinOfTheWeepingMaw",
-            "description": "The skin of the weeping maw",
-            "resistance": 30,
-            "armourType": 2
+            "name": "DefaultArmour",
+            "description": "No armour",
+            "resistance": 0,
+            "armourType": 1
         },
         "inventory": {
             "itemNames": [
                 "WoodenSword",
                 "Fireball",
-                "DefaultArmour",
-                "Longsword",
-                "SkinOfTheWeepingMaw"
+                "DefaultArmour"
             ],
             "weapons": [
                 {
@@ -49,16 +47,6 @@
                     "chargedDamage": 75,
                     "abilityDamage": 125,
                     "abilityManaCost": 125,
-                    "abilityCooldown": 5
-                },
-                {
-                    "name": "Longsword",
-                    "description": "A long iron sword",
-                    "abilityDescription": "A powerful overhead swing",
-                    "damage": 80,
-                    "chargedDamage": 120,
-                    "abilityDamage": 200,
-                    "abilityManaCost": 150,
                     "abilityCooldown": 5
                 }
             ],
@@ -76,33 +64,27 @@
                     "description": "No armour",
                     "resistance": 0,
                     "armourType": 1
-                },
-                {
-                    "name": "SkinOfTheWeepingMaw",
-                    "description": "The skin of the weeping maw",
-                    "resistance": 30,
-                    "armourType": 2
                 }
             ]
         },
         "mapFragments": {
             "1": true,
             "2": true,
-            "3": false,
-            "4": false
+            "3": true,
+            "4": true
         }
     },
     "enemies": [
         {
             "enemyType": 29,
-            "worldX": 3600.46492677684,
+            "worldX": 2272.499171831762,
             "worldY": 1280,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 30,
-            "worldX": 4351.394245178947,
+            "worldX": 5674.896886769058,
             "worldY": 1280,
             "health": 200,
             "dead": false
@@ -114,7 +96,7 @@
             "worldX": 5440,
             "worldY": 1280,
             "health": 500,
-            "dead": true
+            "dead": false
         }
     ],
     "waypoints": [
@@ -142,18 +124,18 @@
     ],
     "treasureChests": [
         {
-            "chestOpened": true
+            "chestOpened": false
         },
         {
-            "chestOpened": true
+            "chestOpened": false
         }
     ],
     "friendlyCharacters": [
         {
-            "textNumber": 3
+            "textNumber": 0
         },
         {
-            "textNumber": 7
+            "textNumber": 0
         },
         {
             "textNumber": 0
