@@ -288,21 +288,21 @@ class GameHandler(Setup.pg.sprite.Sprite):
                                    5 : [4, 6, 39],
                                    6 : [5],
                                    7 : [4, 8],
-                                   8 : [9, 34], # cannot return to 7
-                                   9 : [8, 10],
+                                   8 : [34, 41], # cannot return to 7
+                                   9 : [10, 41],
                                    10 : [9, 11, 14],
                                    11 : [10, 12, 13],
                                    12 : [11, 37],
                                    13 : [11],
-                                   14 : [15], # cannot return to 10
-                                   15 : [14, 16],
+                                   14 : [42], # cannot return to 10
+                                   15 : [16, 40, 42],
                                    16 : [15, 17, 18],
                                    17 : [16],
                                    18 : [16, 19, 21],
                                    19 : [18, 20, 35],
                                    20 : [19],
-                                   21 : [18, 22],
-                                   22 : [21, 23],
+                                   21 : [22], # cannot return to 18
+                                   22 : [21, 23, 40],
                                    23 : [22, 24],
                                    24 : [23, 25],
                                    25 : [24, 26, 28],
@@ -320,6 +320,9 @@ class GameHandler(Setup.pg.sprite.Sprite):
                                    37 : [12, 36],
                                    38 : [1, 39],
                                    39 : [5, 38],
+                                   40 : [15, 22],
+                                   41 : [8, 9],
+                                   42 : [14, 15]
                                    }
         
         for block in blocks: # populate blockNumberToObject
@@ -1511,7 +1514,7 @@ class Player(Setup.pg.sprite.Sprite):
         self.health = self.maxHealth
 
     def Attack(self):
-        if not self.inventory.mainMenuOpen and not self.inventory.equipMenuOpen and not self.IsInvincible():
+        if not self.inventory.mainMenuOpen and not self.inventory.equipMenuOpen and not self.IsInvincible() and not self.miniMap.enlarged:
             if Setup.pg.mouse.get_pressed()[0] and not self.weapon.isChargingAttack:
                 self.weapon.isChargingAttack = True
                 self.weapon.chargingStartTime = Setup.time.time()
@@ -1796,7 +1799,7 @@ class PathGuide:
                     self.active = True
                     self.mouseClickX, self.mouseClickY = Setup.pg.mouse.get_pos()
                 elif Setup.pg.mouse.get_pressed()[2]: # right click
-                    self.active = False
+                    self.ResetPath()
 
         if self.active:
             for block in pathfindingWaypointBlocks:
@@ -1822,7 +1825,7 @@ class PathGuide:
                     if block.DoesTextExist("PATHFINDING"):
                         nearestNodeMouse = int(block.textList[0].text)
 
-            if (nearestNodePlayer != self.startNode or nearestNodeMouse != self.endNode) and (nearestNodeMouse != None and nearestNodePlayer != None):         
+            if (nearestNodePlayer != self.startNode or nearestNodeMouse != self.endNode) and (nearestNodeMouse != None and nearestNodePlayer != None):               
                 self.startNode = nearestNodePlayer
                 self.endNode = nearestNodeMouse
                 self.PerformAlgorithm(player) # only calculate new route if a node changes
@@ -1853,6 +1856,13 @@ class PathGuide:
             if blockNumber in blockNumberToObject:
                 self.pathBlockObjects.append(blockNumberToObject[blockNumber])
 
+    def ResetPath(self):
+        self.path = []
+        self.pathBlockObjects = []
+        self.startNode = None
+        self.endNode = None
+        self.active = False
+
     def DrawPathGuides(self, shrinkModifier, startX, startY, camera, player): 
         if self.active and self.path is not None: 
             if len(self.path) == 1: # draw from player to last waypoint
@@ -1862,7 +1872,7 @@ class PathGuide:
                 if Setup.math.sqrt((playerCordsMini[0] - blockCordsMini[0]) ** 2 + (playerCordsMini[1] - blockCordsMini[1]) ** 2) > 100 // shrinkModifier:
                     Setup.pg.draw.line(Setup.setup.screen, Setup.setup.RED, playerCordsMini, blockCordsMini, 80 // shrinkModifier) 
                 else:
-                    self.active = False
+                    self.ResetPath()
 
                 if not player.miniMap.enlarged and self.active:
                     playerCordsScreen = (player.rect.centerx - camera.left, player.rect.centery - camera.top)

@@ -23,7 +23,7 @@ class AdjacencyList:
             distance = abs(startNode.originalLocationX - endNode.originalLocationX)
 
         return (distance - 160) / 160 # distance caluclated from left most of each block, instead of the gap between blocks (subtract 160 to account for this - doesnt affect functionality)
-                                      # divide by 160 to return a smaller number, distances are always multiples of 160
+                                      # divide by 160 to return a more readable number, distances are always multiples of 160
 
     def FinaliseGraph(self, allNodes): # some connections are directed so fill empty connections
         for node in allNodes:

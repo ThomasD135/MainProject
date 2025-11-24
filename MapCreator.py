@@ -155,7 +155,7 @@ class MapGrid():
         self.changedZoom = True
 
         self.blockSheetHandler = BlockSheetExtractor()
-        self.selectedBlock = 0 #between 0 and 48
+        self.selectedBlock = 1 #between 0 and 48
         self.numberOfBlocks = Setup.setup.NUM_OF_UNIQUE_BLOCKS_INDEX # 49 blocks in total
 
         #placement options
