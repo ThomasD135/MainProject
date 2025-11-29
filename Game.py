@@ -1,3 +1,4 @@
+from turtle import up
 import Setup
 import MapCreator
 import Menus
@@ -38,10 +39,10 @@ class GameHandler(Setup.pg.sprite.Sprite):
             # spikes
             8:  {"collision": True,  "damage": 50, "knockback": 20},
             9:  {"collision": True,  "damage": 50, "knockback": 20},
-            10: {"collision": True,  "damage": 50, "knockback": 20},
-            11: {"collision": True,  "damage": 50, "knockback": 20},
-            12: {"collision": True,  "damage": 50, "knockback": 20},
-            13: {"collision": True,  "damage": 50, "knockback": 20},
+            10: {"collision": True,  "damage": 60, "knockback": 20},
+            11: {"collision": True,  "damage": 60, "knockback": 20},
+            12: {"collision": True,  "damage": 70, "knockback": 20},
+            13: {"collision": True,  "damage": 70, "knockback": 20},
             # non collidable blocks
             14: {"collision": False, "damage": 0,  "knockback": 0},
             15: {"collision": False, "damage": 0,  "knockback": 0},
@@ -1782,15 +1783,9 @@ class PathGuide:
 
     def FindNearestNode(self, player):
         keys = Setup.pg.key.get_pressed()
-        pathfindingWaypointBlocks = player.gameHandler.pathfindingWaypointBlocks
-        
-        smallestDistancePlayer = Setup.sys.maxsize
-        nearestNodePlayer = None
+        newEnd = False
 
-        smallestDistanceMouse = Setup.sys.maxsize
-        nearestNodeMouse = None
-
-        if player.miniMap.enlarged:
+        if player.miniMap.enlarged: # place and delete waypoints
             if keys[Setup.pg.K_LCTRL]:
                 Setup.pg.mouse.set_visible(True)
 
@@ -1798,37 +1793,58 @@ class PathGuide:
                 if Setup.pg.mouse.get_pressed()[0]: # left click
                     self.active = True
                     self.mouseClickX, self.mouseClickY = Setup.pg.mouse.get_pos()
+                    self.endNode = self.NearestNodeToMouseClick(player)
+                    newEnd = True
                 elif Setup.pg.mouse.get_pressed()[2]: # right click
                     self.ResetPath()
 
-        if self.active:
-            for block in pathfindingWaypointBlocks:
-                #----------------------------------------------------------- player
-                distancePlayer = Setup.math.sqrt((block.originalLocationX - player.worldX) ** 2 + (block.originalLocationY - player.worldY) ** 2)
-                
-                if distancePlayer < smallestDistancePlayer:
-                    if self.CheckIfBlockIsValid(player.gameHandler.blocks, player, block): # check if it doesnt intersect a block
-                        smallestDistancePlayer = distancePlayer
+        if not self.active or self.endNode is None:
+            return
 
-                        if block.DoesTextExist("PATHFINDING"):
-                            nearestNodePlayer = int(block.textList[0].text)
-                #----------------------------------------------------------- mini map
-                miniMapOffsetX, miniMapOffsetY = 480, 60
-                miniMapScale = 8
-                blockMiniMapX, blockMiniMapY = (block.originalLocationX // miniMapScale) + miniMapOffsetX, (block.originalLocationY // miniMapScale) + miniMapOffsetY
+        updatedStart = self.NearestNodeToPlayer(player)
+        if updatedStart is None:
+            return
 
-                distanceMouse = Setup.math.sqrt((blockMiniMapX - self.mouseClickX) ** 2 + (blockMiniMapY - self.mouseClickY) ** 2)
+        if updatedStart != self.startNode or newEnd:
+            self.startNode = updatedStart
+            self.PerformAlgorithm(player)
 
-                if distanceMouse < smallestDistanceMouse:
+    def NearestNodeToMouseClick(self, player):
+        pathfindingWaypointBlocks = player.gameHandler.pathfindingWaypointBlocks
+
+        smallestDistanceMouse = Setup.sys.maxsize
+        nearestNodeMouse = None
+        miniMapOffsetX, miniMapOffsetY = 480, 60
+        miniMapScale = 8
+
+        for block in pathfindingWaypointBlocks: # get nearest node to click
+            blockMiniMapX, blockMiniMapY = (block.originalLocationX // miniMapScale) + miniMapOffsetX, (block.originalLocationY // miniMapScale) + miniMapOffsetY
+
+            distanceMouse = Setup.math.sqrt((blockMiniMapX - self.mouseClickX) ** 2 + (blockMiniMapY - self.mouseClickY) ** 2)
+
+            if distanceMouse < smallestDistanceMouse:
+                if block.DoesTextExist("PATHFINDING"):
                     smallestDistanceMouse = distanceMouse
+                    nearestNodeMouse = int(block.textList[0].text)            
 
+        return nearestNodeMouse
+
+    def NearestNodeToPlayer(self, player):
+        pathfindingWaypointBlocks = player.gameHandler.pathfindingWaypointBlocks
+
+        smallestDistancePlayer = Setup.sys.maxsize
+        nearestNodePlayer = None
+
+        for block in pathfindingWaypointBlocks:
+            distancePlayer = Setup.math.sqrt((block.originalLocationX - player.worldX) ** 2 + (block.originalLocationY - player.worldY) ** 2)
+                
+            if distancePlayer < smallestDistancePlayer:
+                if self.CheckIfBlockIsValid(player.gameHandler.blocks, player, block): # check if it doesnt intersect a block
                     if block.DoesTextExist("PATHFINDING"):
-                        nearestNodeMouse = int(block.textList[0].text)
-
-            if (nearestNodePlayer != self.startNode or nearestNodeMouse != self.endNode) and (nearestNodeMouse != None and nearestNodePlayer != None):               
-                self.startNode = nearestNodePlayer
-                self.endNode = nearestNodeMouse
-                self.PerformAlgorithm(player) # only calculate new route if a node changes
+                        smallestDistancePlayer = distancePlayer
+                        nearestNodePlayer = int(block.textList[0].text)
+            
+        return nearestNodePlayer
 
     def CheckIfBlockIsValid(self, allBlocks, player, node):
         playerCoords = (player.worldX, player.worldY)
