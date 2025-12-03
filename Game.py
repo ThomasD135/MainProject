@@ -132,9 +132,10 @@ class GameHandler(Setup.pg.sprite.Sprite):
                 Setup.json.dump(self.DataToDictionary(), file, indent=4)
 
     def LoadGame(self):
-        if Setup.setup.changeSlot[0] and Setup.setup.changeSlot[1] != -1 and Setup.setup.currentSaveSlot != Setup.setup.changeSlot[1]:
+        if (Setup.setup.changeSlot[0] and Setup.setup.changeSlot[1] != -1 and Setup.setup.currentSaveSlot != Setup.setup.changeSlot[1]) or Setup.setup.changedMap:
+            Setup.setup.changedMap = False
             self.ResetData()
-                      
+                                
             Setup.setup.currentSaveSlot = Setup.setup.changeSlot[1]
             Setup.setup.changeSlot = (False, -1)
                                              
@@ -142,7 +143,7 @@ class GameHandler(Setup.pg.sprite.Sprite):
             if Setup.os.path.exists(filePath) and Setup.os.path.getsize(filePath) > 0:                            
                 with open(filePath, "r") as file:
                     data = Setup.json.load(file)
-                    self.DataFromDictionary(data)                       
+                    self.DataFromDictionary(data)   
         
     def ResetData(self):
         self.player = Player("Player", self)

@@ -131,6 +131,10 @@ class MapDataHandling():
         return grid
 
     def LoadDataOrCreateMap(self):
+        if not Setup.os.path.exists(self.filePath + ".txt"):
+            with open(self.filePath + ".txt", "w"):
+                pass # creates an empty file which is later filled 
+
         file = open(self.filePath + ".txt", "r")
 
         numberOfLines = len(file.readlines())
@@ -179,7 +183,7 @@ class MapGrid():
 
         for gridYPosition in range(0, Setup.setup.BLOCKS_WIDE):
             for gridXPosition in range(0, Setup.setup.BLOCKS_WIDE): 
-                blockRow.append(Menus.BlockButton("BLOCK", self.blockWidth, self.blockWidth, gridXPosition * self.blockWidth, gridYPosition * self.blockWidth, self.selectedBlock, self.rotation, self.blockSheetHandler.GetCorrectBlockImage(self.selectedBlock, False, self.rotation, 1)))
+                blockRow.append(Menus.BlockButton("BLOCK", self.blockWidth, self.blockWidth, gridXPosition * self.blockWidth, gridYPosition * self.blockWidth, 0, self.rotation, self.blockSheetHandler.GetCorrectBlockImage(0, False, self.rotation, 1)))
 
             self.blockGrid.append(blockRow)
             blockRow = [] 

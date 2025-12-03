@@ -485,6 +485,7 @@ class CreateMapMenu(Setup.pg.sprite.Sprite):
         menuManagement.AddMenu(menuManagement.menuButtonGroup, "MENU") 
         menuManagement.RemoveMenu(self, "MENU")      
 
+        Setup.setup.changedMap = True
         Setup.setup.gameState = "MENU"
 
     def DeleteButton(self):

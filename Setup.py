@@ -43,6 +43,7 @@ class Setup:
         #map attributes
         self.gameState = "MENU"
         self.deletingBlocks = False
+        self.changedMap = False
 
         #game settings
         self.gainHealthFromBosses = True
