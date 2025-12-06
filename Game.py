@@ -2112,6 +2112,18 @@ class BaseEnemy(Setup.pg.sprite.Sprite):
 
             self.worldY -= self.verticalSpeedY
             self.verticalSpeedY = 0   
+
+    def CheckIfDetectionIsValid(self, allBlocks, player):
+        playerCoords = (player.worldX, player.worldY)
+        enemyCoords = (self.worldX, self.worldY)
+ 
+        for block in allBlocks:                   
+            if block.rect.clipline(playerCoords, enemyCoords) and block.collision:
+                Setup.pg.draw.line(Setup.setup.screen, Setup.setup.RED, (player.worldX - player.camera.camera.left, player.worldY - player.camera.camera.top), (self.worldX - player.camera.camera.left, self.worldY - player.camera.camera.top))
+                return False
+
+        Setup.pg.draw.line(Setup.setup.screen, Setup.setup.GREEN, (player.worldX - player.camera.camera.left, player.worldY - player.camera.camera.top), (self.worldX - player.camera.camera.left, self.worldY - player.camera.camera.top))
+        return True
             
     def CheckCollisionMap(self):
         collisionMap = self.gameHandler.collisionMap
@@ -2260,39 +2272,43 @@ class Enemy(BaseEnemy):
 
     def UpdateState(self):
         distanceFromPlayer = self.CalculateDistanceFromPlayer()
+        canEnemySeePlayer = self.CheckIfDetectionIsValid(self.gameHandler.blocks, self.gameHandler.player)
 
-        if distanceFromPlayer <= self.detectionRange:
+        if (distanceFromPlayer > self.suspicionRange or not canEnemySeePlayer) and self.state == "DETECTED":
+            self.TransitionFromDetectedToSuspicion(canEnemySeePlayer)
+            return
+
+        if distanceFromPlayer <= self.detectionRange and canEnemySeePlayer:
             self.state = "DETECTED"
             self.outsideSuspicionRangeWhenDetected.Reset()
+            return
 
-        elif distanceFromPlayer <= self.suspicionRange:
+        if distanceFromPlayer <= self.suspicionRange and canEnemySeePlayer:
             if self.state != "DETECTED" and self.state != "RETURNING": # must be within detection range to detect player while returning
                 self.state = "SUSPICIOUS"
                 self.detectedPlayerLocation = (self.gameHandler.player.worldX, self.gameHandler.player.worldY)
+            return
+        
+    def TransitionFromDetectedToSuspicion(self, canEnemySeePlayer):
+        if not canEnemySeePlayer or self.outsideSuspicionRangeWhenDetected.CheckFinished():
+            self.state = "SUSPICIOUS"  
+            self.outsideSuspicionRangeWhenDetected.Reset()
 
-        elif distanceFromPlayer > self.suspicionRange and self.state == "DETECTED":
-            self.TransitionFromDetectedToSuspicion()
+            if self.gameHandler.player.worldX < self.worldX:
+                self.detectedPlayerLocation = (self.worldX - self.suspicionRange, self.worldY)
+            else:
+                self.detectedPlayerLocation = (self.worldX + self.suspicionRange, self.worldY)
 
-    def TransitionFromDetectedToSuspicion(self):
-        if self.outsideSuspicionRangeWhenDetected.startTime is None:
-                self.outsideSuspicionRangeWhenDetected.StartTimer()
-        else:
-            if self.outsideSuspicionRangeWhenDetected.CheckFinished():
-                self.state = "SUSPICIOUS"                   
-                self.outsideSuspicionRangeWhenDetected.Reset()
-
-                if self.gameHandler.player.worldX < self.worldX:
-                    self.detectedPlayerLocation = (self.worldX - self.suspicionRange, self.worldY)
-                else:
-                    self.detectedPlayerLocation = (self.worldX + self.suspicionRange, self.worldY)
-
+        elif self.outsideSuspicionRangeWhenDetected.startTime is None:
+            self.outsideSuspicionRangeWhenDetected.StartTimer()  
+            
     def PerformAction(self):
         self.DisplayHealthBar()
         self.PerformAttack()
-        self.ApplyKnockback()
         self.Falling()
-
-        if self.movementClass is not None: # stationary enemies cannot move
+        
+        if self.movementClass is not None: # stationary enemies cannot move so do not need falling or knockback functions
+            self.ApplyKnockback()          
             self.UpdateState()
 
             match self.state:
@@ -2443,7 +2459,7 @@ class Boss(BaseEnemy):
     def IsPlayerWithinRange(self):
         distance = self.CalculateDistanceFromPlayer(fromStartLocation=True)
 
-        if distance < self.bossDetectionRange or (self.health < self.maxHealth and (self.worldX, self.worldY) == (self.startLocationX, self.startLocationY)): # if the player damages the boss, it detects the player
+        if (distance < self.bossDetectionRange and self.CheckIfDetectionIsValid(self.gameHandler.blocks, self.gameHandler.player)) or (self.health < self.maxHealth and (self.worldX, self.worldY) == (self.startLocationX, self.startLocationY)): # if the player damages the boss, it detects the player
             self.state = "DETECTED"
         elif distance > self.bossFightRange:
             self.ResetSelf()
