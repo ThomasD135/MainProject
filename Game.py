@@ -1854,7 +1854,7 @@ class PathGuide:
         for block in allBlocks:       
             if block.rect.clipline(playerCoords, nodeCoords) and block.collision:
                 return False
-
+        
         return True
 
     def PerformAlgorithm(self, player):
@@ -2113,13 +2113,13 @@ class BaseEnemy(Setup.pg.sprite.Sprite):
             self.worldY -= self.verticalSpeedY
             self.verticalSpeedY = 0   
 
-    def CheckIfDetectionIsValid(self, allBlocks, player):
+    def CheckIfDetectionIsValid(self, allBlocks, player): # contains visualisers
         playerCoords = (player.worldX, player.worldY)
         enemyCoords = (self.worldX, self.worldY)
  
         for block in allBlocks:                   
             if block.rect.clipline(playerCoords, enemyCoords) and block.collision:
-                Setup.pg.draw.line(Setup.setup.screen, Setup.setup.RED, (player.worldX - player.camera.camera.left, player.worldY - player.camera.camera.top), (self.worldX - player.camera.camera.left, self.worldY - player.camera.camera.top))
+                #Setup.pg.draw.line(Setup.setup.screen, Setup.setup.RED, (player.worldX - player.camera.camera.left, player.worldY - player.camera.camera.top), (self.worldX - player.camera.camera.left, self.worldY - player.camera.camera.top))
                 return False
 
         Setup.pg.draw.line(Setup.setup.screen, Setup.setup.GREEN, (player.worldX - player.camera.camera.left, player.worldY - player.camera.camera.top), (self.worldX - player.camera.camera.left, self.worldY - player.camera.camera.top))
@@ -2273,6 +2273,9 @@ class Enemy(BaseEnemy):
     def UpdateState(self):
         distanceFromPlayer = self.CalculateDistanceFromPlayer()
         canEnemySeePlayer = self.CheckIfDetectionIsValid(self.gameHandler.blocks, self.gameHandler.player)
+
+        Setup.pg.draw.circle(Setup.setup.screen, Setup.setup.BLUE, (self.worldX - self.gameHandler.player.camera.camera.left, self.worldY - self.gameHandler.player.camera.camera.top), self.suspicionRange, 5) # visualiser
+        Setup.pg.draw.circle(Setup.setup.screen, Setup.setup.RED, (self.worldX - self.gameHandler.player.camera.camera.left, self.worldY - self.gameHandler.player.camera.camera.top), self.detectionRange, 5) # visualiser
 
         if (distanceFromPlayer > self.suspicionRange or not canEnemySeePlayer) and self.state == "DETECTED":
             self.TransitionFromDetectedToSuspicion(canEnemySeePlayer)

@@ -1,8 +1,8 @@
 {
     "player": {
-        "worldX": 6626,
-        "worldY": 1280,
-        "health": 800,
+        "worldX": 6880,
+        "worldY": 2240,
+        "health": 680.0,
         "maxHealth": 800,
         "mana": 300,
         "maxMana": 300,
@@ -77,20 +77,63 @@
     "enemies": [
         {
             "enemyType": 29,
-            "worldX": 3843.4194809624387,
+            "worldX": 4376.689975691563,
             "worldY": 1280,
             "health": 200,
             "dead": false
         },
         {
+            "enemyType": 33,
+            "worldX": 1068.7820909404386,
+            "worldY": 2240,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 33,
+            "worldX": 2291.6951119735772,
+            "worldY": 2240,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 31,
+            "worldX": 4113.374384010382,
+            "worldY": 2240,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 31,
+            "worldX": 3737.866388266522,
+            "worldY": 2240,
+            "health": 200,
+            "dead": false
+        },
+        {
             "enemyType": 29,
-            "worldX": 3642.7623361917927,
+            "worldX": 4969.7801596772815,
             "worldY": 4000,
             "health": 200,
             "dead": false
         }
     ],
-    "bosses": [],
+    "bosses": [
+        {
+            "enemyType": 21,
+            "worldX": 3680,
+            "worldY": 1280,
+            "health": 500,
+            "dead": false
+        },
+        {
+            "enemyType": 22,
+            "worldX": 640,
+            "worldY": 2240,
+            "health": 700,
+            "dead": false
+        }
+    ],
     "waypoints": [
         {
             "waypointActive": false
