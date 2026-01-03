@@ -1,4 +1,4 @@
-from turtle import up
+from turtle import left, up
 import Setup
 import MapCreator
 import Menus
@@ -24,6 +24,8 @@ class GameHandler(Setup.pg.sprite.Sprite):
         self.waypoints = []
         self.treasureChests = []
         self.friendlyCharacters = []
+
+        self.autoSaveTimer = CooldownTimer(5)
 
         # enemies and bosses all have no collision so no need for attributes
         self.blockAttributeDictionary = {
@@ -75,7 +77,7 @@ class GameHandler(Setup.pg.sprite.Sprite):
                            42 : {"class": Enemy1, "health": 200, "movementType": "RANDOM", "velocity": 5, "size": 160, "suspicionRange": Setup.setup.BLOCK_WIDTH * 4.5, "detectionRange": Setup.setup.BLOCK_WIDTH * 3},
                            }
 
-        self.bossTypes = {21 : {"class": Boss1, "health": 500, "velocity": 5, "size": 160, "phases": 1, "name": "Glod the Infected"},
+        self.bossTypes = {21 : {"class": Boss1, "health": 500, "velocity": 5, "size": 160, "phases": 2, "name": "Glod the Infected"},
                           22 : {"class": Boss2, "health": 700, "velocity": 4, "size": 160, "phases": 1, "name": "The Wretched Growth"},
                           23 : {"class": Boss3, "health": 1000, "velocity": 0, "size": 320, "phases": 1, "name": "The Weeping Maw"},
                           24 : {"class": Boss4, "health": 700, "velocity": 6, "size": 160, "phases": 1, "name": "The Forgotten Champion"},
@@ -124,12 +126,20 @@ class GameHandler(Setup.pg.sprite.Sprite):
             boss.ResetSelf()
 
     def SaveGame(self):
-        if Setup.setup.currentSaveSlot != -1 and Setup.setup.saveGame:
+        if self.autoSaveTimer.startTime is None:
+            self.autoSaveTimer.StartTimer()
+
+        if (Setup.setup.currentSaveSlot != -1 and Setup.setup.saveGame) or self.autoSaveTimer.CheckFinished():
+            self.autoSaveTimer.Reset()
             Setup.setup.saveGame = False
 
             filePath = Setup.os.path.join("ASSETS", "SAVED_DATA", f"SAVE_FILE_{Setup.setup.currentSaveSlot}.txt")     
-            with open(filePath, "w") as file:
-                Setup.json.dump(self.DataToDictionary(), file, indent=4)
+
+            try:
+                with open(filePath, "w") as file:
+                    Setup.json.dump(self.DataToDictionary(), file, indent=4)
+            except PermissionError:
+                pass # text file is read-only, skip saving data
 
     def LoadGame(self):
         if (Setup.setup.changeSlot[0] and Setup.setup.changeSlot[1] != -1 and Setup.setup.currentSaveSlot != Setup.setup.changeSlot[1]) or Setup.setup.changedMap:
@@ -931,6 +941,9 @@ class Inventory:
         return cls(weapons=itemNameToObjects["weapons"], spells=itemNameToObjects["spells"], armour=itemNameToObjects["armour"], itemNames=data["itemNames"])
 
     def AddItem(self, itemToAdd):
+        if itemToAdd is None:
+            return
+
         classToList = {Weapon : self.weapons,
                        Spell : self.spells,
                        Armour : self.armour}
@@ -1044,7 +1057,7 @@ class Player(Setup.pg.sprite.Sprite):
         self.damageTakenMultiplier = 1
         self.mana = mana
         self.maxMana = maxMana
-        self.mapFragments = mapFragments if mapFragments is not None else {"1": True, "2": True, "3": True, "4": True} # json converts int keys to strings, which forces a conversion later, it is safer to always use string keys
+        self.mapFragments = mapFragments if mapFragments is not None else {"1": False, "2": False, "3": False, "4": False} # json converts int keys to strings, which forces a conversion later, it is safer to always use string keys
         self.mostRecentWaypointCords = mostRecentWaypointCords
 
         attributesAndDefault = {"weapon" : WoodenSword(damage=50, chargedDamage=75, abilityDamage=125, abilityManaCost=125, abilityCooldown=5, parentPlayer=self), 
@@ -1770,6 +1783,7 @@ class MiniMap(Setup.pg.sprite.Sprite):
                     locationY = float(text[2])
                     player.worldX = locationX
                     player.worldY = locationY
+                    player.mostRecentWaypointCords = (locationX, locationY)
                     player.miniMap.enlarged = False
                     Setup.pg.mouse.set_visible(False)
 
@@ -2041,7 +2055,7 @@ class BaseEnemy(Setup.pg.sprite.Sprite):
             for hitbox in self.attackToHitbox.values():
                 self.gameHandler.enemyHitboxes.remove(hitbox)
 
-            if isinstance(self, Boss) and Boss.rewards[self.enemyType] is not None:
+            if isinstance(self, Boss):
                 self.gameHandler.player.inventory.AddItem(Boss.rewards[self.enemyType])
                 self.gameHandler.player.maxHealth += 100 # player gains 100 max health every time a boss is killed
                 Boss.rewards[self.enemyType] = None
@@ -2122,7 +2136,7 @@ class BaseEnemy(Setup.pg.sprite.Sprite):
                 #Setup.pg.draw.line(Setup.setup.screen, Setup.setup.RED, (player.worldX - player.camera.camera.left, player.worldY - player.camera.camera.top), (self.worldX - player.camera.camera.left, self.worldY - player.camera.camera.top))
                 return False
 
-        Setup.pg.draw.line(Setup.setup.screen, Setup.setup.GREEN, (player.worldX - player.camera.camera.left, player.worldY - player.camera.camera.top), (self.worldX - player.camera.camera.left, self.worldY - player.camera.camera.top))
+        #Setup.pg.draw.line(Setup.setup.screen, Setup.setup.GREEN, (player.worldX - player.camera.camera.left, player.worldY - player.camera.camera.top), (self.worldX - player.camera.camera.left, self.worldY - player.camera.camera.top))
         return True
             
     def CheckCollisionMap(self):
@@ -2147,8 +2161,8 @@ class BaseEnemy(Setup.pg.sprite.Sprite):
                     blockRect = Setup.pg.Rect(x * blockSize, y * blockSize, blockSize, blockSize)
                     if self.rect.colliderect(blockRect):
                         return blockRect.left
-        return None
-            
+        return None          
+
     def MoveToPoint(self, endLocation, velocity):
         if self.movementLocked:
             return False
@@ -2274,8 +2288,8 @@ class Enemy(BaseEnemy):
         distanceFromPlayer = self.CalculateDistanceFromPlayer()
         canEnemySeePlayer = self.CheckIfDetectionIsValid(self.gameHandler.blocks, self.gameHandler.player)
 
-        Setup.pg.draw.circle(Setup.setup.screen, Setup.setup.BLUE, (self.worldX - self.gameHandler.player.camera.camera.left, self.worldY - self.gameHandler.player.camera.camera.top), self.suspicionRange, 5) # visualiser
-        Setup.pg.draw.circle(Setup.setup.screen, Setup.setup.RED, (self.worldX - self.gameHandler.player.camera.camera.left, self.worldY - self.gameHandler.player.camera.camera.top), self.detectionRange, 5) # visualiser
+        #Setup.pg.draw.circle(Setup.setup.screen, Setup.setup.BLUE, (self.worldX - self.gameHandler.player.camera.camera.left, self.worldY - self.gameHandler.player.camera.camera.top), self.suspicionRange, 5) # visualiser
+        #Setup.pg.draw.circle(Setup.setup.screen, Setup.setup.RED, (self.worldX - self.gameHandler.player.camera.camera.left, self.worldY - self.gameHandler.player.camera.camera.top), self.detectionRange, 5) # visualiser
 
         if (distanceFromPlayer > self.suspicionRange or not canEnemySeePlayer) and self.state == "DETECTED":
             self.TransitionFromDetectedToSuspicion(canEnemySeePlayer)
@@ -2310,7 +2324,7 @@ class Enemy(BaseEnemy):
         self.PerformAttack()
         self.Falling()
         
-        if self.movementClass is not None: # stationary enemies cannot move so do not need falling or knockback functions
+        if self.movementClass is not None: # stationary enemies cannot move so do not require knockback functions
             self.ApplyKnockback()          
             self.UpdateState()
 
@@ -2323,6 +2337,8 @@ class Enemy(BaseEnemy):
                     self.Suspicious()
                 case "RETURNING":
                     self.Returning()
+        else:
+            self.StationaryMovementDirection()
 
         self.rect.topleft = (self.worldX, self.worldY)
 
@@ -2354,6 +2370,12 @@ class Enemy(BaseEnemy):
     def PerformMovement(self):
         self.movementClass.Movement(self)
 
+    def StationaryMovementDirection(self):
+        if self.gameHandler.player.worldX <= self.worldX:
+            self.mostRecentDirection = "LEFT"
+        else:
+            self.mostRecentDirection = "RIGHT"
+
 class GuardMovement:
     def Movement(self, enemy):
         enemy.MoveToPoint(enemy.startLocationX, enemy.velocity)
@@ -2384,10 +2406,10 @@ class RandomMovement:
         if self.direction == "RETURN":
             enemy.MoveToPoint(enemy.startLocationX, enemy.slowVelocity) # return to start
         if self.direction == "RIGHT":
-            targetX = min(enemy.startLocationX + self.maxDistanceFromStart, enemy.worldX + self.maxDistanceFromStart)
+            targetX = min(enemy.startLocationX + self.maxDistanceFromStart + 5, enemy.worldX + self.maxDistanceFromStart)
             enemy.MoveToPoint(targetX, enemy.slowVelocity) # anywhere to the right
         elif self.direction == "LEFT":
-            targetX = max(enemy.startLocationX - self.maxDistanceFromStart, enemy.worldX - self.maxDistanceFromStart)
+            targetX = max(enemy.startLocationX - self.maxDistanceFromStart - 5, enemy.worldX - self.maxDistanceFromStart)
             enemy.MoveToPoint(targetX, enemy.slowVelocity) # anywhere to the left    
 
 class Enemy1(Enemy):
@@ -2405,7 +2427,7 @@ class Enemy2(Enemy):
                         "ATTACK_2" : {"damage" : 40, "range" : self.detectionRange, "length" : 2, "dimentions" : [80, 80], "velocityX" : 10}}
 
 class Boss(BaseEnemy):
-    rewards = {21 : None,
+    rewards = {21 : Longsword(damage=80,  chargedDamage=120, abilityDamage=200, abilityManaCost=150, abilityCooldown=5, parentPlayer=None),
                22 : None,
                23 : None,
                24 : None,
@@ -2501,7 +2523,7 @@ class Boss1(Boss):
         self.attacks = {"ATTACK_1" : {"damage" : 50, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 1, "dimentions" : [160, 80]},
                         "ATTACK_2" : {"damage" : 75, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 1.25, "dimentions" : [240, 80]}}
 
-        self.phaseTwoAttacks = {"ATTACK_3" : {"damage" : 100, "range" : Setup.setup.BLOCK_WIDTH * 1.25, "length" : 2, "dimentions" : [160, 80]}}
+        self.phaseTwoAttacks = {"ATTACK_3" : {"damage" : 75, "range" : Setup.setup.BLOCK_WIDTH * 2, "length" : 1.25, "dimentions" : [160, 160]}}
 
 class Boss2(Boss):
     def __init__(self, worldX, worldY, image, health, velocity, size, phases, name, bossType, gameHandler):

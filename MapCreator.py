@@ -61,7 +61,10 @@ class MapDataHandling():
         self.LoadDataOrCreateMap()
 
     def SaveData(self, blockGrid):
-        file = open(self.filePath + ".txt", "w")
+        try:
+            file = open(self.filePath + ".txt", "w")
+        except:
+            return # the data cannot be saved if the file is read-only
 
         dataLine = ""
 

@@ -1,23 +1,23 @@
 {
     "player": {
-        "worldX": 6880,
-        "worldY": 2240,
-        "health": 680.0,
-        "maxHealth": 800,
+        "worldX": 2348.0,
+        "worldY": 1280,
+        "health": 1000,
+        "maxHealth": 1000,
         "mana": 300,
         "maxMana": 300,
         "mostRecentWaypointCords": [
-            160,
-            160
+            2720.0,
+            1280.0
         ],
         "weapon": {
-            "name": "WoodenSword",
-            "description": "A weak wooden sword",
-            "abilityDescription": "A quick thrust",
-            "damage": 50,
-            "chargedDamage": 75,
-            "abilityDamage": 125,
-            "abilityManaCost": 125,
+            "name": "Longsword",
+            "description": "A long iron sword",
+            "abilityDescription": "A powerful overhead swing",
+            "damage": 80,
+            "chargedDamage": 120,
+            "abilityDamage": 200,
+            "abilityManaCost": 150,
             "abilityCooldown": 5
         },
         "spell": {
@@ -27,16 +27,18 @@
             "manaCost": 75
         },
         "armour": {
-            "name": "DefaultArmour",
-            "description": "No armour",
-            "resistance": 0,
-            "armourType": 1
+            "name": "SkinOfTheWeepingMaw",
+            "description": "The skin of the weeping maw",
+            "resistance": 30,
+            "armourType": 2
         },
         "inventory": {
             "itemNames": [
                 "WoodenSword",
                 "Fireball",
-                "DefaultArmour"
+                "DefaultArmour",
+                "Longsword",
+                "SkinOfTheWeepingMaw"
             ],
             "weapons": [
                 {
@@ -47,6 +49,16 @@
                     "chargedDamage": 75,
                     "abilityDamage": 125,
                     "abilityManaCost": 125,
+                    "abilityCooldown": 5
+                },
+                {
+                    "name": "Longsword",
+                    "description": "A long iron sword",
+                    "abilityDescription": "A powerful overhead swing",
+                    "damage": 80,
+                    "chargedDamage": 120,
+                    "abilityDamage": 200,
+                    "abilityManaCost": 150,
                     "abilityCooldown": 5
                 }
             ],
@@ -64,55 +76,61 @@
                     "description": "No armour",
                     "resistance": 0,
                     "armourType": 1
+                },
+                {
+                    "name": "SkinOfTheWeepingMaw",
+                    "description": "The skin of the weeping maw",
+                    "resistance": 30,
+                    "armourType": 2
                 }
             ]
         },
         "mapFragments": {
             "1": true,
             "2": true,
-            "3": true,
-            "4": true
+            "3": false,
+            "4": false
         }
     },
     "enemies": [
         {
-            "enemyType": 29,
-            "worldX": 4376.689975691563,
-            "worldY": 1280,
-            "health": 200,
-            "dead": false
-        },
-        {
             "enemyType": 33,
-            "worldX": 1068.7820909404386,
+            "worldX": 1728.403000702383,
             "worldY": 2240,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 33,
-            "worldX": 2291.6951119735772,
+            "worldX": 2208.1253453676363,
             "worldY": 2240,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 31,
-            "worldX": 4113.374384010382,
+            "worldX": 3967.3234359821045,
             "worldY": 2240,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 31,
-            "worldX": 3737.866388266522,
+            "worldX": 4290.513089373683,
             "worldY": 2240,
+            "health": 200,
+            "dead": false
+        },
+        {
+            "enemyType": 39,
+            "worldX": 5407.395231461225,
+            "worldY": 2208,
             "health": 200,
             "dead": false
         },
         {
             "enemyType": 29,
-            "worldX": 4969.7801596772815,
+            "worldX": 4127.9883261933355,
             "worldY": 4000,
             "health": 200,
             "dead": false
@@ -121,31 +139,31 @@
     "bosses": [
         {
             "enemyType": 21,
-            "worldX": 3680,
+            "worldX": 4480,
             "worldY": 1280,
             "health": 500,
-            "dead": false
+            "dead": true
         },
         {
             "enemyType": 22,
             "worldX": 640,
             "worldY": 2240,
             "health": 700,
-            "dead": false
+            "dead": true
         }
     ],
     "waypoints": [
         {
-            "waypointActive": false
+            "waypointActive": true
         },
         {
-            "waypointActive": false
+            "waypointActive": true
         },
         {
-            "waypointActive": false
+            "waypointActive": true
         },
         {
-            "waypointActive": false
+            "waypointActive": true
         },
         {
             "waypointActive": false
@@ -159,18 +177,18 @@
     ],
     "treasureChests": [
         {
-            "chestOpened": false
+            "chestOpened": true
         },
         {
-            "chestOpened": false
+            "chestOpened": true
         }
     ],
     "friendlyCharacters": [
         {
-            "textNumber": 0
+            "textNumber": 3
         },
         {
-            "textNumber": 0
+            "textNumber": 7
         },
         {
             "textNumber": 0

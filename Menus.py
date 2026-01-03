@@ -440,14 +440,18 @@ class CreateNewGameMenu(Setup.pg.sprite.Sprite):
         menuManagement.RemoveMenu(self, "MENU")
 
     def DeleteSlotButton(self, buttonNumber):
+        try:
+            savedDataFilePath = Setup.os.path.join("ASSETS", "SAVED_DATA", f"SAVE_FILE_{buttonNumber}.txt") 
+            open(savedDataFilePath, "w").close() # wipe the file
+
+        except PermissionError:
+            return # cannot delete a read only text file
+
         if buttonNumber == Setup.setup.currentSaveSlot:
             Setup.setup.currentSaveSlot = -1
         
         self.buttons.remove(ButtonGroupMethods.GetButton(f"DELETE_SLOT_{buttonNumber}", self.buttons))
-        
-        savedDataFilePath = Setup.os.path.join("ASSETS", "SAVED_DATA", f"SAVE_FILE_{buttonNumber}.txt") 
-        open(savedDataFilePath, "w").close() # wipe the file
-        
+    
     def ExitButton(self):
         menuManagement.AddMenu(menuManagement.menuButtonGroup, "MENU") 
         menuManagement.RemoveMenu(self, "MENU")    

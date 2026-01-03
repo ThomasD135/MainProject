@@ -1,0 +1,8 @@
+{
+    "player": null,
+    "enemies": [],
+    "bosses": [],
+    "waypoints": [],
+    "treasureChests": [],
+    "friendlyCharacters": []
+}
